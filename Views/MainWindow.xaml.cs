@@ -1,23 +1,14 @@
-﻿using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using System.Windows;
+using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.ViewModels;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views;
 
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
 public partial class MainWindow : Window
 {
     public MainWindow()
     {
         InitializeComponent();
+        // Asignamos el DataContext por código para evitar el error del compilador XAML
+        this.DataContext = new MainViewModel(); 
     }
 }

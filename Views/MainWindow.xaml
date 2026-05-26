@@ -3,10 +3,131 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="Sistema de Control de Calificaciones - José Ma. Morelos y Pavón" 
+        Height="650" Width="1000"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F6F8">
 
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="80"/>
+            <RowDefinition Height="60"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#1B365D" CornerRadius="0,0,10,10" Panel.ZIndex="1">
+            <Grid Margin="20,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Width="50" Height="50" Background="#C8102E" CornerRadius="25" VerticalAlignment="Center">
+                    <TextBlock Text="P" Foreground="White" FontWeight="Bold" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="15,0,0,0">
+                    <TextBlock Text="ESCUELA JOSÉ MARÍA MORELOS Y PAVÓN" Foreground="White" FontSize="18" FontWeight="Bold"/>
+                    <TextBlock Text="Control de Evaluaciones Continuas (.CAP)" Foreground="#A5B4FC" FontSize="12" FontWeight="SemiBold"/>
+                </StackPanel>
+                
+                <TextBlock Grid.Column="2" Text="CEIM v10.0" Foreground="White" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" Opacity="0.7"/>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Background="White" Margin="15,10,15,5" CornerRadius="6" BorderBrush="#E2E8F0" BorderThickness="1">
+            <Grid Margin="15,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="USB:" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,5,0"/>
+                <TextBox Grid.Column="1" Text="{Binding RutaUsb, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" Height="32" BorderBrush="#CBD5E1"/>
+                
+                <Button Grid.Column="2" Content="Escanear" Command="{Binding EscanearUsbCommand}" Height="32" Width="90" Margin="10,0,0,0" Background="#1B365D" Foreground="White" FontWeight="SemiBold" BorderThickness="0">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="4"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+
+                <TextBlock Grid.Column="3" Text="Archivo:" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#475569" Margin="20,0,5,0"/>
+                <ComboBox Grid.Column="4" ItemsSource="{Binding ArchivosDisponibles}" SelectedItem="{Binding ArchivoSeleccionado}" Height="32" VerticalContentAlignment="Center"/>
+
+                <TextBlock Grid.Column="5" Text="Eval:" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#475569" Margin="20,0,5,0"/>
+                <ComboBox Grid.Column="6" ItemsSource="{Binding EvaluacionesDisponibles}" SelectedItem="{Binding EvaluacionSeleccionada}" Height="32" VerticalContentAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="15,5,15,10">
+            <DataGrid ItemsSource="{Binding Alumnos}" 
+                      AutoGenerateColumns="False" 
+                      CanUserAddRows="False"
+                      Background="White"
+                      BorderBrush="#E2E8F0"
+                      BorderThickness="1"
+                      RowHeight="35"
+                      GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="#F1F5F9"
+                      HeadersVisibility="Column"
+                      SelectionMode="Single">
+                
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="#1B365D"/>
+                        <Setter Property="Foreground" Value="White"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="Height" Value="40"/>
+                        <Setter Property="Padding" Value="10,0"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Matrícula" Binding="{Binding Matricula}" Width="120" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Nombre del Alumno" Binding="{Binding Nombre}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Grupo" Binding="{Binding Grupo}" Width="80" IsReadOnly="True"/>
+                    
+                    <DataGridTemplateColumn Width="120">
+                        <DataGridTemplateColumn.HeaderTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DataContext.EvaluacionSeleccionada, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" 
+                                           FontWeight="Bold" Foreground="White"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.HeaderTemplate>
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding ValorSeleccionado}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+        <Border Grid.Row="3" Background="#E2E8F0">
+            <Grid Margin="15,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Alumnos cargados: " Foreground="#64748B" FontSize="11" FontWeight="Medium"/>
+                    <TextBlock Text="{Binding Alumnos.Count}" Foreground="#1E293B" FontSize="11" FontWeight="Bold"/>
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="Estado: Conectado a dispositivo de almacenamiento" Foreground="#64748B" FontSize="11" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>
