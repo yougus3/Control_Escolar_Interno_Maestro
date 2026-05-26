@@ -1,0 +1,12 @@
+﻿<UserControl x:Class="Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.ParcialesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Background="White">
+        <TextBlock Text="PARCIALES" 
+                   FontSize="48" 
+                   FontWeight="Bold" 
+                   Foreground="#1B365D" 
+                   HorizontalAlignment="Center" 
+                   VerticalAlignment="Center"/>
+    </Grid>
+</UserControl>

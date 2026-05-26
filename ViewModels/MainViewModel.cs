@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -15,14 +14,10 @@ public partial class MainViewModel : ObservableObject
     private readonly CapParserService _parserService;
     private readonly FileScannerService _scannerService;
 
-    [ObservableProperty]
-    private string _rutaUsb = @"D:\";
-
-    [ObservableProperty]
-    private string? _archivoSeleccionado;
-
-    [ObservableProperty]
-    private string? _evaluacionSeleccionada;
+    [ObservableProperty] private string _rutaUsb = @"D:\";
+    [ObservableProperty] private string? _archivoSeleccionado;
+    [ObservableProperty] private string? _evaluacionSeleccionada;
+    [ObservableProperty] private string _currentView = "List";
 
     public ObservableCollection<string> EvaluacionesDisponibles { get; } = new();
     public ObservableCollection<string> ArchivosDisponibles { get; } = new();
@@ -42,33 +37,42 @@ public partial class MainViewModel : ObservableObject
         Alumnos.Clear();
         EvaluacionesDisponibles.Clear();
         ArchivoSeleccionado = null;
-
+        
         var archivos = _scannerService.ObtenerArchivosCap(RutaUsb);
-        foreach (var archivo in archivos)
-        {
-            ArchivosDisponibles.Add(Path.GetFileName(archivo));
-        }
-
-        if (ArchivosDisponibles.Any())
-        {
-            ArchivoSeleccionado = ArchivosDisponibles.First();
-        }
+        foreach (var archivo in archivos) ArchivosDisponibles.Add(Path.GetFileName(archivo));
+        
+        if (ArchivosDisponibles.Any()) ArchivoSeleccionado = ArchivosDisponibles.First();
     }
 
     partial void OnEvaluacionSeleccionadaChanged(string? value)
-    {
-        if (string.IsNullOrEmpty(value)) return;
-
-        foreach (var alumno in Alumnos)
         {
-            alumno.ActualizarSeleccion(value);
+            if (string.IsNullOrEmpty(value)) return;
+    
+            // Pasamos a mayúsculas para matar la diferencia entre "extra" y "EXTRA"
+            string valorMayusculas = value.ToUpper();
+    
+            // Comparación exacta de cadenas
+            if (valorMayusculas == "SEM" || valorMayusculas == "EXTRA")
+            {
+                CurrentView = "List"; // Muestra la tabla
+            }
+            else
+            {
+                CurrentView = "Parciales"; // Muestra el texto de parciales
+            }
+    
+            foreach (var alumno in Alumnos)
+            {
+                alumno.ActualizarSeleccion(value);
+            }
         }
-    }
 
     partial void OnArchivoSeleccionadoChanged(string? value)
     {
         Alumnos.Clear();
         EvaluacionesDisponibles.Clear();
+        EvaluacionSeleccionada = null;
+
         if (string.IsNullOrEmpty(value)) return;
 
         string rutaCompleta = Path.Combine(RutaUsb, value);
@@ -79,14 +83,24 @@ public partial class MainViewModel : ObservableObject
         if (alumnosProcesados.Any())
         {
             var keys = alumnosProcesados.First().Calificación.ObtenerClaves();
-            foreach (var key in keys) EvaluacionesDisponibles.Add(key);
-            EvaluacionSeleccionada = EvaluacionesDisponibles.FirstOrDefault();
-        }
+            foreach (var key in keys) 
+            {
+                // FILTRO DE SEGURIDAD EN EL VM TAMBIÉN PARA PROMSEM
+                if (key.Equals("RESFINAL", StringComparison.OrdinalIgnoreCase) || 
+                    key.Equals("PROMSEM", StringComparison.OrdinalIgnoreCase)) 
+                {
+                    continue;
+                }
 
-        foreach (var alumno in alumnosProcesados)
-        {
-            alumno.ActualizarSeleccion(EvaluacionSeleccionada ?? "");
-            Alumnos.Add(alumno);
+                EvaluacionesDisponibles.Add(key);
+            }
+            
+            foreach (var alumno in alumnosProcesados) 
+            {
+                Alumnos.Add(alumno);
+            }
+
+            EvaluacionSeleccionada = EvaluacionesDisponibles.FirstOrDefault();
         }
     }
 }

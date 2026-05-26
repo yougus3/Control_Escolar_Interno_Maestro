@@ -60,6 +60,16 @@ public class CapParserService
                     string claveCompleta = partes[0].Trim(); 
                     string nombreColumnaReal = partes[1].Trim(); 
                     string idEval = claveCompleta.Replace("ID_", "").Replace("_STR", "");
+                    
+                    // FILTRO DOBLE AHORA CON PROMSEM Y RESFINAL
+                    if (idEval.Equals("RESFINAL", StringComparison.OrdinalIgnoreCase) || 
+                        nombreColumnaReal.Equals("RESFINAL", StringComparison.OrdinalIgnoreCase) ||
+                        idEval.Equals("PROMSEM", StringComparison.OrdinalIgnoreCase) || 
+                        nombreColumnaReal.Equals("PROMSEM", StringComparison.OrdinalIgnoreCase)) 
+                    {
+                        continue; // A chingar a su madre
+                    }
+
                     mapaEvaluaciones[idEval] = nombreColumnaReal;
                 }
             }
