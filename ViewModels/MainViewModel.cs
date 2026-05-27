@@ -14,7 +14,7 @@ public partial class MainViewModel : ObservableObject
     private readonly CapParserService _parserService;
     private readonly FileScannerService _scannerService;
 
-    [ObservableProperty] private string _rutaUsb = @"D:\";
+    [ObservableProperty] private string _rutaUsb = @"E:\";
     [ObservableProperty] private string? _archivoSeleccionado;
     [ObservableProperty] private string? _evaluacionSeleccionada;
     [ObservableProperty] private string _currentView = "List";
@@ -37,70 +37,80 @@ public partial class MainViewModel : ObservableObject
         Alumnos.Clear();
         EvaluacionesDisponibles.Clear();
         ArchivoSeleccionado = null;
-        
-        var archivos = _scannerService.ObtenerArchivosCap(RutaUsb);
-        foreach (var archivo in archivos) ArchivosDisponibles.Add(Path.GetFileName(archivo));
-        
-        if (ArchivosDisponibles.Any()) ArchivoSeleccionado = ArchivosDisponibles.First();
-    }
+        EvaluacionSeleccionada = null;
+        CurrentView = "List";
 
-    partial void OnEvaluacionSeleccionadaChanged(string? value)
+        var archivos = _scannerService.ObtenerArchivosCap(RutaUsb);
+        foreach (var archivo in archivos)
         {
-            if (string.IsNullOrEmpty(value)) return;
-    
-            // Pasamos a mayúsculas para matar la diferencia entre "extra" y "EXTRA"
-            string valorMayusculas = value.ToUpper();
-    
-            // Comparación exacta de cadenas
-            if (valorMayusculas == "SEM" || valorMayusculas == "EXTRA")
-            {
-                CurrentView = "List"; // Muestra la tabla
-            }
-            else
-            {
-                CurrentView = "Parciales"; // Muestra el texto de parciales
-            }
-    
-            foreach (var alumno in Alumnos)
-            {
-                alumno.ActualizarSeleccion(value);
-            }
+            ArchivosDisponibles.Add(Path.GetFileName(archivo));
         }
+
+        if (ArchivosDisponibles.Any())
+        {
+            ArchivoSeleccionado = ArchivosDisponibles.First();
+        }
+    }
 
     partial void OnArchivoSeleccionadoChanged(string? value)
     {
         Alumnos.Clear();
         EvaluacionesDisponibles.Clear();
         EvaluacionSeleccionada = null;
+        CurrentView = "List";
 
-        if (string.IsNullOrEmpty(value)) return;
+        if (string.IsNullOrWhiteSpace(value))
+            return;
 
         string rutaCompleta = Path.Combine(RutaUsb, value);
-        if (!File.Exists(rutaCompleta)) return;
+        if (!File.Exists(rutaCompleta))
+            return;
 
         var alumnosProcesados = _parserService.ProcesarArchivo(rutaCompleta);
 
         if (alumnosProcesados.Any())
         {
             var keys = alumnosProcesados.First().Calificación.ObtenerClaves();
-            foreach (var key in keys) 
+
+            foreach (var key in keys)
             {
-                // FILTRO DE SEGURIDAD EN EL VM TAMBIÉN PARA PROMSEM
-                if (key.Equals("RESFINAL", StringComparison.OrdinalIgnoreCase) || 
-                    key.Equals("PROMSEM", StringComparison.OrdinalIgnoreCase)) 
+                if (key.Equals("RESFINAL", StringComparison.OrdinalIgnoreCase) ||
+                    key.Equals("PROMSEM", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
 
                 EvaluacionesDisponibles.Add(key);
             }
-            
-            foreach (var alumno in alumnosProcesados) 
+
+            foreach (var alumno in alumnosProcesados)
             {
                 Alumnos.Add(alumno);
             }
 
             EvaluacionSeleccionada = EvaluacionesDisponibles.FirstOrDefault();
+        }
+    }
+
+    partial void OnEvaluacionSeleccionadaChanged(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return;
+
+        string valorMayusculas = value.ToUpperInvariant();
+
+        if (valorMayusculas == "SEM" || valorMayusculas == "EXTRA")
+        {
+            CurrentView = "List";
+        }
+        else
+        {
+            CurrentView = "Parciales";
+        }
+
+        foreach (var alumno in Alumnos)
+        {
+            alumno.ActualizarSeleccion(value);
         }
     }
 }

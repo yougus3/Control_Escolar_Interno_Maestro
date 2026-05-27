@@ -2,9 +2,9 @@
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views;
 
-public partial class ListView : UserControl
+public partial class TablaView : UserControl
 {
-    public ListView()
+    public TablaView()
     {
         InitializeComponent();
     }
