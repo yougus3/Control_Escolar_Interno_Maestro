@@ -3,51 +3,105 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:conv="clr-namespace:Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Converters"
              mc:Ignorable="d"
              d:DesignHeight="400"
              d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <conv:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+    </UserControl.Resources>
 
     <Grid Background="White">
         <DataGrid ItemsSource="{Binding Alumnos}"
                   AutoGenerateColumns="False"
                   CanUserAddRows="False"
-                  IsReadOnly="True"
+                  IsReadOnly="False"
                   BorderThickness="1"
                   BorderBrush="#E2E8F0"
                   GridLinesVisibility="Horizontal"
                   HorizontalGridLinesBrush="#F1F5F9"
-                  RowHeight="36"
+                  RowHeight="42"
                   Background="White"
-                  HeadersVisibility="Column">
+                  HeadersVisibility="Column"
+                  FontSize="14">
 
             <DataGrid.ColumnHeaderStyle>
                 <Style TargetType="DataGridColumnHeader">
                     <Setter Property="Background" Value="#1B365D"/>
                     <Setter Property="Foreground" Value="White"/>
                     <Setter Property="FontWeight" Value="SemiBold"/>
-                    <Setter Property="Height" Value="38"/>
+                    <Setter Property="FontSize" Value="14"/>
+                    <Setter Property="Height" Value="42"/>
                     <Setter Property="Padding" Value="10,0"/>
                     <Setter Property="BorderThickness" Value="0,0,1,1"/>
                     <Setter Property="BorderBrush" Value="#E2E8F0"/>
                 </Style>
             </DataGrid.ColumnHeaderStyle>
 
+            <DataGrid.CellStyle>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    <Setter Property="Padding" Value="8,0"/>
+                </Style>
+            </DataGrid.CellStyle>
+
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Matrícula"
                                     Binding="{Binding Matricula}"
-                                    Width="120"/>
+                                    Width="120"
+                                    IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontSize" Value="14"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
 
                 <DataGridTextColumn Header="Nombre del Alumno"
                                     Binding="{Binding Nombre}"
-                                    Width="*"/>
+                                    Width="*"
+                                    IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontSize" Value="14"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
 
                 <DataGridTextColumn Header="Grupo"
                                     Binding="{Binding Grupo}"
-                                    Width="90"/>
+                                    Width="90"
+                                    IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontSize" Value="14"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
 
                 <DataGridTextColumn Header="Calificación"
-                                    Binding="{Binding CalificacionSeleccionada}"
-                                    Width="110"/>
+                                    Binding="{Binding ValorSeleccionado, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    Width="110"
+                                    IsReadOnly="{Binding DataContext.EsExtraSeleccionado, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource InverseBooleanConverter}}">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontSize" Value="14"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+
+                    <DataGridTextColumn.EditingElementStyle>
+                        <Style TargetType="TextBox">
+                            <Setter Property="FontSize" Value="14"/>
+                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                            <Setter Property="Padding" Value="6,0"/>
+                        </Style>
+                    </DataGridTextColumn.EditingElementStyle>
+                </DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

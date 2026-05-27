@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 
@@ -17,10 +16,21 @@ public partial class Alumno : ObservableObject
     [ObservableProperty]
     private string _valorSeleccionado = "-";
 
+    private string _evaluacionActual = string.Empty;
+
     public Calificación Calificación { get; set; } = new Calificación();
 
-    public void ActualizarSeleccion(string key)
+    public void ActualizarSeleccion(string? key)
     {
-        ValorSeleccionado = Calificación[key];
+        _evaluacionActual = key ?? string.Empty;
+        ValorSeleccionado = Calificación[key ?? string.Empty];
+    }
+
+    partial void OnValorSeleccionadoChanged(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(_evaluacionActual))
+            return;
+
+        Calificación[_evaluacionActual] = value;
     }
 }
