@@ -25,6 +25,13 @@ public partial class MainViewModel : ObservableObject
 
     private string? _archivoCompletoActual;
 
+    // Expose the full file path of the currently selected CAP file so other
+    // view models (e.g. ParcialesViewModel) can use the file name as a
+    // stable key when saving JSON data.
+    public string? ArchivoCompletoActual => _archivoCompletoActual;
+
+    public ParcialesViewModel ParcialesVm { get; }
+
     [ObservableProperty] private string _rutaUsb = @"E:\";
     [ObservableProperty] private string? _archivoSeleccionado;
     [ObservableProperty] private string? _evaluacionSeleccionada;
@@ -42,6 +49,9 @@ public partial class MainViewModel : ObservableObject
         _parserService = new CapParserService();
         _writerService = new CapWriterService();
         _scannerService = new FileScannerService();
+
+        ParcialesVm = new ParcialesViewModel(this);
+
         EscanearUsb();
     }
 
@@ -158,16 +168,6 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void Guardar()
     {
-        if (!EsExtraSeleccionado)
-        {
-            MessageBox.Show(
-                "Selecciona EXTRA para poder guardar.",
-                "Aviso",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-            return;
-        }
-
         if (string.IsNullOrWhiteSpace(_archivoCompletoActual))
         {
             MessageBox.Show(
@@ -196,6 +196,21 @@ public partial class MainViewModel : ObservableObject
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
             return;
+        }
+
+        if (string.Equals(CurrentView, "Parciales", StringComparison.OrdinalIgnoreCase))
+        {
+            ParcialesVm.PrepararGuardado();
+
+            if (ParcialesVm.SumaPorcentajes != 100m)
+            {
+                MessageBox.Show(
+                    "La suma de porcentajes debe ser 100% antes de guardar.",
+                    "Aviso",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
         }
 
         var ok = _writerService.GuardarEvaluacion(

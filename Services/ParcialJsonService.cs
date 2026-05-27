@@ -12,12 +12,7 @@ public class ParcialJsonService
 
     public ParcialJsonService()
     {
-        _rutaJson = Path.Combine(
-            AppDomain.CurrentDomain.BaseDirectory,
-            "Data",
-            "parciales.json"
-        );
-
+        _rutaJson = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "parciales.json");
         CrearArchivoSiNoExiste();
     }
 
@@ -41,9 +36,7 @@ public class ParcialJsonService
         try
         {
             string json = File.ReadAllText(_rutaJson);
-
             var datos = JsonSerializer.Deserialize<Dictionary<string, MateriaParcial>>(json);
-
             return datos ?? new Dictionary<string, MateriaParcial>();
         }
         catch
@@ -60,7 +53,6 @@ public class ParcialJsonService
         };
 
         string json = JsonSerializer.Serialize(datos, opciones);
-
         File.WriteAllText(_rutaJson, json);
     }
 
@@ -73,21 +65,18 @@ public class ParcialJsonService
             return materia;
         }
 
-        materia = new MateriaParcial();
-
-        datos[claveMateria] = materia;
-
-        GuardarTodo(datos);
-
-        return materia;
+        // Do not create and persist an empty MateriaParcial here to avoid
+        // pre-populating the JSON file with empty entries when the user only
+        // opens a subject. Return an in-memory empty object; it will be saved
+        // later by GuardarMateria when the user explicitly saves changes.
+        return new MateriaParcial();
     }
 
     public void GuardarMateria(string claveMateria, MateriaParcial materia)
     {
         var datos = CargarTodo();
-
         datos[claveMateria] = materia;
-
         GuardarTodo(datos);
     }
+
 }

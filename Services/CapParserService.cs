@@ -182,7 +182,7 @@ public class CapParserService
                 if (mapaEvaluaciones.TryGetValue(idEval, out string? columnaDestino))
                 {
                     alumnoActual.Calificación[columnaDestino] =
-                        string.IsNullOrWhiteSpace(val) ? "-" : val;
+                        string.IsNullOrWhiteSpace(val) ? "" : val;
                 }
             }
         }

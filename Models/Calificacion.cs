@@ -14,16 +14,16 @@ public class Calificación
         get
         {
             if (string.IsNullOrWhiteSpace(key))
-                return "-";
+                return "";
 
-            return _valores.TryGetValue(key, out var valor) ? valor : "-";
+            return _valores.TryGetValue(key, out var valor) ? valor : "";
         }
         set
         {
             if (string.IsNullOrWhiteSpace(key))
                 return;
 
-            _valores[key.Trim()] = string.IsNullOrWhiteSpace(value) ? "-" : value.Trim();
+            _valores[key.Trim()] = string.IsNullOrWhiteSpace(value) ? "" : value.Trim();
         }
     }
 

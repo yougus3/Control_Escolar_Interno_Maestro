@@ -15,7 +15,7 @@ public partial class ParcialesView : UserControl
     {
         if (DataContext is MainViewModel mainVm)
         {
-            DataContext = new ParcialesViewModel(mainVm);
+            DataContext = mainVm.ParcialesVm;
         }
     }
 }

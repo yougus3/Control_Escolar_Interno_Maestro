@@ -2,297 +2,279 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             mc:Ignorable="d"
-             Loaded="UserControl_Loaded"
-             d:DesignHeight="620"
-             d:DesignWidth="980">
-
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" mc:Ignorable="d" Loaded="UserControl_Loaded"
+             d:DesignHeight="680" d:DesignWidth="1200">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
     <Grid Background="#F5F6F8">
-        <Border Background="White"
-                BorderBrush="#D7DEE8"
-                BorderThickness="1"
-                CornerRadius="8"
-                Padding="12">
-
+        <Border Background="White" BorderBrush="#D7DEE8" BorderThickness="1" CornerRadius="8" Padding="8">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto" /> <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-
-                <Border Background="#1B365D"
-                        CornerRadius="6"
-                        Padding="10"
-                        Margin="0,0,0,10">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel>
-                            <TextBlock Text="Calificaciones Parciales"
-                                       Foreground="White"
-                                       FontSize="18"
-                                       FontWeight="Bold"/>
-
-                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                <TextBlock Text="Asignatura: "
-                                           Foreground="#D6E4FF"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"/>
-                                <TextBlock Text="{Binding NombreMateria}"
-                                           Foreground="White"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"/>
-                                <TextBlock Text="   Evaluación: "
-                                           Foreground="#D6E4FF"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           Margin="20,0,0,0"/>
-                                <TextBlock Text="{Binding NombreEvaluacion}"
-                                           Foreground="White"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"/>
-                                <TextBlock Text="   Grupo: "
-                                           Foreground="#D6E4FF"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           Margin="20,0,0,0"/>
-                                <TextBlock Text="{Binding GrupoAlumno}"
-                                           Foreground="White"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"/>
+                <Border Background="#1B365D" CornerRadius="6" Padding="8" Margin="0,0,0,8">
+                    <StackPanel>
+                        <TextBlock Text="Calificaciones Parciales" Foreground="White" FontSize="16" FontWeight="Bold" />
+                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                            <TextBlock Text="Asignatura: " Foreground="#D6E4FF" FontSize="12" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding NombreMateria}" Foreground="White" FontSize="12"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text=" Evaluación: " Foreground="#D6E4FF" FontSize="12" FontWeight="SemiBold"
+                                       Margin="15,0,0,0" />
+                            <TextBlock Text="{Binding NombreEvaluacion}" Foreground="White" FontSize="12"
+                                       FontWeight="SemiBold" />
+                            <StackPanel Orientation="Horizontal" Margin="15,0,0,0"
+                                        Visibility="{Binding MostrarGrupo, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text=" Grupo: " Foreground="#D6E4FF" FontSize="12" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding GrupoAlumno}" Foreground="White" FontSize="12"
+                                           FontWeight="SemiBold" />
                             </StackPanel>
                         </StackPanel>
-
-                        <Button Grid.Column="1"
-                                Content="Guardar"
-                                Command="{Binding GuardarCommand}"
-                                Height="32"
-                                Width="100"
-                                Background="#16A34A"
-                                Foreground="White"
-                                FontWeight="SemiBold"
-                                BorderThickness="0">
-                            <Button.Resources>
-                                <Style TargetType="Border">
-                                    <Setter Property="CornerRadius" Value="4"/>
-                                </Style>
-                            </Button.Resources>
-                        </Button>
-                    </Grid>
+                    </StackPanel>
                 </Border>
-
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1.25*"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="1.4*" /> <ColumnDefinition Width="1.6*" />
                     </Grid.ColumnDefinitions>
-
-                    <Grid Grid.Column="0" Margin="0,0,10,0">
+                    <Grid Grid.Column="0" Margin="0,0,12,0">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="2.1*"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="1.8*"/>
-                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*" /> <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" /> <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-
-                        <GroupBox Header="Alumnos" Margin="0,0,0,10">
-                            <Grid>
-                                <ListBox ItemsSource="{Binding Alumnos}"
-                                         SelectedItem="{Binding AlumnoSeleccionado, Mode=TwoWay}"
-                                         BorderThickness="0"
-                                         ScrollViewer.VerticalScrollBarVisibility="Auto">
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid Margin="4,2">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="110"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Text="{Binding Matricula}"
-                                                           FontWeight="SemiBold"
-                                                           Foreground="#1E293B"/>
-                                                <TextBlock Grid.Column="1"
-                                                           Text="{Binding Nombre}"
-                                                           Foreground="#334155"/>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                            </Grid>
+                        <GroupBox Header="Alumnos" Margin="0,0,0,5">
+                            <ListBox ItemsSource="{Binding Alumnos}"
+                                     SelectedItem="{Binding AlumnoSeleccionado, Mode=TwoWay}" BorderThickness="0"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="2,1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="80" /> <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Matricula}" FontWeight="SemiBold"
+                                                       Foreground="#1E293B" FontSize="11" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Nombre}" Foreground="#334155"
+                                                       FontSize="11" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
                         </GroupBox>
-
-                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
-                            <Button Content="Inicio" Command="{Binding InicioCommand}" Margin="0,0,8,0" MinWidth="90"/>
-                            <Button Content="Anterior" Command="{Binding AnteriorCommand}" Margin="0,0,8,0" MinWidth="90"/>
-                            <Button Content="Siguiente" Command="{Binding SiguienteCommand}" Margin="0,0,8,0" MinWidth="90"/>
-                            <Button Content="Final" Command="{Binding FinalCommand}" MinWidth="90"/>
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,5">
+                            <Button Content="Inicio" Command="{Binding InicioCommand}" Margin="0,0,4,0" MinWidth="60"
+                                    Padding="4,2" />
+                            <Button Content="Anterior" Command="{Binding AnteriorCommand}" Margin="0,0,4,0"
+                                    MinWidth="60" Padding="4,2" />
+                            <Button Content="Siguiente" Command="{Binding SiguienteCommand}" Margin="0,0,4,0"
+                                    MinWidth="60" Padding="4,2" />
+                            <Button Content="Final" Command="{Binding FinalCommand}" MinWidth="60" Padding="4,2" />
                         </StackPanel>
-
-                        <GroupBox Grid.Row="2" Header="Puntajes obtenidos por el Alumno(a):" Margin="0,0,0,10">
-                            <StackPanel Margin="10">
-                                <TextBlock Text="{Binding NombreAlumno}"
-                                           FontWeight="Bold"
-                                           Foreground="#0F172A"
-                                           Margin="0,0,0,10"/>
-
+                        <GroupBox Grid.Row="2" Header="Puntajes obtenidos:" Margin="0,0,0,5">
+                            <StackPanel Margin="6">
+                                <TextBlock Text="{Binding NombreAlumno}" FontWeight="Bold" Foreground="#0F172A"
+                                           Margin="0,0,0,6" FontSize="12" />
                                 <ItemsControl ItemsSource="{Binding Actividades}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid Margin="0,4">
+                                            <Grid Margin="0,2">
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="80"/>
-                                                    <ColumnDefinition Width="90"/>
-                                                    <ColumnDefinition Width="70"/>
+                                                    <ColumnDefinition Width="*" /> <ColumnDefinition Width="50" />
+                                                    <ColumnDefinition Width="65" /> <ColumnDefinition Width="45" />
                                                 </Grid.ColumnDefinitions>
-
-                                                <TextBlock Text="{Binding Nombre}"
-                                                           VerticalAlignment="Center"
-                                                           FontWeight="SemiBold"
-                                                           Foreground="#1E293B"/>
-
+                                                <TextBlock Text="{Binding Nombre}" VerticalAlignment="Center"
+                                                           FontWeight="SemiBold" Foreground="#1E293B" FontSize="11"
+                                                           TextTrimming="CharacterEllipsis" />
                                                 <TextBox Grid.Column="1"
                                                          Text="{Binding PuntajeObtenido, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                         Height="28"
-                                                         VerticalContentAlignment="Center"
-                                                         HorizontalContentAlignment="Center"
-                                                         Margin="8,0,8,0"/>
-
-                                                <TextBlock Grid.Column="2"
-                                                           Text="{Binding FraccionTexto}"
-                                                           VerticalAlignment="Center"
-                                                           Foreground="#475569"/>
-
-                                                <TextBlock Grid.Column="3"
-                                                           Text="{Binding ContribucionTexto}"
-                                                           VerticalAlignment="Center"
-                                                           HorizontalAlignment="Right"
-                                                           FontWeight="Bold"
-                                                           Foreground="#1B365D"/>
+                                                         Height="22" VerticalContentAlignment="Center"
+                                                         HorizontalContentAlignment="Center" FontSize="11" Margin="2,0" />
+                                                <TextBlock Grid.Column="2" Text="{Binding FraccionTexto}"
+                                                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                           Foreground="#475569" FontSize="11" />
+                                                <TextBlock Grid.Column="3" Text="{Binding ContribucionTexto}"
+                                                           VerticalAlignment="Center" HorizontalAlignment="Right"
+                                                           FontWeight="Bold" Foreground="#1B365D" FontSize="11" />
                                             </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </StackPanel>
                         </GroupBox>
-
-                        <Border Grid.Row="3"
-                                Background="#EAF0F8"
-                                BorderBrush="#D7DEE8"
-                                BorderThickness="1"
-                                CornerRadius="6"
-                                Padding="10">
+                        <Border Grid.Row="3" Background="#EAF0F8" BorderBrush="#D7DEE8" BorderThickness="1"
+                                CornerRadius="4" Padding="8">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*" /> <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-
                                 <StackPanel>
-                                    <TextBlock Text="{Binding EstadoValidacion}"
-                                               Foreground="#334155"
-                                               FontSize="12"
-                                               FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding EstadoGuardado}"
-                                               Foreground="#64748B"
-                                               FontSize="11"
-                                               Margin="0,3,0,0"/>
+                                    <TextBlock Text="{Binding EstadoValidacion}" Foreground="#334155" FontSize="10"
+                                               FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding EstadoGuardado}" Foreground="#64748B" FontSize="10"
+                                               Margin="0,2,0,0" />
                                 </StackPanel>
-
-                                <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                                    <TextBlock Text="Calificación Parcial:"
-                                               HorizontalAlignment="Right"
-                                               Foreground="#334155"
-                                               FontSize="12"/>
-                                    <TextBlock Text="{Binding CalificacionParcialTexto}"
-                                               HorizontalAlignment="Right"
-                                               Foreground="#1B365D"
-                                               FontSize="18"
-                                               FontWeight="Bold"/>
+                                <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock Text="Calificación Parcial:" HorizontalAlignment="Right"
+                                               Foreground="#334155" FontSize="10" />
+                                    <TextBlock Text="{Binding CalificacionParcialTexto}" HorizontalAlignment="Right"
+                                               Foreground="#1B365D" FontSize="18" FontWeight="Bold" />
                                 </StackPanel>
                             </Grid>
                         </Border>
                     </Grid>
-
                     <Grid Grid.Column="1">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto" /> <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" /> <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-
-                        <GroupBox Header="Propiedades">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                <StackPanel Margin="10">
-                                    <ItemsControl ItemsSource="{Binding Actividades}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border BorderBrush="#D7DEE8"
-                                                        BorderThickness="1"
-                                                        CornerRadius="6"
-                                                        Padding="10"
-                                                        Margin="0,0,0,10"
-                                                        Background="#FAFBFD">
-                                                    <StackPanel>
-                                                        <CheckBox Content="Actividad activa"
-                                                                  IsChecked="{Binding Activa, Mode=TwoWay}"
-                                                                  FontWeight="SemiBold"
-                                                                  Foreground="#1E293B"/>
-
-                                                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                                                            <TextBlock Text="Nombre:"
-                                                                       Width="70"
-                                                                       VerticalAlignment="Center"/>
-                                                            <TextBox Text="{Binding Nombre, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                     Height="28"
-                                                                     Width="220"/>
-                                                        </StackPanel>
-
-                                                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                                            <TextBlock Text="Porcentaje:"
-                                                                       Width="70"
-                                                                       VerticalAlignment="Center"/>
-                                                            <TextBox Text="{Binding Porcentaje, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                     Height="28"
-                                                                     Width="80"/>
-                                                            <TextBlock Text="%"
-                                                                       VerticalAlignment="Center"
-                                                                       Margin="6,0,14,0"/>
-                                                            <TextBlock Text="Puntaje Máx.:"
-                                                                       VerticalAlignment="Center"
-                                                                       Margin="0,0,8,0"/>
-                                                            <TextBox Text="{Binding PuntajeMaximo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                     Height="28"
-                                                                     Width="80"/>
-                                                        </StackPanel>
-                                                    </StackPanel>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
+                        <GroupBox Header="Propiedades de Actividades">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,4,0">
+                                    <Button Content="Agregar actividad" Command="{Binding AgregarActividadCommand}" MinWidth="140" />
                                 </StackPanel>
-                            </ScrollViewer>
-                        </GroupBox>
+                                <ItemsControl Grid.Row="1" ItemsSource="{Binding Actividades}" Margin="2">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="2" Rows="2" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                            <DataTemplate.Resources>
+                                            <Style x:Key="PorcStyle" TargetType="TextBox">
+                                                <Setter Property="Background" Value="White" />
+                                                <Setter Property="BorderBrush" Value="#D1D5DB" />
+                                                <Setter Property="Foreground" Value="#0F172A" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding DataContext.PorcentajeEstado, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="Over">
+                                                        <Setter Property="Background" Value="#FEE2E2" />
+                                                        <Setter Property="BorderBrush" Value="#DC2626" />
+                                                        <Setter Property="Foreground" Value="#DC2626" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding DataContext.PorcentajeEstado, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="Under">
+                                                        <Setter Property="Background" Value="#FFF7ED" />
+                                                        <Setter Property="BorderBrush" Value="#F97316" />
+                                                        <Setter Property="Foreground" Value="#F97316" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </DataTemplate.Resources>
 
-                        <Border Grid.Row="1"
-                                Background="#EAF0F8"
-                                BorderBrush="#D7DEE8"
-                                BorderThickness="1"
-                                CornerRadius="6"
-                                Padding="10"
-                                Margin="0,10,0,0">
-                            <StackPanel>
-                                <TextBlock Text="{Binding SumaPorcentajesTexto}"
-                                           FontSize="16"
-                                           FontWeight="Bold"
-                                           Foreground="#1B365D"/>
-                                <TextBlock Text="La suma debe dar 100%"
-                                           FontSize="11"
-                                           Foreground="#64748B"/>
+                                        <Border x:Name="ActividadBorder" BorderBrush="#D7DEE8" BorderThickness="1" CornerRadius="4"
+                                                Padding="6,4" Margin="3" Background="#FAFBFD">
+                                            <StackPanel>
+                                                <Button Content="Eliminar" HorizontalAlignment="Right" Margin="0,0,0,4"
+                                                        Command="{Binding DataContext.QuitarActividadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}" Visibility="Visible" />
+                                                <CheckBox Content="Actividad activa"
+                                                          IsChecked="{Binding Activa, Mode=TwoWay}"
+                                                          FontWeight="SemiBold" Foreground="#1E293B" FontSize="11" />
+                                                <Grid Margin="0,4,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="50" /> <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="Nombre:" VerticalAlignment="Center" FontSize="11" />
+                                                    <TextBox Grid.Column="1"
+                                                             Text="{Binding Nombre, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                             Height="22" FontSize="11"
+                                                             VerticalContentAlignment="Center" />
+                                                </Grid>
+                                                <TextBlock Grid.Column="0" Grid.ColumnSpan="5" Text="No es obligatorio" FontSize="10" Foreground="#64748B" Margin="0,6,0,0">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Activa}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <Grid Margin="0,4,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="Porc:" VerticalAlignment="Center" Margin="0,0,4,0"
+                                                               FontSize="11" />
+                                                    <TextBox x:Name="PorcBox" Grid.Column="1" Style="{StaticResource PorcStyle}"
+                                                             Text="{Binding Porcentaje, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                             Height="22" FontSize="11"
+                                                             HorizontalContentAlignment="Center"
+                                                             VerticalContentAlignment="Center" />
+                                                    <TextBlock Grid.Column="2" Text="%" VerticalAlignment="Center"
+                                                               Margin="2,0,10,0" FontSize="11" />
+                                                    <TextBlock Grid.Column="3" Text="Máx:" VerticalAlignment="Center"
+                                                               Margin="0,0,4,0" FontSize="11" />
+                                                    <TextBox Grid.Column="4"
+                                                             Text="{Binding PuntajeMaximo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                             Height="22" FontSize="11"
+                                                             HorizontalContentAlignment="Center"
+                                                             VerticalContentAlignment="Center" />
+                                                </Grid>
+                                            </StackPanel>
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="BorderBrush" Value="#D7DEE8" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Activa}" Value="True">
+                                                            <Setter Property="BorderBrush" Value="#16A34A" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Activa}" Value="False">
+                                                            <Setter Property="BorderBrush" Value="#DC2626" />
+                                                        </DataTrigger>
+                                                        <MultiDataTrigger>
+                                                            <MultiDataTrigger.Conditions>
+                                                                <Condition Binding="{Binding Activa}" Value="False" />
+                                                                <Condition Binding="{Binding Nombre}" Value="" />
+                                                            </MultiDataTrigger.Conditions>
+                                                            <Setter Property="BorderBrush" Value="#D7DEE8" />
+                                                        </MultiDataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+                        </GroupBox>
+                        <GroupBox Grid.Row="1" Header="Configuración de Asistencias (En desarrollo)" Margin="0,5,0,0">
+                            <Border BorderBrush="#D7DEE8" BorderThickness="1" CornerRadius="4" Padding="10,8"
+                                    Margin="4" Background="#F8FAFC">
+                                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <CheckBox Content="Activar Asistencias" FontWeight="SemiBold" Foreground="#1E293B"
+                                              FontSize="11" VerticalAlignment="Center" Margin="0,0,15,5" />
+                                    <TextBlock Text="Valor:" VerticalAlignment="Center" FontSize="11" Margin="0,0,5,5" />
+                                    <TextBox Width="35" Height="22" FontSize="11" HorizontalContentAlignment="Center"
+                                             VerticalContentAlignment="Center" Margin="0,0,2,5" />
+                                    <TextBlock Text="%" VerticalAlignment="Center" FontSize="11" Margin="0,0,15,5" />
+                                    <TextBlock Text="Clases en el Parcial:" VerticalAlignment="Center" FontSize="11"
+                                               Margin="0,0,5,5" />
+                                    <TextBox Width="35" Height="22" FontSize="11" HorizontalContentAlignment="Center"
+                                             VerticalContentAlignment="Center" Margin="0,0,15,5" />
+                                    <TextBlock Text="Total Asistencias:" VerticalAlignment="Center" FontSize="11"
+                                               Margin="0,0,5,5" />
+                                    <TextBox Width="40" Height="22" FontSize="11" HorizontalContentAlignment="Center"
+                                             VerticalContentAlignment="Center" Margin="0,0,5,5" />
+                                </WrapPanel>
+                            </Border>
+                        </GroupBox>
+                        <Border Grid.Row="2" Background="#EAF0F8" BorderBrush="#D7DEE8" BorderThickness="1"
+                                CornerRadius="4" Padding="8" Margin="0,10,0,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding SumaPorcentajesTexto}" FontSize="18" FontWeight="Bold"
+                                           Foreground="#1B365D" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                <TextBlock Text="La suma total debe dar exactamente 100%." FontSize="11"
+                                           Foreground="#64748B" VerticalAlignment="Center" />
                             </StackPanel>
                         </Border>
                     </Grid>
