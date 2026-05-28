@@ -32,7 +32,8 @@ public partial class MainViewModel : ObservableObject
 
     public ParcialesViewModel ParcialesVm { get; }
 
-    [ObservableProperty] private string _rutaUsb = @"E:\";
+    [ObservableProperty] private string _rutaUsb = string.Empty;
+    [ObservableProperty] private bool _rutaUsbEditable = true;
     [ObservableProperty] private string? _archivoSeleccionado;
     [ObservableProperty] private string? _evaluacionSeleccionada;
     [ObservableProperty] private string _currentView = "List";
@@ -52,6 +53,27 @@ public partial class MainViewModel : ObservableObject
 
         ParcialesVm = new ParcialesViewModel(this);
 
+        // Detect connected removable drives automatically at startup and
+        // set RutaUsb to the first removable drive. Do not overwrite it
+        // later if additional drives are connected while app is running.
+        try
+        {
+            var drives = System.IO.DriveInfo.GetDrives()
+                .Where(d => d.DriveType == System.IO.DriveType.Removable && d.IsReady)
+                .OrderBy(d => d.Name)
+                .ToList();
+
+            // If the app hasn't been configured with a USB path, pick the first
+            // removable drive and lock the field so the user cannot edit it.
+            if (drives.Any() && string.IsNullOrWhiteSpace(_rutaUsb))
+            {
+                _rutaUsb = drives.First().Name;
+                _rutaUsbEditable = false;
+            }
+        }
+        catch { }
+
+        // Scan the (possibly auto-detected) USB drive.
         EscanearUsb();
     }
 

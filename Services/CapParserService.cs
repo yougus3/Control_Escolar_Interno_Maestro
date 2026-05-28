@@ -32,8 +32,12 @@ public class CapParserService
                         string matricula = relacion[0].Trim();
                         string grupo = relacion[1].Trim();
 
+                        // Keep the first mapping found for a matricula (do not overwrite),
+                        // to match original program behavior when grupo.json contains duplicates.
                         if (!mapa.ContainsKey(matricula))
+                        {
                             mapa.Add(matricula, grupo);
+                        }
                     }
                 }
             }
@@ -86,7 +90,58 @@ public class CapParserService
         if (string.IsNullOrWhiteSpace(asignatura))
             return clave;
 
-        return $"{clave} {asignatura}";
+        string resultado = string.IsNullOrWhiteSpace(clave) ? asignatura : string.IsNullOrWhiteSpace(asignatura) ? clave : $"{clave} {asignatura}";
+
+        // Try to obtain the grupo for the first alumno in the CAP using the
+        // grupo.json map, but only append the grupo when this CAP is a PARCIALES
+        // type (i.e. NOT an EXTRA file). This keeps group shown only for parciales.
+        try
+        {
+            bool containsExtra = false;
+            foreach (var line in File.ReadAllLines(filePath, encodingCap))
+            {
+                if (line.IndexOf("EXTRA", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    containsExtra = true;
+                    break;
+                }
+            }
+
+            // Append group only when the CAP is NOT an EXTRA
+            if (!containsExtra)
+            {
+                var mapa = CargarMapaGrupos();
+                bool inAlumno = false;
+                foreach (var linea in File.ReadAllLines(filePath, encodingCap))
+                {
+                    var l = linea.Trim();
+                    if (l.StartsWith("[Alumno_", StringComparison.OrdinalIgnoreCase) && l.EndsWith("]"))
+                    {
+                        inAlumno = true;
+                        continue;
+                    }
+
+                    if (!inAlumno) continue;
+
+                    if (l.StartsWith("Matricula", StringComparison.OrdinalIgnoreCase) && l.Contains('='))
+                    {
+                        var partes = l.Split('=', 2);
+                        if (partes.Length == 2)
+                        {
+                            var matricula = partes[1].Trim();
+                            if (mapa.TryGetValue(matricula, out var grupo) && !string.IsNullOrWhiteSpace(grupo))
+                            {
+                                resultado = $"{resultado} ({grupo})";
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        catch { }
+
+        return resultado;
     }
 
     public CapParseResult ProcesarArchivoCompleto(string filePath)
@@ -102,10 +157,16 @@ public class CapParserService
 
         var mapaGrupos = CargarMapaGrupos();
         var mapaEvaluaciones = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        bool containsExtra = false;
 
         foreach (var linea in lineas)
         {
             string l = linea.Trim();
+
+            if (l.IndexOf("EXTRA", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                containsExtra = true;
+            }
 
             if (l.StartsWith("ID_EVAL", StringComparison.OrdinalIgnoreCase) &&
                 l.Contains('=') &&
@@ -134,9 +195,18 @@ public class CapParserService
             }
         }
 
-        foreach (var eval in mapaEvaluaciones.Values.Distinct())
+        // If this CAP contains an EXTRA evaluation, treat it as an EXTRA-only CAP.
+        if (containsExtra || mapaEvaluaciones.Values.Any(v => string.Equals(v, "EXTRA", StringComparison.OrdinalIgnoreCase)))
         {
-            resultado.EvaluacionesDisponibles.Add(eval);
+            resultado.EvaluacionesDisponibles.Add("EXTRA");
+        }
+        else
+        {
+            // Default to parcial evaluations P1, P2, P3 and SEM for non-EXTRA CAPs
+            resultado.EvaluacionesDisponibles.Add("P1");
+            resultado.EvaluacionesDisponibles.Add("P2");
+            resultado.EvaluacionesDisponibles.Add("P3");
+            resultado.EvaluacionesDisponibles.Add("SEM");
         }
 
         Alumno? alumnoActual = null;

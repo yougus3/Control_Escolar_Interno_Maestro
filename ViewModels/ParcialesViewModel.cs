@@ -495,7 +495,9 @@ public partial class ParcialesViewModel : ObservableObject
             foreach (var relacion in datos.Where(r => r.Count >= 2))
             {
                 string matricula = relacion[0].Trim();
-                if (!_mapaGrupos.ContainsKey(matricula)) _mapaGrupos.Add(matricula, relacion[1].Trim());
+                string grupo = relacion[1].Trim();
+                // Overwrite if there are duplicate entries; last one wins.
+                _mapaGrupos[matricula] = grupo;
             }
         }
         catch { }
