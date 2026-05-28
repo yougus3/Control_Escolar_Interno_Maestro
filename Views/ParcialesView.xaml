@@ -6,6 +6,23 @@
              d:DesignHeight="680" d:DesignWidth="1200">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <Style TargetType="CheckBox">
+            <Setter Property="Margin" Value="0,2,0,2" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="ActividadBorderStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#D7DEE8" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style x:Key="SumaPorcText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#1B365D" />
+        </Style>
     </UserControl.Resources>
     <Grid Background="#F5F6F8">
         <Border Background="White" BorderBrush="#D7DEE8" BorderThickness="1" CornerRadius="8" Padding="8">
@@ -53,15 +70,15 @@
                                                 <ColumnDefinition Width="80" /> <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="{Binding Matricula}" FontWeight="SemiBold"
-                                                       Foreground="#1E293B" FontSize="11" />
+                                                       Foreground="#1E293B" FontSize="14" />
                                             <TextBlock Grid.Column="1" Text="{Binding Nombre}" Foreground="#334155"
-                                                       FontSize="11" />
+                                                       FontSize="14" />
                                         </Grid>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
                         </GroupBox>
-                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,5">
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignmeCORRECCIÓN DE BUG ACTIVIDADESnt="Center" Margin="0,0,0,5">
                             <Button Content="Inicio" Command="{Binding InicioCommand}" Margin="0,0,4,0" MinWidth="60"
                                     Padding="4,2" />
                             <Button Content="Anterior" Command="{Binding AnteriorCommand}" Margin="0,0,4,0"
@@ -128,123 +145,132 @@
                             <RowDefinition Height="Auto" /> <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <GroupBox Header="Propiedades de Actividades">
+                            <GroupBox.Resources>
+                                <DataTemplate x:Key="ActividadTemplate">
+                                    <DataTemplate.Resources>
+                                        <Style x:Key="PorcStyle" TargetType="TextBox">
+                                            <Setter Property="Background" Value="White" />
+                                            <Setter Property="BorderBrush" Value="#D1D5DB" />
+                                            <Setter Property="Foreground" Value="#0F172A" />
+                                            <Setter Property="Padding" Value="2" />
+                                            <Style.Triggers>
+                                                <!-- Estado: excedido -->
+                                                <DataTrigger Binding="{Binding DataContext.PorcentajeEstado, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="Over">
+                                                    <Setter Property="Background" Value="#FEF2F2" />
+                                                    <Setter Property="BorderBrush" Value="#EF4444" />
+                                                    <Setter Property="Foreground" Value="#7F1D1D" />
+                                                </DataTrigger>
+                                                <!-- Estado: por debajo -->
+                                                <DataTrigger Binding="{Binding DataContext.PorcentajeEstado, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="Under">
+                                                    <Setter Property="Background" Value="#FFFBEB" />
+                                                    <Setter Property="BorderBrush" Value="#F59E0B" />
+                                                    <Setter Property="Foreground" Value="#92400E" />
+                                                </DataTrigger>
+                                                <!-- Apariencia cuando está deshabilitado (actividad inactiva) -->
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter Property="Background" Value="#F3F4F6" />
+                                                    <Setter Property="BorderBrush" Value="#CBD5E1" />
+                                                    <Setter Property="Foreground" Value="#94A3B8" />
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </DataTemplate.Resources>
+
+                                    <Border x:Name="ActividadBorder" Background="#FAFBFD">
+                                        <StackPanel>
+                                            <!-- Eliminado botón de eliminar para mantener siempre 4 actividades -->
+                                            <CheckBox Content="Actividad activa"
+                                                      IsChecked="{Binding Activa, Mode=TwoWay}"
+                                                      FontWeight="SemiBold" Foreground="#1E293B" FontSize="11" />
+                                            <Grid Margin="0,4,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="50" /> <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="Nombre:" VerticalAlignment="Center" FontSize="11" />
+                                                <TextBox Grid.Column="1"
+                                                         Text="{Binding Nombre, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         Height="22" FontSize="11"
+                                                         VerticalContentAlignment="Center"
+                                                         IsEnabled="{Binding Activa}" />
+                                            </Grid>
+                                            <TextBlock Grid.Column="0" Grid.ColumnSpan="5" Text="No es obligatorio" FontSize="10" Foreground="#64748B" Margin="0,6,0,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Activa}" Value="False">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <Grid Margin="0,4,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="Porc:" VerticalAlignment="Center" Margin="0,0,4,0"
+                                                           FontSize="11" />
+                                                <TextBox x:Name="PorcBox" Grid.Column="1" Style="{StaticResource PorcStyle}"
+                                                         Text="{Binding Porcentaje, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         Height="22" FontSize="11"
+                                                         HorizontalContentAlignment="Center"
+                                                         VerticalContentAlignment="Center"
+                                                         IsEnabled="{Binding Activa}" />
+                                                <TextBlock Grid.Column="2" Text="%" VerticalAlignment="Center"
+                                                           Margin="2,0,10,0" FontSize="11" />
+                                                <TextBlock Grid.Column="3" Text="Máx:" VerticalAlignment="Center"
+                                                           Margin="0,0,4,0" FontSize="11" />
+                                                <TextBox Grid.Column="4"
+                                                         Text="{Binding PuntajeMaximo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         Height="22" FontSize="11"
+                                                         HorizontalContentAlignment="Center"
+                                                         VerticalContentAlignment="Center"
+                                                         IsEnabled="{Binding Activa}" />
+                                            </Grid>
+                                        </StackPanel>
+                                        <Border.Style>
+                                            <Style TargetType="Border" BasedOn="{StaticResource ActividadBorderStyle}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Activa}" Value="True">
+                                                        <Setter Property="BorderBrush" Value="#16A34A" />
+                                                        <Setter Property="Background" Value="#ECFDF5" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Activa}" Value="False">
+                                                        <Setter Property="BorderBrush" Value="#DC2626" />
+                                                        <Setter Property="Background" Value="#FFFBFA" />
+                                                    </DataTrigger>
+                                                    <MultiDataTrigger>
+                                                        <MultiDataTrigger.Conditions>
+                                                            <Condition Binding="{Binding Activa}" Value="False" />
+                                                            <Condition Binding="{Binding Nombre}" Value="" />
+                                                        </MultiDataTrigger.Conditions>
+                                                        <Setter Property="BorderBrush" Value="#D7DEE8" />
+                                                        <Setter Property="Background" Value="#FAFBFD" />
+                                                    </MultiDataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                    </Border>
+                                </DataTemplate>
+                            </GroupBox.Resources>
+
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
-                                <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,4,0">
-                                    <Button Content="Agregar actividad" Command="{Binding AgregarActividadCommand}" MinWidth="140" />
-                                </StackPanel>
-                                <ItemsControl Grid.Row="1" ItemsSource="{Binding Actividades}" Margin="2">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Columns="2" Rows="2" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                            <DataTemplate.Resources>
-                                            <Style x:Key="PorcStyle" TargetType="TextBox">
-                                                <Setter Property="Background" Value="White" />
-                                                <Setter Property="BorderBrush" Value="#D1D5DB" />
-                                                <Setter Property="Foreground" Value="#0F172A" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding DataContext.PorcentajeEstado, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="Over">
-                                                        <Setter Property="Background" Value="#FEE2E2" />
-                                                        <Setter Property="BorderBrush" Value="#DC2626" />
-                                                        <Setter Property="Foreground" Value="#DC2626" />
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding DataContext.PorcentajeEstado, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="Under">
-                                                        <Setter Property="Background" Value="#FFF7ED" />
-                                                        <Setter Property="BorderBrush" Value="#F97316" />
-                                                        <Setter Property="Foreground" Value="#F97316" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </DataTemplate.Resources>
 
-                                        <Border x:Name="ActividadBorder" BorderBrush="#D7DEE8" BorderThickness="1" CornerRadius="4"
-                                                Padding="6,4" Margin="3" Background="#FAFBFD">
-                                            <StackPanel>
-                                                <Button Content="Eliminar" HorizontalAlignment="Right" Margin="0,0,0,4"
-                                                        Command="{Binding DataContext.QuitarActividadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                        CommandParameter="{Binding}" Visibility="Visible" />
-                                                <CheckBox Content="Actividad activa"
-                                                          IsChecked="{Binding Activa, Mode=TwoWay}"
-                                                          FontWeight="SemiBold" Foreground="#1E293B" FontSize="11" />
-                                                <Grid Margin="0,4,0,0">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="50" /> <ColumnDefinition Width="*" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Text="Nombre:" VerticalAlignment="Center" FontSize="11" />
-                                                    <TextBox Grid.Column="1"
-                                                             Text="{Binding Nombre, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                             Height="22" FontSize="11"
-                                                             VerticalContentAlignment="Center" />
-                                                </Grid>
-                                                <TextBlock Grid.Column="0" Grid.ColumnSpan="5" Text="No es obligatorio" FontSize="10" Foreground="#64748B" Margin="0,6,0,0">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Visibility" Value="Collapsed" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Activa}" Value="False">
-                                                                    <Setter Property="Visibility" Value="Visible" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                                <Grid Margin="0,4,0,0">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="*" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Text="Porc:" VerticalAlignment="Center" Margin="0,0,4,0"
-                                                               FontSize="11" />
-                                                    <TextBox x:Name="PorcBox" Grid.Column="1" Style="{StaticResource PorcStyle}"
-                                                             Text="{Binding Porcentaje, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                             Height="22" FontSize="11"
-                                                             HorizontalContentAlignment="Center"
-                                                             VerticalContentAlignment="Center" />
-                                                    <TextBlock Grid.Column="2" Text="%" VerticalAlignment="Center"
-                                                               Margin="2,0,10,0" FontSize="11" />
-                                                    <TextBlock Grid.Column="3" Text="Máx:" VerticalAlignment="Center"
-                                                               Margin="0,0,4,0" FontSize="11" />
-                                                    <TextBox Grid.Column="4"
-                                                             Text="{Binding PuntajeMaximo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                             Height="22" FontSize="11"
-                                                             HorizontalContentAlignment="Center"
-                                                             VerticalContentAlignment="Center" />
-                                                </Grid>
-                                            </StackPanel>
-                                            <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="BorderBrush" Value="#D7DEE8" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Activa}" Value="True">
-                                                            <Setter Property="BorderBrush" Value="#16A34A" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding Activa}" Value="False">
-                                                            <Setter Property="BorderBrush" Value="#DC2626" />
-                                                        </DataTrigger>
-                                                        <MultiDataTrigger>
-                                                            <MultiDataTrigger.Conditions>
-                                                                <Condition Binding="{Binding Activa}" Value="False" />
-                                                                <Condition Binding="{Binding Nombre}" Value="" />
-                                                            </MultiDataTrigger.Conditions>
-                                                            <Setter Property="BorderBrush" Value="#D7DEE8" />
-                                                        </MultiDataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Border.Style>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                <UniformGrid Grid.Row="1" Columns="2" Rows="2" Margin="2">
+                                    <ContentControl Content="{Binding Actividades[0]}" ContentTemplate="{StaticResource ActividadTemplate}" />
+                                    <ContentControl Content="{Binding Actividades[1]}" ContentTemplate="{StaticResource ActividadTemplate}" />
+                                    <ContentControl Content="{Binding Actividades[2]}" ContentTemplate="{StaticResource ActividadTemplate}" />
+                                    <ContentControl Content="{Binding Actividades[3]}" ContentTemplate="{StaticResource ActividadTemplate}" />
+                                </UniformGrid>
                             </Grid>
                         </GroupBox>
                         <GroupBox Grid.Row="1" Header="Configuración de Asistencias (En desarrollo)" Margin="0,5,0,0">
@@ -271,8 +297,17 @@
                         <Border Grid.Row="2" Background="#EAF0F8" BorderBrush="#D7DEE8" BorderThickness="1"
                                 CornerRadius="4" Padding="8" Margin="0,10,0,0">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding SumaPorcentajesTexto}" FontSize="18" FontWeight="Bold"
-                                           Foreground="#1B365D" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                <TextBlock Text="{Binding SumaPorcentajesTexto}" VerticalAlignment="Center" Margin="0,0,10,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource SumaPorcText}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SumaValida}" Value="False">
+                                                    <Setter Property="Foreground" Value="#D97706" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                                 <TextBlock Text="La suma total debe dar exactamente 100%." FontSize="11"
                                            Foreground="#64748B" VerticalAlignment="Center" />
                             </StackPanel>

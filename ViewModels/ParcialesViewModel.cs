@@ -40,6 +40,7 @@ public partial class ParcialesViewModel : ObservableObject
     [ObservableProperty] private decimal _sumaPorcentajes;
     [ObservableProperty] private string _sumaPorcentajesTexto = "0%";
     [ObservableProperty] private string _porcentajeEstado = "Ok";
+    [ObservableProperty] private bool _sumaValida = false;
     [ObservableProperty] private string _calificacionParcialTexto = "";
     [ObservableProperty] private string _estadoValidacion = "Sin cargar";
     [ObservableProperty] private string _estadoGuardado = string.Empty;
@@ -164,6 +165,8 @@ public partial class ParcialesViewModel : ObservableObject
     private void LimpiarVista()
     {
         Actividades.Clear();
+        // Always show four activity editors (may be inactive/empty)
+        for (int i = 0; i < 4; i++) Actividades.Add(CreateBlankEditor());
         SumaPorcentajes = 0;
         SumaPorcentajesTexto = "0%";
         CalificacionParcialTexto = "";
@@ -253,6 +256,22 @@ public partial class ParcialesViewModel : ObservableObject
             editor.CargarDesdeModelo(modelo);
             Actividades.Add(editor);
         }
+        // Ensure there are always 4 editors shown (fill with inactive blanks)
+        while (Actividades.Count < 4)
+        {
+            Actividades.Add(CreateBlankEditor());
+        }
+    }
+
+    private ActividadParcialEditor CreateBlankEditor()
+    {
+        var ed = new ActividadParcialEditor(() => RecalcularTodo(guardarJson: false));
+        ed.Activa = false;
+        ed.Nombre = string.Empty;
+        ed.Porcentaje = string.Empty;
+        ed.PuntajeMaximo = string.Empty;
+        ed.PuntajeObtenido = string.Empty;
+        return ed;
     }
 
     // No default activities are created automatically. The teacher must
@@ -303,6 +322,8 @@ public partial class ParcialesViewModel : ObservableObject
         SumaPorcentajesTexto = $"{TruncarUnDecimal(sumaPorcentajes):0.0}%";
 
         bool porcentajesCorrectos = Math.Abs(sumaPorcentajes - 100m) < 0.0001m;
+        // Indicate whether the active percentages sum to exactly 100
+        SumaValida = porcentajesCorrectos;
         // Set porcentaje estado for UI coloring: "Over" (>) , "Under" (<) , "Ok" (=)
         if (sumaPorcentajes > 100m) PorcentajeEstado = "Over";
         else if (sumaPorcentajes < 100m) PorcentajeEstado = "Under";
