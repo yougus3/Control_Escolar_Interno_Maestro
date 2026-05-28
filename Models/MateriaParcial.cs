@@ -8,4 +8,8 @@ public class MateriaParcial
 
     // Matrícula -> actividad -> valor obtenido
     public Dictionary<string, Dictionary<string, double>> Calificaciones { get; set; } = new();
+
+    // Porcentaje acumulado definido por el docente para este CAP+parcial.
+    // Se guarda en parciales.json junto a actividades y calificaciones.
+    public double PorcentajeAcumulado { get; set; }
 }

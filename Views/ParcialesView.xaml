@@ -78,7 +78,7 @@
                                 </ListBox.ItemTemplate>
                             </ListBox>
                         </GroupBox>
-                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignmeCORRECCIÓN DE BUG ACTIVIDADESnt="Center" Margin="0,0,0,5">
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,5">
                             <Button Content="Inicio" Command="{Binding InicioCommand}" Margin="0,0,4,0" MinWidth="60"
                                     Padding="4,2" />
                             <Button Content="Anterior" Command="{Binding AnteriorCommand}" Margin="0,0,4,0"
@@ -308,7 +308,7 @@
                                         </Style>
                                     </TextBlock.Style>
                                 </TextBlock>
-                                <TextBlock Text="La suma total debe dar exactamente 100%." FontSize="11"
+                                <TextBlock Text="Porcentaje acumulado mostrado arriba." FontSize="11"
                                            Foreground="#64748B" VerticalAlignment="Center" />
                             </StackPanel>
                         </Border>

@@ -78,6 +78,28 @@ public partial class ParcialesViewModel : ObservableObject
 
         Actividades.Add(nueva);
         _materia.Actividades = Actividades.Select(a => a.ToModelo()).ToList();
+        // Recompute accumulated percentage directly from editors to avoid
+        // relying on SumaPorcentajes (in case bindings didn't update).
+        double acumuladoPorcentajes = 0.0;
+        foreach (var ed in Actividades)
+        {
+            if (!ed.Activa) continue;
+            var text = (ed.Porcentaje ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(text)) continue;
+            // Accept both comma and dot decimal separators from UI input
+            text = text.Replace(',', '.');
+            if (double.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out double p))
+            {
+                acumuladoPorcentajes += p;
+            }
+        }
+        // Fallback: if parsing yielded 0 but SumaPorcentajes has a value, use it.
+        if (Math.Abs(acumuladoPorcentajes) < 0.000001 && SumaPorcentajes > 0)
+        {
+            acumuladoPorcentajes = (double)SumaPorcentajes;
+        }
+
+        _materia.PorcentajeAcumulado = acumuladoPorcentajes;
         RecalcularTodo(guardarJson: false);
     }
 
@@ -286,6 +308,9 @@ public partial class ParcialesViewModel : ObservableObject
         decimal acumulado = 0m;
         bool logicaCorrecta = true;
 
+        // First pass: validate and collect numeric values for active activities
+        var entradas = new List<(double porc, double max, double obt)>();
+
         foreach (var actividad in Actividades)
         {
             if (!actividad.Activa) continue;
@@ -295,7 +320,6 @@ public partial class ParcialesViewModel : ObservableObject
                 logicaCorrecta = false;
                 continue;
             }
-            sumaPorcentajes += (decimal)porc;
 
             if (!double.TryParse(actividad.PuntajeMaximo, NumberStyles.Any, CultureInfo.InvariantCulture, out double max) || max <= 0)
             {
@@ -315,16 +339,29 @@ public partial class ParcialesViewModel : ObservableObject
                 continue;
             }
 
-            acumulado += ((decimal)obt / (decimal)max) * (decimal)porc;
+            entradas.Add((porc, max, obt));
+            sumaPorcentajes += (decimal)porc;
+        }
+
+        // If there is an accumulated percentage different than 100, normalize
+        // so that the sum is treated as 100% for the calculation of the partial.
+        double scaling = 1.0;
+        if (sumaPorcentajes > 0)
+        {
+            scaling = 100.0 / (double)sumaPorcentajes;
+        }
+
+        foreach (var (porc, max, obt) in entradas)
+        {
+            double porcNorm = porc * scaling;
+            acumulado += ((decimal)obt / (decimal)max) * (decimal)porcNorm;
         }
 
         SumaPorcentajes = sumaPorcentajes;
         SumaPorcentajesTexto = $"{TruncarUnDecimal(sumaPorcentajes):0.0}%";
 
         bool porcentajesCorrectos = Math.Abs(sumaPorcentajes - 100m) < 0.0001m;
-        // Indicate whether the active percentages sum to exactly 100
-        SumaValida = porcentajesCorrectos;
-        // Set porcentaje estado for UI coloring: "Over" (>) , "Under" (<) , "Ok" (=)
+        // Set porcentaje estado for UI coloring: "Over" (>), "Under" (<), "Ok" (=)
         if (sumaPorcentajes > 100m) PorcentajeEstado = "Over";
         else if (sumaPorcentajes < 100m) PorcentajeEstado = "Under";
         else PorcentajeEstado = "Ok";
@@ -337,7 +374,10 @@ public partial class ParcialesViewModel : ObservableObject
         else
             EstadoValidacion = "Porcentajes y calificaciones correctos.";
 
-        if (porcentajesCorrectos && logicaCorrecta)
+        // Allow saving/evaluating when the accumulated percentage is > 0
+        // and the per-activity data is logically correct. Do not require
+        // the total to be exactly 100%.
+        if (sumaPorcentajes > 0m && logicaCorrecta)
         {
             decimal calificacion = TruncarUnDecimal(acumulado / 10m);
             CalificacionParcialTexto = calificacion.ToString("0.0", CultureInfo.InvariantCulture);
@@ -364,6 +404,23 @@ public partial class ParcialesViewModel : ObservableObject
     private void GuardarEnJsonLocal()
     {
         if (string.IsNullOrWhiteSpace(_claveMateria) || string.IsNullOrWhiteSpace(_evaluacionActual)) return;
+
+        // Recompute accumulated percentage directly from the editors to ensure
+        // we persist exactly what the teacher entered (accepting comma or dot).
+        double acumuladoPorcentajes = 0.0;
+        foreach (var ed in Actividades)
+        {
+            if (!ed.Activa) continue;
+            var text = (ed.Porcentaje ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(text)) continue;
+            text = text.Replace(',', '.');
+            if (double.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out double p))
+            {
+                acumuladoPorcentajes += p;
+            }
+        }
+
+        _materia.PorcentajeAcumulado = acumuladoPorcentajes;
 
         _materia.Actividades = Actividades.Select(a => a.ToModelo()).ToList();
 

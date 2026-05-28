@@ -201,16 +201,6 @@ public partial class MainViewModel : ObservableObject
         if (string.Equals(CurrentView, "Parciales", StringComparison.OrdinalIgnoreCase))
         {
             ParcialesVm.PrepararGuardado();
-
-            if (ParcialesVm.SumaPorcentajes != 100m)
-            {
-                MessageBox.Show(
-                    "La suma de porcentajes debe ser 100% antes de guardar.",
-                    "Aviso",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
-            }
         }
 
         var ok = _writerService.GuardarEvaluacion(
