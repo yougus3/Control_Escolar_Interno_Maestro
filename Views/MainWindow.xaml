@@ -15,7 +15,8 @@
     <Window.Resources>
         <converters:InverseBooleanConverter x:Key="InverseBoolConverter" />
     </Window.Resources>
-  <Grid>
+    
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="80" />
             <RowDefinition Height="60" />
@@ -30,17 +31,20 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Border Grid.Column="0" Width="50" Height="50" Background="#C8102E" CornerRadius="25"
-                        VerticalAlignment="Center">
-                    <TextBlock Text="P" Foreground="White" FontWeight="Bold" FontSize="24" HorizontalAlignment="Center"
-                               VerticalAlignment="Center" />
+                
+                <Border Grid.Column="0" Width="50" Height="50" CornerRadius="25" VerticalAlignment="Center">
+                    <Border.Background>
+                        <ImageBrush ImageSource="/logo.jpg" Stretch="UniformToFill" />
+                    </Border.Background>
                 </Border>
+
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="15,0,0,0">
-                    <TextBlock Text="ESCUELA JOSÉ MARÍA MORELOS Y PAVÓN" Foreground="White" FontSize="18"
+                    <TextBlock Text="PREPARATORIA FEDERAL POR COOPERACIÓN JOSÉ MARÍA MORELOS Y PAVÓN" Foreground="White" FontSize="18"
                                FontWeight="Bold" />
-                    <TextBlock Text="Control de Evaluaciones Continuas (.CAP)" Foreground="#A5B4FC" FontSize="12"
+                    <TextBlock Text="Control de Evaluaciones Continuas" Foreground="#A5B4FC" FontSize="12"
                                FontWeight="SemiBold" />
                 </StackPanel>
+                
                 <Button Grid.Column="2"
                         Width="40"
                         Height="40"
