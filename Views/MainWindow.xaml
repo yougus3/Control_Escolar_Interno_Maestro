@@ -13,7 +13,7 @@
         Background="#F5F6F8">
 
     <Window.Resources>
-        <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+        <converters:InverseBooleanConverter x:Key="InverseBoolConverter" />
     </Window.Resources>
     <Window.DataContext>
         <vm:MainViewModel />
