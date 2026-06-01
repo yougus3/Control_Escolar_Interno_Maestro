@@ -16,12 +16,15 @@ public partial class MainViewModel : ObservableObject
     private readonly CapParserService _parserService;
     private readonly CapWriterService _writerService;
     private readonly FileScannerService _scannerService;
+    private readonly ConfiguracionParcialesService _configuracionService;
 
     private readonly Dictionary<string, string> _mapaArchivos =
         new(StringComparer.OrdinalIgnoreCase);
 
     private readonly Dictionary<string, string> _evaluacionIdPorNombre =
         new(StringComparer.OrdinalIgnoreCase);
+
+    private ConfiguracionParciales _configuracionActual = new();
 
     private string? _archivoCompletoActual;
 
@@ -50,6 +53,8 @@ public partial class MainViewModel : ObservableObject
         _parserService = new CapParserService();
         _writerService = new CapWriterService();
         _scannerService = new FileScannerService();
+        _configuracionService = new ConfiguracionParcialesService();
+        _configuracionActual = _configuracionService.ObtenerConfiguracion();
 
         ParcialesVm = new ParcialesViewModel(this);
 
@@ -58,8 +63,8 @@ public partial class MainViewModel : ObservableObject
         // later if additional drives are connected while app is running.
         try
         {
-            var drives = System.IO.DriveInfo.GetDrives()
-                .Where(d => d.DriveType == System.IO.DriveType.Removable && d.IsReady)
+            var drives = DriveInfo.GetDrives()
+                .Where(d => d.DriveType == DriveType.Removable && d.IsReady)
                 .OrderBy(d => d.Name)
                 .ToList();
 
@@ -71,10 +76,37 @@ public partial class MainViewModel : ObservableObject
                 _rutaUsbEditable = false;
             }
         }
-        catch { }
+        catch
+        {
+        }
 
         // Scan the (possibly auto-detected) USB drive.
         EscanearUsb();
+    }
+
+    public void RecargarConfiguracionYArchivoActual()
+    {
+        _configuracionActual = _configuracionService.ObtenerConfiguracion();
+
+        if (!string.IsNullOrWhiteSpace(ArchivoSeleccionado))
+        {
+            CargarArchivoSeleccionado(ArchivoSeleccionado);
+        }
+    }
+
+    private bool EvaluacionEstaHabilitada(string evaluacion)
+    {
+        if (string.IsNullOrWhiteSpace(evaluacion))
+            return false;
+
+        return evaluacion.Trim().ToUpperInvariant() switch
+        {
+            "P1" => _configuracionActual.Parcial1Habilitado,
+            "P2" => _configuracionActual.Parcial2Habilitado,
+            "P3" => _configuracionActual.Parcial3Habilitado,
+            "SEM" => _configuracionActual.SemestralHabilitado,
+            _ => true
+        };
     }
 
     [RelayCommand]
@@ -109,6 +141,11 @@ public partial class MainViewModel : ObservableObject
     }
 
     partial void OnArchivoSeleccionadoChanged(string? value)
+    {
+        CargarArchivoSeleccionado(value);
+    }
+
+    private void CargarArchivoSeleccionado(string? value)
     {
         Alumnos.Clear();
         EvaluacionesDisponibles.Clear();
@@ -146,7 +183,10 @@ public partial class MainViewModel : ObservableObject
 
         foreach (var eval in resultado.EvaluacionesDisponibles)
         {
-            EvaluacionesDisponibles.Add(eval);
+            if (EvaluacionEstaHabilitada(eval))
+            {
+                EvaluacionesDisponibles.Add(eval);
+            }
         }
 
         foreach (var alumno in resultado.Alumnos)

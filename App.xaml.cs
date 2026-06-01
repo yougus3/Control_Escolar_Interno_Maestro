@@ -1,12 +1,14 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
+﻿using System.Windows;
+using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon;
 
-/// <summary>
-/// Interaction logic for App.xaml
-/// </summary>
 public partial class App : Application
 {
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+        _ = new ConfiguracionParcialesService().ObtenerConfiguracion();
+    }
 }

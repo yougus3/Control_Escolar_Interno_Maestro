@@ -8,7 +8,30 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        // Asignamos el DataContext por código para evitar el error del compilador XAML
-        this.DataContext = new MainViewModel(); 
+        DataContext = new MainViewModel();
+    }
+
+    private void Configuracion_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm)
+            return;
+
+        var login = new PasswordWindow
+        {
+            Owner = this
+        };
+
+        if (login.ShowDialog() == true)
+        {
+            var config = new ConfiguracionParcialesWindow
+            {
+                Owner = this
+            };
+
+            if (config.ShowDialog() == true)
+            {
+                vm.RecargarConfiguracionYArchivoActual();
+            }
+        }
     }
 }

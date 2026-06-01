@@ -15,72 +15,96 @@
     <Window.Resources>
         <converters:InverseBooleanConverter x:Key="InverseBoolConverter" />
     </Window.Resources>
-    <Window.DataContext>
-        <vm:MainViewModel />
-    </Window.DataContext>
-
-    <Grid>
+  <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="80"/>
-            <RowDefinition Height="60"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="30"/>
+            <RowDefinition Height="80" />
+            <RowDefinition Height="60" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="30" />
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Background="#1B365D" CornerRadius="0,0,10,10" Panel.ZIndex="1">
             <Grid Margin="20,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Border Grid.Column="0" Width="50" Height="50" Background="#C8102E" CornerRadius="25" VerticalAlignment="Center">
-                    <TextBlock Text="P" Foreground="White" FontWeight="Bold" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Border Grid.Column="0" Width="50" Height="50" Background="#C8102E" CornerRadius="25"
+                        VerticalAlignment="Center">
+                    <TextBlock Text="P" Foreground="White" FontWeight="Bold" FontSize="24" HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
                 </Border>
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="15,0,0,0">
-                    <TextBlock Text="ESCUELA JOSÉ MARÍA MORELOS Y PAVÓN" Foreground="White" FontSize="18" FontWeight="Bold"/>
-                    <TextBlock Text="Control de Evaluaciones Continuas (.CAP)" Foreground="#A5B4FC" FontSize="12" FontWeight="SemiBold"/>
+                    <TextBlock Text="ESCUELA JOSÉ MARÍA MORELOS Y PAVÓN" Foreground="White" FontSize="18"
+                               FontWeight="Bold" />
+                    <TextBlock Text="Control de Evaluaciones Continuas (.CAP)" Foreground="#A5B4FC" FontSize="12"
+                               FontWeight="SemiBold" />
                 </StackPanel>
-                <TextBlock Grid.Column="2" Text="CEIM v10.0" Foreground="White" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" Opacity="0.7"/>
+                <Button Grid.Column="2"
+                        Width="40"
+                        Height="40"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        ToolTip="Configuración"
+                        Click="Configuracion_Click">
+
+                    <TextBlock Text="⚙"
+                               FontSize="22"
+                               Foreground="White"
+                               Opacity="0.8"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Button>
             </Grid>
         </Border>
 
-        <Border Grid.Row="1" Background="White" Margin="15,10,15,5" CornerRadius="6" BorderBrush="#E2E8F0" BorderThickness="1">
+        <Border Grid.Row="1" Background="White" Margin="15,10,15,5" CornerRadius="6" BorderBrush="#E2E8F0"
+                BorderThickness="1">
             <Grid Margin="15,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="100"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="150"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Text="USB:" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,5,0"/>
-                <TextBox Grid.Column="1" Text="{Binding RutaUsb, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" Height="32" BorderBrush="#CBD5E1" IsReadOnly="{Binding RutaUsbEditable, Converter={StaticResource InverseBoolConverter}}"/>
+                <TextBlock Grid.Column="0" Text="USB:" VerticalAlignment="Center" FontWeight="SemiBold"
+                           Foreground="#475569" Margin="0,0,5,0" />
+                <TextBox Grid.Column="1" Text="{Binding RutaUsb, UpdateSourceTrigger=PropertyChanged}"
+                         VerticalContentAlignment="Center" Height="32" BorderBrush="#CBD5E1"
+                         IsReadOnly="{Binding RutaUsbEditable, Converter={StaticResource InverseBoolConverter}}" />
 
-                <Button Grid.Column="2" Content="Escanear" Command="{Binding EscanearUsbCommand}" Height="32" Width="90" Margin="10,0,0,0" Background="#1B365D" Foreground="White" FontWeight="SemiBold" BorderThickness="0">
+                <Button Grid.Column="2" Content="Escanear" Command="{Binding EscanearUsbCommand}" Height="32"
+                        Width="90" Margin="10,0,0,0" Background="#1B365D" Foreground="White" FontWeight="SemiBold"
+                        BorderThickness="0">
                     <Button.Resources>
                         <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="4"/>
+                            <Setter Property="CornerRadius" Value="4" />
                         </Style>
                     </Button.Resources>
                 </Button>
 
-                <TextBlock Grid.Column="3" Text="Archivo:" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#475569" Margin="20,0,5,0"/>
+                <TextBlock Grid.Column="3" Text="Archivo:" VerticalAlignment="Center" FontWeight="SemiBold"
+                           Foreground="#475569" Margin="20,0,5,0" />
                 <ComboBox Grid.Column="4"
                           ItemsSource="{Binding ArchivosDisponibles}"
                           SelectedItem="{Binding ArchivoSeleccionado}"
                           Height="32"
                           Width="450"
                           HorizontalAlignment="Left"
-                          VerticalContentAlignment="Center"/>
+                          VerticalContentAlignment="Center" />
 
-                <TextBlock Grid.Column="5" Text="Eval:" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#475569" Margin="20,0,5,0"/>
-                <ComboBox Grid.Column="6" ItemsSource="{Binding EvaluacionesDisponibles}" SelectedItem="{Binding EvaluacionSeleccionada}" Height="32" VerticalContentAlignment="Center"/>
+                <TextBlock Grid.Column="5" Text="Eval:" VerticalAlignment="Center" FontWeight="SemiBold"
+                           Foreground="#475569" Margin="20,0,5,0" />
+                <ComboBox Grid.Column="6" ItemsSource="{Binding EvaluacionesDisponibles}"
+                          SelectedItem="{Binding EvaluacionSeleccionada}" Height="32" VerticalContentAlignment="Center" />
 
                 <Button Grid.Column="7"
                         Content="Guardar"
@@ -94,7 +118,7 @@
                         BorderThickness="0">
                     <Button.Resources>
                         <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="4"/>
+                            <Setter Property="CornerRadius" Value="4" />
                         </Style>
                     </Button.Resources>
                 </Button>
@@ -129,14 +153,15 @@
         <Border Grid.Row="3" Background="#E2E8F0">
             <Grid Margin="15,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Alumnos: " Foreground="#64748B" FontSize="11" FontWeight="Medium"/>
-                    <TextBlock Text="{Binding Alumnos.Count}" Foreground="#1E293B" FontSize="11" FontWeight="Bold"/>
+                    <TextBlock Text="Alumnos: " Foreground="#64748B" FontSize="11" FontWeight="Medium" />
+                    <TextBlock Text="{Binding Alumnos.Count}" Foreground="#1E293B" FontSize="11" FontWeight="Bold" />
                 </StackPanel>
-                <TextBlock Grid.Column="1" Text="Estado: Conectado" Foreground="#64748B" FontSize="11" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Estado: Conectado" Foreground="#64748B" FontSize="11"
+                           VerticalAlignment="Center" />
             </Grid>
         </Border>
     </Grid>
