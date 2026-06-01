@@ -15,23 +15,20 @@ public partial class MainWindow : Window
     {
         if (DataContext is not MainViewModel vm)
             return;
-
+    
         var login = new PasswordWindow
         {
             Owner = this
         };
-
+    
         if (login.ShowDialog() == true)
         {
-            var config = new ConfiguracionParcialesWindow
+            var ventana = new ConfiguracionParcialesWindow(vm)
             {
                 Owner = this
             };
-
-            if (config.ShowDialog() == true)
-            {
-                vm.RecargarConfiguracionYArchivoActual();
-            }
+    
+            ventana.ShowDialog();
         }
     }
 }
