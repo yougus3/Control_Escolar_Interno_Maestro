@@ -60,25 +60,27 @@
                             <RowDefinition Height="*" /> <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" /> <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <GroupBox Header="Alumnos" Margin="0,0,0,5">
-                            <ListBox ItemsSource="{Binding Alumnos}"
-                                     SelectedItem="{Binding AlumnoSeleccionado, Mode=TwoWay}" BorderThickness="0"
-                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="2,1">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="80" /> <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding Matricula}" FontWeight="SemiBold"
-                                                       Foreground="#1E293B" FontSize="14" />
-                                            <TextBlock Grid.Column="1" Text="{Binding Nombre}" Foreground="#334155"
-                                                       FontSize="14" />
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                        </GroupBox>
+                       <GroupBox Header="Alumnos" Margin="0,0,0,5">
+                           <ListBox ItemsSource="{Binding Alumnos}"
+                                    SelectedItem="{Binding AlumnoSeleccionado, Mode=TwoWay}" 
+                                    SelectionChanged="Alumnos_SelectionChanged"
+                                    BorderThickness="0"
+                                    ScrollViewer.VerticalScrollBarVisibility="Auto">
+                               <ListBox.ItemTemplate>
+                                   <DataTemplate>
+                                       <Grid Margin="2,1">
+                                           <Grid.ColumnDefinitions>
+                                               <ColumnDefinition Width="80" /> <ColumnDefinition Width="*" />
+                                           </Grid.ColumnDefinitions>
+                                           <TextBlock Text="{Binding Matricula}" FontWeight="SemiBold"
+                                                      Foreground="#1E293B" FontSize="14" />
+                                           <TextBlock Grid.Column="1" Text="{Binding Nombre}" Foreground="#334155"
+                                                      FontSize="14" />
+                                       </Grid>
+                                   </DataTemplate>
+                               </ListBox.ItemTemplate>
+                           </ListBox>
+                       </GroupBox>
                         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,5">
                             <Button Content="Inicio" Command="{Binding InicioCommand}" Margin="0,0,4,0" MinWidth="60"
                                     Padding="4,2" />
@@ -288,15 +290,6 @@
                             <Border BorderBrush="#D7DEE8" BorderThickness="1" CornerRadius="4" Padding="10,8"
                                     Margin="4" Background="#F8FAFC">
                                 <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <CheckBox Content="Activar Asistencias" FontWeight="SemiBold" Foreground="#1E293B"
-                                              FontSize="11" VerticalAlignment="Center" Margin="0,0,15,5" />
-                                    <TextBlock Text="Valor:" VerticalAlignment="Center" FontSize="11" Margin="0,0,5,5" />
-                                    
-                                    <TextBox Width="35" Height="22" FontSize="11" HorizontalContentAlignment="Center"
-                                             VerticalContentAlignment="Center" Margin="0,0,2,5" 
-                                             MaxLength="3" PreviewTextInput="Numeros_PreviewTextInput" DataObject.Pasting="Numeros_Pasting" />
-                                    
-                                    <TextBlock Text="%" VerticalAlignment="Center" FontSize="11" Margin="0,0,15,5" />
                                     <TextBlock Text="Clases en el Parcial:" VerticalAlignment="Center" FontSize="11"
                                                Margin="0,0,5,5" />
                                     
@@ -304,7 +297,7 @@
                                              VerticalContentAlignment="Center" Margin="0,0,15,5" 
                                              MaxLength="3" PreviewTextInput="Numeros_PreviewTextInput" DataObject.Pasting="Numeros_Pasting" />
                                     
-                                    <TextBlock Text="Total Asistencias:" VerticalAlignment="Center" FontSize="11"
+                                    <TextBlock Text="Inasistencias:" VerticalAlignment="Center" FontSize="11"
                                                Margin="0,0,5,5" />
                                     
                                     <TextBox Width="40" Height="22" FontSize="11" HorizontalContentAlignment="Center"

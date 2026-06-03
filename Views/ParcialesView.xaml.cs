@@ -59,4 +59,14 @@ public partial class ParcialesView : UserControl
             e.CancelCommand();
         }
     }
+    
+    private void Alumnos_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        // Verificamos que el emisor sea un ListBox y que realmente haya un elemento seleccionado
+        if (sender is ListBox listBox && listBox.SelectedItem != null)
+        {
+            // Forzamos al ListBox a hacer scroll hasta el elemento seleccionado
+            listBox.ScrollIntoView(listBox.SelectedItem);
+        }
+    }
 }

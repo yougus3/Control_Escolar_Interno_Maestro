@@ -5,6 +5,8 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Windows.Input;
+using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -559,5 +561,29 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
     private void OnPropertyChanged([CallerMemberName] string? nombrePropiedad = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nombrePropiedad));
+    }
+    
+    private void Calificacion_PreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        TextBox tb = (TextBox)sender;
+    
+        // Formamos el texto tal como quedaría si aceptamos la tecla
+        string textoResultante = tb.Text.Insert(tb.CaretIndex, e.Text);
+
+        // 1. Regla del punto: Si contiene un punto, este DEBE estar estrictamente en la posición 1 (índice 1, es decir, el segundo carácter)
+        int indicePunto = textoResultante.IndexOf('.');
+        if (indicePunto != -1 && indicePunto != 1)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        // 2. Expresión regular que valida el formato paso a paso:
+        // - Permite un solo dígito del 0 al 9, opcionalmente seguido de un punto y otro dígito (ej: 0, 4, 4., 4.7)
+        // - O permite exactamente el número 10 (sin puntos)
+        bool esFormatoValido = Regex.IsMatch(textoResultante, @"^([0-9](\.[0-9]?)?|10?)$");
+
+        // Si no cumple el formato, bloqueamos la tecla
+        e.Handled = !esFormatoValido;
     }
 }
