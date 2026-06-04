@@ -69,4 +69,11 @@ public partial class ParcialesView : UserControl
             listBox.ScrollIntoView(listBox.SelectedItem);
         }
     }
+    
+    private void NumerosEnteros_PreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        // Expresión regular que deniega cualquier caracter que NO sea un dígito entre 0 y 9
+        Regex regex = new Regex("[^0-9]+");
+        e.Handled = regex.IsMatch(e.Text);
+    }
 }

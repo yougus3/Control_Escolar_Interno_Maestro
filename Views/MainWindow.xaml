@@ -10,7 +10,7 @@
         Title="Sistema de Control de Calificaciones - José Ma. Morelos y Pavón"
         WindowState="Normal"
         Width="1108"
-        Height="689"
+        Height="700"
         ResizeMode="CanMinimize"
         WindowStartupLocation="CenterScreen"
         Background="#F5F6F8">

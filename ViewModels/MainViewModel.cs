@@ -28,9 +28,6 @@ public partial class MainViewModel : ObservableObject
 
     private string? _archivoCompletoActual;
 
-    // Expose the full file path of the currently selected CAP file so other
-    // view models (e.g. ParcialesViewModel) can use the file name as a
-    // stable key when saving JSON data.
     public string? ArchivoCompletoActual => _archivoCompletoActual;
 
     public ParcialesViewModel ParcialesVm { get; }
@@ -58,9 +55,6 @@ public partial class MainViewModel : ObservableObject
 
         ParcialesVm = new ParcialesViewModel(this);
 
-        // Detect connected removable drives automatically at startup and
-        // set RutaUsb to the first removable drive. Do not overwrite it
-        // later if additional drives are connected while app is running.
         try
         {
             var drives = DriveInfo.GetDrives()
@@ -68,8 +62,6 @@ public partial class MainViewModel : ObservableObject
                 .OrderBy(d => d.Name)
                 .ToList();
 
-            // If the app hasn't been configured with a USB path, pick the first
-            // removable drive and lock the field so the user cannot edit it.
             if (drives.Any() && string.IsNullOrWhiteSpace(_rutaUsb))
             {
                 _rutaUsb = drives.First().Name;
@@ -80,7 +72,6 @@ public partial class MainViewModel : ObservableObject
         {
         }
 
-        // Scan the (possibly auto-detected) USB drive.
         EscanearUsb();
     }
 
@@ -213,6 +204,10 @@ public partial class MainViewModel : ObservableObject
         if (valorMayusculas == "SEM" || valorMayusculas == "EXTRA")
         {
             CurrentView = "List";
+            if (valorMayusculas == "SEM")
+            {
+                CalcularAsistenciasSemestrales();
+            }
         }
         else
         {
@@ -265,6 +260,11 @@ public partial class MainViewModel : ObservableObject
             ParcialesVm.PrepararGuardado();
         }
 
+        if (string.Equals(EvaluacionSeleccionada, "SEM", StringComparison.OrdinalIgnoreCase))
+        {
+            CalcularAsistenciasSemestrales();
+        }
+
         var ok = _writerService.GuardarEvaluacion(
             _archivoCompletoActual,
             Alumnos.ToList(),
@@ -276,5 +276,74 @@ public partial class MainViewModel : ObservableObject
             ok ? "OK" : "Error",
             MessageBoxButton.OK,
             ok ? MessageBoxImage.Information : MessageBoxImage.Error);
+    }
+
+    private void CalcularAsistenciasSemestrales()
+    {
+        if (string.IsNullOrWhiteSpace(ArchivoSeleccionado)) return;
+
+        string claveMateria = string.Empty;
+        if (!string.IsNullOrWhiteSpace(ArchivoCompletoActual))
+        {
+            try
+            {
+                var nombre = Path.GetFileNameWithoutExtension(ArchivoCompletoActual);
+                if (!string.IsNullOrWhiteSpace(nombre)) claveMateria = nombre.Trim().Replace(' ', '_');
+            }
+            catch { }
+        }
+        
+        if (string.IsNullOrWhiteSpace(claveMateria) && !string.IsNullOrWhiteSpace(ArchivoSeleccionado))
+        {
+            string texto = ArchivoSeleccionado.Trim();
+            int indexEspacio = texto.IndexOf(' ');
+            if (indexEspacio <= 0) claveMateria = texto.Replace(' ', '_');
+            else
+            {
+                string clave = texto[..indexEspacio].Trim();
+                string nombre = texto[(indexEspacio + 1)..].Trim();
+                claveMateria = string.IsNullOrWhiteSpace(nombre) ? clave : $"{clave}_{nombre}";
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(claveMateria)) return;
+
+        var jsonService = new ParcialJsonService();
+        var m1 = jsonService.ObtenerMateria($"{claveMateria}_P1");
+        var m2 = jsonService.ObtenerMateria($"{claveMateria}_P2");
+        var m3 = jsonService.ObtenerMateria($"{claveMateria}_P3");
+
+        if (m1 == null || m2 == null || m3 == null) return;
+
+        bool p1Activa = m1.Calificaciones.TryGetValue("$CONFIG$", out var c1) && c1.TryGetValue("AsistenciaActiva", out var aa1) && aa1 > 0;
+        bool p2Activa = m2.Calificaciones.TryGetValue("$CONFIG$", out var c2) && c2.TryGetValue("AsistenciaActiva", out var aa2) && aa2 > 0;
+        bool p3Activa = m3.Calificaciones.TryGetValue("$CONFIG$", out var c3) && c3.TryGetValue("AsistenciaActiva", out var aa3) && aa3 > 0;
+
+        if (p1Activa && p2Activa && p3Activa)
+        {
+            int clasesP1 = c1.TryGetValue("ClasesTotales", out var ct1) ? (int)ct1 : 0;
+            int clasesP2 = c2.TryGetValue("ClasesTotales", out var ct2) ? (int)ct2 : 0;
+            int clasesP3 = c3.TryGetValue("ClasesTotales", out var ct3) ? (int)ct3 : 0;
+            int totalClases = clasesP1 + clasesP2 + clasesP3;
+
+            if (totalClases > 0)
+            {
+                foreach (var alumno in Alumnos)
+                {
+                    int faltasP1 = m1.Calificaciones.TryGetValue(alumno.Matricula, out var cap1) && cap1.TryGetValue("__Inasistencias__", out var f1) ? (int)f1 : 0;
+                    int faltasP2 = m2.Calificaciones.TryGetValue(alumno.Matricula, out var cap2) && cap2.TryGetValue("__Inasistencias__", out var f2) ? (int)f2 : 0;
+                    int faltasP3 = m3.Calificaciones.TryGetValue(alumno.Matricula, out var cap3) && cap3.TryGetValue("__Inasistencias__", out var f3) ? (int)f3 : 0;
+                    int totalFaltas = faltasP1 + faltasP2 + faltasP3;
+
+                    int asistencias = totalClases - totalFaltas;
+                    double porcentajeAsistencia = ((double)asistencias / totalClases) * 100.0;
+
+                    if (porcentajeAsistencia < 80.0)
+                    {
+                        alumno.Calificación["SEM"] = "0.0";
+                    }
+                }
+            }
+        }
     }
 }

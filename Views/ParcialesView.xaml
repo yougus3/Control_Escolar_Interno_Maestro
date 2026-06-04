@@ -287,24 +287,33 @@
                                 </UniformGrid>
                             </Grid>
                         </GroupBox>
-                        <GroupBox Grid.Row="1" Header="Configuración de Asistencias (En desarrollo)" Margin="0,5,0,0">
+                        <GroupBox Grid.Row="1" Header="Configuración de Asistencias" Margin="0,5,0,0">
                             <Border BorderBrush="#D7DEE8" BorderThickness="1" CornerRadius="4" Padding="10,8"
                                     Margin="4" Background="#F8FAFC">
-                                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="Clases en el Parcial:" VerticalAlignment="Center" FontSize="11"
-                                               Margin="0,0,5,5" />
-                                    
-                                    <TextBox Width="35" Height="22" FontSize="11" HorizontalContentAlignment="Center"
-                                             VerticalContentAlignment="Center" Margin="0,0,15,5" 
-                                             MaxLength="3" PreviewTextInput="Numeros_PreviewTextInput" DataObject.Pasting="Numeros_Pasting" />
-                                    
-                                    <TextBlock Text="Inasistencias:" VerticalAlignment="Center" FontSize="11"
-                                               Margin="0,0,5,5" />
-                                    
-                                    <TextBox Width="40" Height="22" FontSize="11" HorizontalContentAlignment="Center"
-                                             VerticalContentAlignment="Center" Margin="0,0,5,5" 
-                                             MaxLength="3" PreviewTextInput="Numeros_PreviewTextInput" DataObject.Pasting="Numeros_Pasting" />
-                                </WrapPanel>
+                                <StackPanel>
+                                    <CheckBox Content="Evaluar asistencia en este parcial" 
+                                              IsChecked="{Binding AsistenciaActiva, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              FontWeight="SemiBold" Foreground="#1E293B" FontSize="11" Margin="0,0,0,8"/>
+            
+                                    <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" 
+                                               IsEnabled="{Binding AsistenciaActiva}">
+                                        <TextBlock Text="Clases en el Parcial:" VerticalAlignment="Center" FontSize="11"
+                                                   Margin="0,0,5,5" />
+                
+                                        <TextBox Width="35" Height="22" FontSize="11" HorizontalContentAlignment="Center"
+                                                 VerticalContentAlignment="Center" Margin="0,0,15,5" MaxLength="3" 
+                                                 Text="{Binding ClasesTotales, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 PreviewTextInput="NumerosEnteros_PreviewTextInput" DataObject.Pasting="Numeros_Pasting" />
+                
+                                        <TextBlock Text="Inasistencias:" VerticalAlignment="Center" FontSize="11"
+                                                   Margin="0,0,5,5" />
+                
+                                        <TextBox Width="40" Height="22" FontSize="11" HorizontalContentAlignment="Center"
+                                                 VerticalContentAlignment="Center" Margin="0,0,5,5" MaxLength="3" 
+                                                 Text="{Binding Inasistencias, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 PreviewTextInput="NumerosEnteros_PreviewTextInput" DataObject.Pasting="Numeros_Pasting" />
+                                    </WrapPanel>
+                                </StackPanel>
                             </Border>
                         </GroupBox>
                         <Border Grid.Row="2" Background="#EAF0F8" BorderBrush="#D7DEE8" BorderThickness="1"
