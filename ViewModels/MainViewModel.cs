@@ -206,7 +206,7 @@ public partial class MainViewModel : ObservableObject
             CurrentView = "List";
             if (valorMayusculas == "SEM")
             {
-                CalcularAsistenciasSemestrales();
+                SincronizarCalificacionSemestral();
             }
         }
         else
@@ -260,16 +260,14 @@ public partial class MainViewModel : ObservableObject
             ParcialesVm.PrepararGuardado();
         }
 
-        if (string.Equals(EvaluacionSeleccionada, "SEM", StringComparison.OrdinalIgnoreCase))
-        {
-            CalcularAsistenciasSemestrales();
-        }
-
         var ok = _writerService.GuardarEvaluacion(
             _archivoCompletoActual,
             Alumnos.ToList(),
             EvaluacionSeleccionada,
             idEval);
+
+        // Después de guardar cualquier evaluación, sincronizar SEM
+        SincronizarCalificacionSemestral();
 
         MessageBox.Show(
             ok ? "Guardado correcto." : "No se pudo guardar el archivo CAP.",
@@ -278,10 +276,10 @@ public partial class MainViewModel : ObservableObject
             ok ? MessageBoxImage.Information : MessageBoxImage.Error);
     }
 
-    private void CalcularAsistenciasSemestrales()
+    private void SincronizarCalificacionSemestral()
     {
         if (string.IsNullOrWhiteSpace(ArchivoSeleccionado)) return;
-
+    
         string claveMateria = string.Empty;
         if (!string.IsNullOrWhiteSpace(ArchivoCompletoActual))
         {
@@ -290,9 +288,11 @@ public partial class MainViewModel : ObservableObject
                 var nombre = Path.GetFileNameWithoutExtension(ArchivoCompletoActual);
                 if (!string.IsNullOrWhiteSpace(nombre)) claveMateria = nombre.Trim().Replace(' ', '_');
             }
-            catch { }
+            catch
+            {
+            }
         }
-        
+    
         if (string.IsNullOrWhiteSpace(claveMateria) && !string.IsNullOrWhiteSpace(ArchivoSeleccionado))
         {
             string texto = ArchivoSeleccionado.Trim();
@@ -305,45 +305,88 @@ public partial class MainViewModel : ObservableObject
                 claveMateria = string.IsNullOrWhiteSpace(nombre) ? clave : $"{clave}_{nombre}";
             }
         }
-
+    
         if (string.IsNullOrWhiteSpace(claveMateria)) return;
-
+    
         var jsonService = new ParcialJsonService();
         var m1 = jsonService.ObtenerMateria($"{claveMateria}_P1");
         var m2 = jsonService.ObtenerMateria($"{claveMateria}_P2");
         var m3 = jsonService.ObtenerMateria($"{claveMateria}_P3");
-
+    
         if (m1 == null || m2 == null || m3 == null) return;
-
-        bool p1Activa = m1.Calificaciones.TryGetValue("$CONFIG$", out var c1) && c1.TryGetValue("AsistenciaActiva", out var aa1) && aa1 > 0;
-        bool p2Activa = m2.Calificaciones.TryGetValue("$CONFIG$", out var c2) && c2.TryGetValue("AsistenciaActiva", out var aa2) && aa2 > 0;
-        bool p3Activa = m3.Calificaciones.TryGetValue("$CONFIG$", out var c3) && c3.TryGetValue("AsistenciaActiva", out var aa3) && aa3 > 0;
-
+    
+        bool p1Activa = m1.Calificaciones.TryGetValue("$CONFIG$", out var c1) &&
+                        c1.TryGetValue("AsistenciaActiva", out var aa1) && aa1 > 0;
+        bool p2Activa = m2.Calificaciones.TryGetValue("$CONFIG$", out var c2) &&
+                        c2.TryGetValue("AsistenciaActiva", out var aa2) && aa2 > 0;
+        bool p3Activa = m3.Calificaciones.TryGetValue("$CONFIG$", out var c3) &&
+                        c3.TryGetValue("AsistenciaActiva", out var aa3) && aa3 > 0;
+    
+        int totalClases = 0;
         if (p1Activa && p2Activa && p3Activa)
         {
             int clasesP1 = c1.TryGetValue("ClasesTotales", out var ct1) ? (int)ct1 : 0;
             int clasesP2 = c2.TryGetValue("ClasesTotales", out var ct2) ? (int)ct2 : 0;
             int clasesP3 = c3.TryGetValue("ClasesTotales", out var ct3) ? (int)ct3 : 0;
-            int totalClases = clasesP1 + clasesP2 + clasesP3;
-
-            if (totalClases > 0)
+            totalClases = clasesP1 + clasesP2 + clasesP3;
+        }
+    
+        foreach (var alumno in Alumnos)
+        {
+            string? califP1Str = alumno.Calificación["P1"];
+            string? califP2Str = alumno.Calificación["P2"];
+            string? califP3Str = alumno.Calificación["P3"];
+    
+            bool p1Valida = double.TryParse(califP1Str, out double p1Num);
+            bool p2Valida = double.TryParse(califP2Str, out double p2Num);
+            bool p3Valida = double.TryParse(califP3Str, out double p3Num);
+    
+            if (!p1Valida || !p2Valida || !p3Valida)
             {
-                foreach (var alumno in Alumnos)
-                {
-                    int faltasP1 = m1.Calificaciones.TryGetValue(alumno.Matricula, out var cap1) && cap1.TryGetValue("__Inasistencias__", out var f1) ? (int)f1 : 0;
-                    int faltasP2 = m2.Calificaciones.TryGetValue(alumno.Matricula, out var cap2) && cap2.TryGetValue("__Inasistencias__", out var f2) ? (int)f2 : 0;
-                    int faltasP3 = m3.Calificaciones.TryGetValue(alumno.Matricula, out var cap3) && cap3.TryGetValue("__Inasistencias__", out var f3) ? (int)f3 : 0;
-                    int totalFaltas = faltasP1 + faltasP2 + faltasP3;
-
-                    int asistencias = totalClases - totalFaltas;
-                    double porcentajeAsistencia = ((double)asistencias / totalClases) * 100.0;
-
-                    if (porcentajeAsistencia < 80.0)
-                    {
-                        alumno.Calificación["SEM"] = "0.0";
-                    }
-                }
+                alumno.Calificación["SEM"] = "";
+                continue;
+            }
+    
+            double promedio = (p1Num + p2Num + p3Num) / 3.0;
+            double promedioRedondeado = RedondearPromedio(promedio);
+    
+            bool cumpleAsistencia = true;
+            if (p1Activa && p2Activa && p3Activa && totalClases > 0)
+            {
+                int faltasP1 = m1.Calificaciones.TryGetValue(alumno.Matricula, out var cap1) &&
+                               cap1.TryGetValue("__Inasistencias__", out var f1) ? (int)f1 : 0;
+                int faltasP2 = m2.Calificaciones.TryGetValue(alumno.Matricula, out var cap2) &&
+                               cap2.TryGetValue("__Inasistencias__", out var f2) ? (int)f2 : 0;
+                int faltasP3 = m3.Calificaciones.TryGetValue(alumno.Matricula, out var cap3) &&
+                               cap3.TryGetValue("__Inasistencias__", out var f3) ? (int)f3 : 0;
+                int totalFaltas = faltasP1 + faltasP2 + faltasP3;
+                int asistencias = totalClases - totalFaltas;
+                double porcentajeAsistencia = ((double)asistencias / totalClases) * 100.0;
+                cumpleAsistencia = porcentajeAsistencia >= 80.0;
+            }
+    
+            if (cumpleAsistencia)
+            {
+                alumno.Calificación["SEM"] = promedioRedondeado.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                alumno.Calificación["SEM"] = "0.0";
             }
         }
+    }
+    
+    private double RedondearPromedio(double promedio)
+    {
+        if (Math.Abs(promedio - 6.5) < 0.01) return 7.0;
+        if (Math.Abs(promedio - 9.5) < 0.01) return 10.0;
+
+        double entero = Math.Floor(promedio);
+        double decimalPart = promedio - entero;
+
+        if (decimalPart >= 0.5)
+            return entero + 1.0;
+        else
+            return entero;
     }
 }
