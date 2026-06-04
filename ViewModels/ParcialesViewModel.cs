@@ -28,6 +28,8 @@ public partial class ParcialesViewModel : ObservableObject
 
     public ObservableCollection<Alumno> Alumnos => _mainVm.Alumnos;
     public ObservableCollection<ActividadParcialEditor> Actividades { get; } = new();
+    public MainViewModel MainVm => _mainVm;
+
 
     [ObservableProperty] private Alumno? _alumnoSeleccionado;
     [ObservableProperty] private string _nombreMateria = string.Empty;
