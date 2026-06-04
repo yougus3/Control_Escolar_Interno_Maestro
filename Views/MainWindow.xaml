@@ -8,7 +8,10 @@
         xmlns:views="clr-namespace:Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views"
         mc:Ignorable="d"
         Title="Sistema de Control de Calificaciones - José Ma. Morelos y Pavón"
-        WindowState="Maximized"
+        WindowState="Normal"
+        Width="1108"
+        Height="689"
+        ResizeMode="CanMinimize"
         WindowStartupLocation="CenterScreen"
         Background="#F5F6F8">
 
@@ -39,7 +42,7 @@
                 </Border>
 
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="15,0,0,0">
-                    <TextBlock Text="PREPARATORIA FEDERAL POR COOPERACIÓN JOSÉ MARÍA MORELOS Y PAVÓN" Foreground="White" FontSize="18"
+                    <TextBlock Text='PREPARATORIA FEDERAL POR COOPERACIÓN "JOSÉ MA. MORELOS Y PAVÓN"' Foreground="White" FontSize="18"
                                FontWeight="Bold" />
                     <TextBlock Text="Control de Evaluaciones Continuas" Foreground="#A5B4FC" FontSize="12"
                                FontWeight="SemiBold" />

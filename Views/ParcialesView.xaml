@@ -83,12 +83,13 @@
                        </GroupBox>
                         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,5">
                             <Button Content="Inicio" Command="{Binding InicioCommand}" Margin="0,0,4,0" MinWidth="60"
-                                    Padding="4,2" />
+                                    Padding="8,8" Background="#1B365D" Foreground="White" FontWeight="Bold"/>
                             <Button Content="Anterior" Command="{Binding AnteriorCommand}" Margin="0,0,4,0"
-                                    MinWidth="60" Padding="4,2" />
+                                    MinWidth="60" Padding="8,8" Background="#1B365D" Foreground="White" FontWeight="Bold"/>
                             <Button Content="Siguiente" Command="{Binding SiguienteCommand}" Margin="0,0,4,0"
-                                    MinWidth="60" Padding="4,2" />
-                            <Button Content="Final" Command="{Binding FinalCommand}" MinWidth="60" Padding="4,2" />
+                                    MinWidth="60" Padding="8,8" Background="#1B365D" Foreground="White" FontWeight="Bold"/>
+                            <Button Content="Final" Command="{Binding FinalCommand}" MinWidth="60" Padding="8,8" Background="#1B365D" Foreground="White"
+                                    FontWeight="Bold"/>
                         </StackPanel>
                         <GroupBox Grid.Row="2" Header="Puntajes obtenidos:" Margin="0,0,0,5">
                             <StackPanel Margin="6">
