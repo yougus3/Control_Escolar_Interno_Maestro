@@ -348,8 +348,7 @@ public partial class MainViewModel : ObservableObject
             }
     
             double promedio = (p1Num + p2Num + p3Num) / 3.0;
-            double promedioRedondeado = RedondearPromedio(promedio);
-    
+            int promedioRedondeado = RedondearPromedio(promedio);    
             bool cumpleAsistencia = true;
             if (p1Activa && p2Activa && p3Activa && totalClases > 0)
             {
@@ -367,26 +366,21 @@ public partial class MainViewModel : ObservableObject
     
             if (cumpleAsistencia)
             {
-                alumno.Calificación["SEM"] = promedioRedondeado.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+                alumno.Calificación["SEM"] =
+                    promedioRedondeado.ToString();
             }
             else
             {
-                alumno.Calificación["SEM"] = "0.0";
+                alumno.Calificación["SEM"] = "0";
             }
         }
     }
     
-    private double RedondearPromedio(double promedio)
+    private int RedondearPromedio(double promedio)
     {
-        if (Math.Abs(promedio - 6.5) < 0.01) return 7.0;
-        if (Math.Abs(promedio - 9.5) < 0.01) return 10.0;
+        if (promedio < 6.0)
+            return (int)Math.Floor(promedio);
 
-        double entero = Math.Floor(promedio);
-        double decimalPart = promedio - entero;
-
-        if (decimalPart >= 0.5)
-            return entero + 1.0;
-        else
-            return entero;
+        return (int)Math.Round(promedio, MidpointRounding.AwayFromZero);
     }
 }
