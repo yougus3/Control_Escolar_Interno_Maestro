@@ -6,7 +6,303 @@
         Height="650"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        Background="#F5F6F8">
+        Background="#F1F5F9">
+
+    <Window.Resources>
+
+        <SolidColorBrush x:Key="AppBlue" Color="#1B365D" />
+        <SolidColorBrush x:Key="AppBlueDark" Color="#172F52" />
+        <SolidColorBrush x:Key="AppBlueSoft" Color="#EFF6FF" />
+        <SolidColorBrush x:Key="AppBlueSoftBorder" Color="#BFDBFE" />
+        <SolidColorBrush x:Key="AppBorder" Color="#D7DEE8" />
+        <SolidColorBrush x:Key="AppSurface" Color="White" />
+        <SolidColorBrush x:Key="AppSurfaceSoft" Color="#F8FAFC" />
+        <SolidColorBrush x:Key="AppTextPrimary" Color="#0F172A" />
+        <SolidColorBrush x:Key="AppTextSecondary" Color="#64748B" />
+
+        <Style x:Key="CardBorderStyle" TargetType="Border">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#D7DEE8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+        </Style>
+
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AppBlue}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AppBlueDark}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.85" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SuccessButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
+            <Setter Property="Background" Value="#16A34A" />
+        </Style>
+
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#E2E8F0" />
+            <Setter Property="Foreground" Value="#0F172A" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#CBD5E1" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.85" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="RoundedTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#CBD5E1" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AppBlue}" />
+                                <Setter TargetName="Bd" Property="BorderThickness" Value="1.5" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#93C5FD" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="#F3F4F6" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#CBD5E1" />
+                                <Setter Property="Foreground" Value="#94A3B8" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="RoundedComboStyle" TargetType="ComboBox">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#CBD5E1" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#0F172A" />
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Padding" Value="8,6" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Background" Value="White" />
+                        <Style.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter Property="Background" Value="#EFF6FF" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid SnapsToDevicePixels="True">
+                            <Border x:Name="Bd"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="30" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <ContentPresenter Margin="8,2,0,2"
+                                                      VerticalAlignment="Center"
+                                                      HorizontalAlignment="Left"
+                                                      Content="{TemplateBinding SelectionBoxItem}"
+                                                      ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                      ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                                      IsHitTestVisible="False" />
+
+                                    <ToggleButton Grid.Column="1"
+                                                  Focusable="False"
+                                                  Background="Transparent"
+                                                  BorderThickness="0"
+                                                  ClickMode="Press"
+                                                  IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                        <Path Data="M 0 0 L 4 4 L 8 0 Z"
+                                              Fill="#475569"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                                    </ToggleButton>
+                                </Grid>
+                            </Border>
+
+                            <Popup x:Name="Popup"
+                                   Placement="Bottom"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Fade"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}">
+                                <Border Background="White"
+                                        BorderBrush="#CBD5E1"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Margin="0,4,0,0"
+                                        MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ScrollViewer SnapsToDevicePixels="True">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AppBlue}" />
+                                <Setter TargetName="Bd" Property="BorderThickness" Value="1.5" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#93C5FD" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="#F3F4F6" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#CBD5E1" />
+                                <Setter Property="Foreground" Value="#94A3B8" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Margin" Value="0,2,0,2" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="#1E293B" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style TargetType="GroupBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="GroupBox">
+                        <Border Background="White"
+                                BorderBrush="#D7DEE8"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="12">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top"
+                                           Text="{TemplateBinding Header}"
+                                           FontWeight="Bold"
+                                           FontSize="14"
+                                           Foreground="#1B365D"
+                                           Margin="0,0,0,10" />
+                                <ContentPresenter />
+                            </DockPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="Background" Value="#E2E8F0" />
+            <Setter Property="Foreground" Value="#334155" />
+            <Setter Property="BorderBrush" Value="#CBD5E1" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10,10,0,0"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              ContentSource="Header" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="White" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#D7DEE8" />
+                                <Setter Property="Foreground" Value="{StaticResource AppBlue}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#F8FAFC" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </Window.Resources>
+
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -20,243 +316,246 @@
                    Foreground="#1B365D"
                    Margin="2,0,0,12" />
 
-        <TabControl Grid.Row="1" Background="White" BorderBrush="#D7DEE8" BorderThickness="1">
-            <TabItem Header="Parciales">
-                <Grid Margin="16">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+        <Border Grid.Row="1"
+                Background="White"
+                BorderBrush="#D7DEE8"
+                BorderThickness="1"
+                CornerRadius="12">
+            <TabControl Background="Transparent"
+                        BorderThickness="0"
+                        Padding="0">
 
-                    <StackPanel>
-                        <TextBlock Text="Activa o desactiva las evaluaciones visibles en el sistema"
-                                   Foreground="#475569"
-                                   FontSize="13"
-                                   Margin="0,0,0,12" />
+                <TabItem Header="Parciales">
+                    <Grid Margin="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
 
-                        <CheckBox Content="P1"
-                                  IsChecked="{Binding Parcial1Habilitado, Mode=TwoWay}"
-                                  FontSize="14"
-                                  FontWeight="SemiBold"
-                                  Margin="0,0,0,8" />
-
-                        <CheckBox Content="P2"
-                                  IsChecked="{Binding Parcial2Habilitado, Mode=TwoWay}"
-                                  FontSize="14"
-                                  FontWeight="SemiBold"
-                                  Margin="0,0,0,8" />
-
-                        <CheckBox Content="P3"
-                                  IsChecked="{Binding Parcial3Habilitado, Mode=TwoWay}"
-                                  FontSize="14"
-                                  FontWeight="SemiBold"
-                                  Margin="0,0,0,8" />
-
-                        <CheckBox Content="SEM"
-                                  IsChecked="{Binding SemestralHabilitado, Mode=TwoWay}"
-                                  FontSize="14"
-                                  FontWeight="SemiBold"
-                                  Margin="0,0,0,8" />
-                    </StackPanel>
-
-                    <Border Grid.Row="1"
-                            Background="#F8FAFC"
-                            BorderBrush="#D7DEE8"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Padding="12"
-                            Margin="0,16,0,16">
                         <StackPanel>
-                            <TextBlock Text="Los cambios se guardan en configuracion_parciales.json"
-                                       Foreground="#64748B"
-                                       FontSize="12" />
-                            <TextBlock
-                                Text="Al guardar, la pantalla principal se refresca con las evaluaciones activas."
-                                Foreground="#64748B"
-                                FontSize="12"
-                                Margin="0,4,0,0" />
+                            <TextBlock Text="Activa o desactiva las evaluaciones visibles en el sistema"
+                                       Foreground="#475569"
+                                       FontSize="13"
+                                       Margin="0,0,0,12" />
+
+                            <CheckBox Content="P1"
+                                      IsChecked="{Binding Parcial1Habilitado, Mode=TwoWay}"
+                                      FontSize="14"
+                                      FontWeight="SemiBold"
+                                      Margin="0,0,0,8" />
+
+                            <CheckBox Content="P2"
+                                      IsChecked="{Binding Parcial2Habilitado, Mode=TwoWay}"
+                                      FontSize="14"
+                                      FontWeight="SemiBold"
+                                      Margin="0,0,0,8" />
+
+                            <CheckBox Content="P3"
+                                      IsChecked="{Binding Parcial3Habilitado, Mode=TwoWay}"
+                                      FontSize="14"
+                                      FontWeight="SemiBold"
+                                      Margin="0,0,0,8" />
+
+                            <CheckBox Content="SEM"
+                                      IsChecked="{Binding SemestralHabilitado, Mode=TwoWay}"
+                                      FontSize="14"
+                                      FontWeight="SemiBold"
+                                      Margin="0,0,0,8" />
                         </StackPanel>
-                    </Border>
 
-                    <StackPanel Grid.Row="2"
-                                Orientation="Horizontal"
-                                HorizontalAlignment="Right">
-                        <Button Content="Guardar configuración"
-                                Width="170"
-                                Height="34"
-                                Background="#1B365D"
-                                Foreground="White"
-                                FontWeight="SemiBold"
-                                BorderThickness="0"
-                                Click="GuardarConfiguracion_Click" />
-                    </StackPanel>
-                </Grid>
-            </TabItem>
-
-            <TabItem Header="Calificación directa">
-                <Grid Margin="16">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <TextBlock Text="Materia:"
-                                   VerticalAlignment="Center"
-                                   Foreground="#475569"
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,8,0" />
-                        <ComboBox Width="300"
-                                  Height="32"
-                                  ItemsSource="{Binding MateriasDisponibles}"
-                                  SelectedItem="{Binding MateriaSeleccionadaDirecta, Mode=TwoWay}"
-                                  VerticalContentAlignment="Center" />
-
-                        <TextBlock Text="Evaluación:"
-                                   VerticalAlignment="Center"
-                                   Foreground="#475569"
-                                   FontWeight="SemiBold"
-                                   Margin="18,0,8,0" />
-                        <ComboBox Width="120"
-                                  Height="32"
-                                  ItemsSource="{Binding EvaluacionesDisponiblesDirecta}"
-                                  SelectedItem="{Binding EvaluacionSeleccionadaDirecta, Mode=TwoWay}"
-                                  VerticalContentAlignment="Center" />
-                    </StackPanel>
-
-                    <Grid Grid.Row="1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1.15*" />
-                            <ColumnDefinition Width="1.0*" />
-                        </Grid.ColumnDefinitions>
-
-                        <GroupBox Header="Alumnos">
-                            <ListBox ItemsSource="{Binding AlumnosDirectos}"
-                                     SelectedItem="{Binding AlumnoSeleccionadoDirecto, Mode=TwoWay}"
-                                     BorderThickness="0"
-                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="2,3">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="90" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="90" />
-                                            </Grid.ColumnDefinitions>
-
-                                            <TextBlock Text="{Binding Matricula}"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="#1E293B"
-                                                       FontSize="13" />
-
-                                            <TextBlock Grid.Column="1"
-                                                       Text="{Binding Nombre}"
-                                                       Foreground="#334155"
-                                                       FontSize="13"
-                                                       TextTrimming="CharacterEllipsis" />
-
-                                            <!--<TextBlock Grid.Column="2"
-                                                       Text="{Binding ValorSeleccionado}"
-                                                       HorizontalAlignment="Right"
-                                                       FontWeight="Bold"
-                                                       Foreground="#1B365D"
-                                                       FontSize="13"/>-->
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                        </GroupBox>
-
-                        <GroupBox Grid.Column="1" Header="Edición">
-                            <Grid Margin="10">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-
-                                <TextBlock Text="Alumno seleccionado"
-                                           FontSize="14"
-                                           FontWeight="Bold"
-                                           Foreground="#1B365D"
-                                           Margin="0,0,0,10" />
-
-                                <TextBlock Grid.Row="1"
-                                           Text="{Binding NombreAlumnoDirecto}"
-                                           FontSize="14"
-                                           FontWeight="SemiBold"
-                                           Foreground="#0F172A"
-                                           Margin="0,0,0,4" />
-
-                                <TextBlock Grid.Row="2"
-                                           Text="{Binding MatriculaAlumnoDirecto}"
-                                           Foreground="#475569"
+                        <Border Grid.Row="1"
+                                Background="#F8FAFC"
+                                BorderBrush="#D7DEE8"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="12"
+                                Margin="0,16,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Los cambios se guardan en configuracion_parciales.json"
+                                           Foreground="#64748B"
+                                           FontSize="12" />
+                                <TextBlock Text="Al guardar, la pantalla principal se refresca con las evaluaciones activas."
+                                           Foreground="#64748B"
                                            FontSize="12"
-                                           Margin="0,0,0,2" />
+                                           Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Border>
 
-                                <TextBlock Grid.Row="3"
-                                           Text="{Binding GrupoAlumnoDirecto}"
-                                           Foreground="#475569"
-                                           FontSize="12"
-                                           Margin="0,0,0,14" />
-
-                                <StackPanel Grid.Row="4" Margin="0,0,0,10">
-                                    <TextBlock Text="Calificación actual"
-                                               Foreground="#475569"
-                                               FontSize="12"
-                                               Margin="0,0,0,4" />
-                                    <TextBlock Text="{Binding CalificacionActualDirecta}"
-                                               FontSize="22"
-                                               FontWeight="Bold"
-                                               Foreground="#1B365D" />
-                                </StackPanel>
-
-                                <StackPanel Grid.Row="5">
-                                    <TextBlock Text="Nueva calificación"
-                                               Foreground="#475569"
-                                               FontSize="12"
-                                               Margin="0,0,0,4" />
-                                    <TextBox
-                                        MaxLength="4"
-                                        PreviewTextInput="Calificacion_PreviewTextInput"
-                                        Text="{Binding CalificacionNuevaDirecta, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock Text="Acepta valores como 0, 8, 10 o 8.5"
-                                               Foreground="#64748B"
-                                               FontSize="11"
-                                               Margin="0,6,0,0" />
-                                </StackPanel>
-
-                                <StackPanel Grid.Row="6"
-                                            Orientation="Horizontal"
-                                            HorizontalAlignment="Right"
-                                            Margin="0,14,0,0">
-                                    <Button Content="Guardar"
-                                            Width="140"
-                                            Height="34"
-                                            Background="#16A34A"
-                                            Foreground="White"
-                                            FontWeight="SemiBold"
-                                            BorderThickness="0"
-                                            Click="GuardarDirecta_Click" />
-                                </StackPanel>
-                            </Grid>
-                        </GroupBox>
+                        <StackPanel Grid.Row="2"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Right">
+                            <Button Content="Guardar configuración"
+                                    Width="170"
+                                    Height="34"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Click="GuardarConfiguracion_Click" />
+                        </StackPanel>
                     </Grid>
+                </TabItem>
 
-                    <TextBlock Grid.Row="2"
-                               Text="{Binding EstadoDirecto}"
-                               Foreground="#64748B"
-                               FontSize="12"
-                               Margin="0,10,0,0" />
-                </Grid>
-            </TabItem>
-        </TabControl>
+                <TabItem Header="Calificación directa">
+                    <Grid Margin="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Orientation="Horizontal"
+                                    Margin="0,0,0,12">
+                            <TextBlock Text="Materia:"
+                                       VerticalAlignment="Center"
+                                       Foreground="#475569"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,8,0" />
+                            <ComboBox Width="300"
+                                      Height="32"
+                                      ItemsSource="{Binding MateriasDisponibles}"
+                                      SelectedItem="{Binding MateriaSeleccionadaDirecta, Mode=TwoWay}"
+                                      VerticalContentAlignment="Center"
+                                      Style="{StaticResource RoundedComboStyle}" />
+
+                            <TextBlock Text="Evaluación:"
+                                       VerticalAlignment="Center"
+                                       Foreground="#475569"
+                                       FontWeight="SemiBold"
+                                       Margin="18,0,8,0" />
+                            <ComboBox Width="120"
+                                      Height="32"
+                                      ItemsSource="{Binding EvaluacionesDisponiblesDirecta}"
+                                      SelectedItem="{Binding EvaluacionSeleccionadaDirecta, Mode=TwoWay}"
+                                      VerticalContentAlignment="Center"
+                                      Style="{StaticResource RoundedComboStyle}" />
+                        </StackPanel>
+
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.15*" />
+                                <ColumnDefinition Width="1.0*" />
+                            </Grid.ColumnDefinitions>
+
+                            <GroupBox Header="Alumnos">
+                                <ListBox ItemsSource="{Binding AlumnosDirectos}"
+                                         SelectedItem="{Binding AlumnoSeleccionadoDirecto, Mode=TwoWay}"
+                                         BorderThickness="0"
+                                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                         Background="Transparent">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="2,3">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="90" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="90" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Text="{Binding Matricula}"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="#1E293B"
+                                                           FontSize="13"
+                                                           VerticalAlignment="Center" />
+
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding Nombre}"
+                                                           Foreground="#334155"
+                                                           FontSize="13"
+                                                           VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </GroupBox>
+
+                            <GroupBox Grid.Column="1"
+                                      Header="Edición">
+                                <Grid Margin="10">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Text="Alumno seleccionado"
+                                               FontSize="14"
+                                               FontWeight="Bold"
+                                               Foreground="#1B365D"
+                                               Margin="0,0,0,10" />
+
+                                    <TextBlock Grid.Row="1"
+                                               Text="{Binding NombreAlumnoDirecto}"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="#0F172A"
+                                               Margin="0,0,0,4" />
+
+                                    <TextBlock Grid.Row="2"
+                                               Text="{Binding MatriculaAlumnoDirecto}"
+                                               Foreground="#475569"
+                                               FontSize="12"
+                                               Margin="0,0,0,2" />
+
+                                    <TextBlock Grid.Row="3"
+                                               Text="{Binding GrupoAlumnoDirecto}"
+                                               Foreground="#475569"
+                                               FontSize="12"
+                                               Margin="0,0,0,14" />
+
+                                    <StackPanel Grid.Row="4"
+                                                Margin="0,0,0,10">
+                                        <TextBlock Text="Calificación actual"
+                                                   Foreground="#475569"
+                                                   FontSize="12"
+                                                   Margin="0,0,0,4" />
+                                        <TextBlock Text="{Binding CalificacionActualDirecta}"
+                                                   FontSize="22"
+                                                   FontWeight="Bold"
+                                                   Foreground="#1B365D" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Row="5">
+                                        <TextBlock Text="Nueva calificación"
+                                                   Foreground="#475569"
+                                                   FontSize="12"
+                                                   Margin="0,0,0,4" />
+                                        <TextBox MaxLength="4"
+                                                 PreviewTextInput="Calificacion_PreviewTextInput"
+                                                 Text="{Binding CalificacionNuevaDirecta, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource RoundedTextBoxStyle}" />
+                                        <TextBlock Text="Acepta valores como 0, 8, 10 o 8.5"
+                                                   Foreground="#64748B"
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Row="6"
+                                                Orientation="Horizontal"
+                                                HorizontalAlignment="Right"
+                                                Margin="0,14,0,0">
+                                        <Button Content="Guardar"
+                                                Width="140"
+                                                Height="34"
+                                                Style="{StaticResource SuccessButtonStyle}"
+                                                Click="GuardarDirecta_Click" />
+                                    </StackPanel>
+                                </Grid>
+                            </GroupBox>
+                        </Grid>
+
+                        <TextBlock Grid.Row="2"
+                                   Text="{Binding EstadoDirecto}"
+                                   Foreground="#64748B"
+                                   FontSize="12"
+                                   Margin="0,10,0,0" />
+                    </Grid>
+                </TabItem>
+            </TabControl>
+        </Border>
 
         <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
@@ -265,10 +564,7 @@
             <Button Content="Cerrar"
                     Width="100"
                     Height="34"
-                    Background="#E2E8F0"
-                    Foreground="#0F172A"
-                    FontWeight="SemiBold"
-                    BorderThickness="0"
+                    Style="{StaticResource SecondaryButtonStyle}"
                     Click="Cerrar_Click" />
         </StackPanel>
     </Grid>

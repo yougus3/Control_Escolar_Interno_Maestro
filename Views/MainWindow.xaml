@@ -7,18 +7,269 @@
         xmlns:vm="clr-namespace:Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.ViewModels"
         xmlns:views="clr-namespace:Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views"
         mc:Ignorable="d"
-        Title="Sistema de Control de Calificaciones - José Ma. Morelos y Pavón"
+        Title="Control Escolar Interno Maestro - José Ma. Morelos y Pavón"
         WindowState="Normal"
-        Width="1208"
-        Height="700"
-        ResizeMode="CanMinimize"
+        Width="1360"
+        Height="768"
+        WindowStyle="None"
+        ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
-        Background="#F5F6F8">
+        Background="#F1F5F9">
 
     <Window.Resources>
         <converters:InverseBooleanConverter x:Key="InverseBoolConverter" />
+
+        <!-- SVG para Configuración (engranaje) -->
+        <Geometry x:Key="SettingsGeometry">M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z</Geometry>
+
+        <!-- SVG para Minimizar (guión) -->
+        <Geometry x:Key="MinimizeGeometry">M19,13H5v-2h14V13z</Geometry>
+
+        <!-- SVG para Cerrar (X) -->
+        <Geometry x:Key="CloseGeometry">M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41z</Geometry>
+
+        <!-- Colores -->
+        <SolidColorBrush x:Key="AppBlue" Color="#1B365D" />
+        <SolidColorBrush x:Key="AppBlueDark" Color="#172F52" />
+        <SolidColorBrush x:Key="AppBlueSoft" Color="#EFF6FF" />
+        <SolidColorBrush x:Key="AppBlueSoftBorder" Color="#BFDBFE" />
+        <SolidColorBrush x:Key="AppBorder" Color="#D7DEE8" />
+        <SolidColorBrush x:Key="AppBackground" Color="#F1F5F9" />
+        <SolidColorBrush x:Key="AppSurface" Color="White" />
+        <SolidColorBrush x:Key="AppSurfaceSoft" Color="#F8FAFC" />
+        <SolidColorBrush x:Key="AppTextPrimary" Color="#0F172A" />
+        <SolidColorBrush x:Key="AppTextSecondary" Color="#64748B" />
+
+        <!-- Botón principal -->
+        <Style x:Key="BlueButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AppBlue}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AppBlueDark}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.85" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <Style x:Key="GreenButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#16A34A" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd"
+                                        Property="Background"
+                                        Value="#15803D"/>
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd"
+                                        Property="Opacity"
+                                        Value="0.85"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Botón de ícono -->
+        <Style x:Key="IconButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#284B79" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.85" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- TextBox -->
+        <Style x:Key="RoundedTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#CBD5E1" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#1B365D" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#93C5FD" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="#F3F4F6" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#CBD5E1" />
+                                <Setter Property="Foreground" Value="#94A3B8" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ComboBox -->
+        <Style x:Key="RoundedComboStyle" TargetType="ComboBox">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#CBD5E1" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="Foreground" Value="#0F172A" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Padding" Value="8,6" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Background" Value="White" />
+                        <Style.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter Property="Background" Value="#EFF6FF" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid SnapsToDevicePixels="True">
+                            <Border x:Name="Bd"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="30" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <ContentPresenter Margin="8,2,0,2"
+                                                      VerticalAlignment="Center"
+                                                      HorizontalAlignment="Left"
+                                                      Content="{TemplateBinding SelectionBoxItem}"
+                                                      ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                      ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                                      IsHitTestVisible="False" />
+
+                                    <ToggleButton Grid.Column="1"
+                                                  Focusable="False"
+                                                  Background="Transparent"
+                                                  BorderThickness="0"
+                                                  ClickMode="Press"
+                                                  IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                        <Path Data="M 0 0 L 4 4 L 8 0 Z"
+                                              Fill="#475569"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                                    </ToggleButton>
+                                </Grid>
+                            </Border>
+
+                            <Popup x:Name="Popup"
+                                   Placement="Bottom"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Fade"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}">
+                                <Border Background="White"
+                                        BorderBrush="#CBD5E1"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Margin="0,4,0,0"
+                                        MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ScrollViewer SnapsToDevicePixels="True">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#1B365D" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#93C5FD" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="#F3F4F6" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#CBD5E1" />
+                                <Setter Property="Foreground" Value="#94A3B8" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Window.Resources>
-    
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="80" />
@@ -27,81 +278,131 @@
             <RowDefinition Height="30" />
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="#1B365D" CornerRadius="0,0,10,10" Panel.ZIndex="1">
+        <Border Grid.Row="0"
+                Background="#1B365D"
+                CornerRadius="0,0,10,10"
+                Panel.ZIndex="1">
             <Grid Margin="20,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                
-                <Border Grid.Column="0" Width="50" Height="50" CornerRadius="25" VerticalAlignment="Center">
+
+                <Border Grid.Column="0"
+                        Width="50"
+                        Height="50"
+                        CornerRadius="25"
+                        VerticalAlignment="Center">
                     <Border.Background>
-                        <ImageBrush ImageSource="/logo.jpg" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
+                        <ImageBrush ImageSource="/logo.jpg"
+                                    Stretch="UniformToFill"
+                                    RenderOptions.BitmapScalingMode="HighQuality" />
                     </Border.Background>
                 </Border>
 
-                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="15,0,0,0">
-                    <TextBlock Text='PREPARATORIA FEDERAL POR COOPERACIÓN "JOSÉ MA. MORELOS Y PAVÓN"' Foreground="White" FontSize="18"
+                <StackPanel Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Margin="15,0,0,0">
+                    <TextBlock Text='PREPARATORIA FEDERAL POR COOPERACIÓN "JOSÉ MA. MORELOS Y PAVÓN"'
+                               Foreground="White"
+                               FontSize="18"
                                FontWeight="Bold" />
-                    <TextBlock Text="Control de Evaluaciones Continuas" Foreground="#A5B4FC" FontSize="12"
+                    <TextBlock Text="Control Escolar Interno Maestro"
+                               Foreground="#A5B4FC"
+                               FontSize="12"
                                FontWeight="SemiBold" />
                 </StackPanel>
-                
-                <Button Grid.Column="2"
-                        Width="40"
-                        Height="40"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Cursor="Hand"
-                        ToolTip="Configuración"
-                        Click="Configuracion_Click">
 
-                    <TextBlock Text="⚙"
-                               FontSize="22"
-                               Foreground="White"
-                               Opacity="0.8"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center" />
-                </Button>
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <Button Style="{StaticResource IconButtonStyle}"
+                            ToolTip="Configuración"
+                            Click="Configuracion_Click">
+                        <Viewbox Width="20" Height="20">
+                            <Path Fill="#94A3B8"
+                                  Opacity="0.8"
+                                  Data="{StaticResource SettingsGeometry}"
+                                  Stretch="Uniform" />
+                        </Viewbox>
+                    </Button>
+
+                    <Button Style="{StaticResource IconButtonStyle}"
+                            ToolTip="Minimizar"
+                            Click="Minimizar_Click">
+                        <Viewbox Width="20" Height="20">
+                            <Path Fill="#60A5FA"
+                                  Opacity="0.8"
+                                  Data="{StaticResource MinimizeGeometry}"
+                                  Stretch="Uniform" />
+                        </Viewbox>
+                    </Button>
+
+                    <Button Style="{StaticResource IconButtonStyle}"
+                            ToolTip="Cerrar"
+                            Click="Cerrar_Click">
+                        <Viewbox Width="20" Height="20">
+                            <Path Fill="#EF4444"
+                                  Opacity="0.8"
+                                  Data="{StaticResource CloseGeometry}"
+                                  Stretch="Uniform" />
+                        </Viewbox>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
 
-        <!-- Reduje el margin horizontal de 15 a 10 y aumenté la altura de la fila 1 -->
-        <Border Grid.Row="1" Background="White" Margin="10,10,10,5" CornerRadius="6" BorderBrush="#E2E8F0"
+        <Border Grid.Row="1"
+                Background="White"
+                Margin="10,10,10,5"
+                CornerRadius="12"
+                BorderBrush="#D7DEE8"
                 BorderThickness="1">
             <Grid Margin="10,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="90" />  <!-- Reducido de 100 a 90 -->
+                    <ColumnDefinition Width="90" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="130" /> <!-- Reducido de 150 a 130 -->
+                    <ColumnDefinition Width="130" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Text="USB:" VerticalAlignment="Center" FontWeight="SemiBold"
-                           Foreground="#475569" Margin="0,0,5,0" />
-                <TextBox Grid.Column="1" Text="{Binding RutaUsb, UpdateSourceTrigger=PropertyChanged}"
-                         VerticalContentAlignment="Center" Height="32" BorderBrush="#CBD5E1"
+                <TextBlock Grid.Column="0"
+                           Text="USB:"
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"
+                           Foreground="#475569"
+                           Margin="0,0,5,0" />
+
+                <TextBox Grid.Column="1"
+                         Style="{StaticResource RoundedTextBoxStyle}"
+                         Text="{Binding RutaUsb, UpdateSourceTrigger=PropertyChanged}"
+                         VerticalContentAlignment="Center"
+                         Height="32"
                          IsReadOnly="{Binding RutaUsbEditable, Converter={StaticResource InverseBoolConverter}}" />
 
-                <Button Grid.Column="2" Content="Escanear" Command="{Binding EscanearUsbCommand}" Height="32"
-                        Width="80" Margin="8,0,0,0" Background="#1B365D" Foreground="White" FontWeight="SemiBold"
-                        BorderThickness="0">
-                    <Button.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="4" />
-                        </Style>
-                    </Button.Resources>
-                </Button>
+                <Button Grid.Column="2"
+                        Content="Escanear"
+                        Command="{Binding EscanearUsbCommand}"
+                        Style="{StaticResource BlueButtonStyle}"
+                        Height="32"
+                        Width="80"
+                        Margin="8,0,0,0" />
 
-                <TextBlock Grid.Column="3" Text="Archivo:" VerticalAlignment="Center" FontWeight="SemiBold"
-                           Foreground="#475569" Margin="15,0,5,0" />
+                <TextBlock Grid.Column="3"
+                           Text="Archivo:"
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"
+                           Foreground="#475569"
+                           Margin="15,0,5,0" />
+
                 <ComboBox Grid.Column="4"
+                          Style="{StaticResource RoundedComboStyle}"
                           ItemsSource="{Binding ArchivosDisponibles}"
                           SelectedItem="{Binding ArchivoSeleccionado}"
                           Height="32"
@@ -109,32 +410,33 @@
                           HorizontalAlignment="Left"
                           VerticalContentAlignment="Center" />
 
-                <TextBlock Grid.Column="5" Text="Eval:" VerticalAlignment="Center" FontWeight="SemiBold"
-                           Foreground="#475569" Margin="15,0,5,0" />
-                <ComboBox Grid.Column="6" ItemsSource="{Binding EvaluacionesDisponibles}"
-                          SelectedItem="{Binding EvaluacionSeleccionada}" Height="32" VerticalContentAlignment="Center" />
+                <TextBlock Grid.Column="5"
+                           Text="Eval:"
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"
+                           Foreground="#475569"
+                           Margin="15,0,5,0" />
+
+                <ComboBox Grid.Column="6"
+                          Style="{StaticResource RoundedComboStyle}"
+                          ItemsSource="{Binding EvaluacionesDisponibles}"
+                          SelectedItem="{Binding EvaluacionSeleccionada}"
+                          Height="32"
+                          VerticalContentAlignment="Center" />
 
                 <Button Grid.Column="7"
                         Content="Guardar"
                         Command="{Binding GuardarCommand}"
+                        Style="{StaticResource GreenButtonStyle}"
                         Height="32"
                         Width="80"
-                        Margin="15,0,0,0"
-                        Background="#16A34A"
-                        Foreground="White"
-                        FontWeight="SemiBold"
-                        BorderThickness="0">
-                    <Button.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="4" />
-                        </Style>
-                    </Button.Resources>
-                </Button>
+                        Margin="15,0,0,0" />
             </Grid>
         </Border>
 
-        <!-- Aquí la tabla ocupa más espacio horizontal (margin reducido de 15 a 10) -->
-        <ContentControl Grid.Row="2" Margin="10,5,15,10" Content="{Binding}">
+        <ContentControl Grid.Row="2"
+                        Margin="10,5,15,10"
+                        Content="{Binding}">
             <ContentControl.Style>
                 <Style TargetType="ContentControl">
                     <Setter Property="ContentTemplate">
@@ -159,17 +461,29 @@
             </ContentControl.Style>
         </ContentControl>
 
-        <Border Grid.Row="3" Background="#E2E8F0">
+        <Border Grid.Row="3"
+                Background="#E2E8F0">
             <Grid Margin="10,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Alumnos: " Foreground="#64748B" FontSize="11" FontWeight="Medium" />
-                    <TextBlock Text="{Binding Alumnos.Count}" Foreground="#1E293B" FontSize="11" FontWeight="Bold" />
+                <StackPanel Grid.Column="0"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="Alumnos: "
+                               Foreground="#64748B"
+                               FontSize="11"
+                               FontWeight="Medium" />
+                    <TextBlock Text="{Binding Alumnos.Count}"
+                               Foreground="#1E293B"
+                               FontSize="11"
+                               FontWeight="Bold" />
                 </StackPanel>
-                <TextBlock Grid.Column="1" Text="Estado: Conectado" Foreground="#64748B" FontSize="11"
+                <TextBlock Grid.Column="1"
+                           Text="Estado: Conectado"
+                           Foreground="#64748B"
+                           FontSize="11"
                            VerticalAlignment="Center" />
             </Grid>
         </Border>

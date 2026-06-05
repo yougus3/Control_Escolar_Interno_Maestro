@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media.Imaging;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
@@ -18,14 +21,6 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
         public string Matricula { get; set; }
         public string Nombre { get; set; }
         public string Grupo { get; set; }
-
-        // Foto
-        private string _fotoUrl = string.Empty;
-        public string FotoUrl
-        {
-            get => _fotoUrl;
-            set { _fotoUrl = value; OnPropertyChanged(); }
-        }
 
         private bool _fotoCargada = false;
         public bool FotoCargada
@@ -64,28 +59,52 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
             Nombre = alumno.Nombre;
             Grupo = alumno.Grupo;
 
-            // Cargar foto
-            FotoUrl = $"https://www.prefecotemixco.edu.mx/fotos_alumno/{Matricula}.jpg";
-            _ = CargarFotoAsync();
-
             // Cargar datos de parciales
             CargarDatosParciales(datosParciales);
 
             DataContext = this;
+
+            // Disparar carga de foto de forma asíncrona (sin bloquear la UI)
+            _ = CargarFotoAsync(Matricula);
         }
 
-        private async System.Threading.Tasks.Task CargarFotoAsync()
+        private async Task CargarFotoAsync(string matricula)
         {
+            string url = $"https://www.prefecotemixco.edu.mx/fotos_alumno/{matricula}.jpg";
+
             try
             {
-                using var client = new HttpClient();
-                client.Timeout = TimeSpan.FromSeconds(10);
-                var response = await client.GetAsync(FotoUrl);
-                FotoCargada = response.IsSuccessStatusCode;
+                // Descargamos y procesamos la imagen en un hilo de fondo
+                var bitmap = await Task.Run(async () =>
+                {
+                    using (var client = new HttpClient())
+                    {
+                        client.Timeout = TimeSpan.FromSeconds(8);
+                        
+                        var bytes = await client.GetByteArrayAsync(url);
+                        
+                        using (var stream = new MemoryStream(bytes))
+                        {
+                            var bi = new BitmapImage();
+                            bi.BeginInit();
+                            bi.CacheOption = BitmapCacheOption.OnLoad; // Obliga a cargar de inmediato a memoria
+                            bi.StreamSource = stream;
+                            bi.EndInit();
+                            bi.Freeze(); // Crucial para pasarla al hilo de la UI sin crashear
+                            return bi;
+                        }
+                    }
+                });
+
+                // Asignamos a la UI
+                FotoAlumnoImage.Source = bitmap;
+                FotoCargada = true;
             }
             catch
             {
+                // Si la imagen no existe o el servidor falla, no crashea, simplemente se queda vacío
                 FotoCargada = false;
+                System.Diagnostics.Debug.WriteLine($"Fallo al cargar la foto para la matrícula {matricula}.");
             }
         }
 
