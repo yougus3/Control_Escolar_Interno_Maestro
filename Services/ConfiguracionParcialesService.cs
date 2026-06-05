@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
@@ -7,7 +8,10 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 
 public class ConfiguracionParcialesService
 {
+    private const string ClaveGlobalLegada = "__DEFAULT__";
+
     private readonly string _rutaJson;
+
     private static readonly JsonSerializerOptions _opciones = new()
     {
         WriteIndented = true
@@ -42,44 +46,102 @@ public class ConfiguracionParcialesService
 
         if (!File.Exists(_rutaJson))
         {
-            GuardarConfiguracion(CrearConfiguracionPorDefecto());
+            File.WriteAllText(_rutaJson, "{}");
         }
+    }
+
+    private Dictionary<string, ConfiguracionParciales> CargarTodoInterno()
+    {
+        try
+        {
+            string json = File.ReadAllText(_rutaJson);
+
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return new Dictionary<string, ConfiguracionParciales>();
+            }
+
+            try
+            {
+                var datosDiccionario = JsonSerializer.Deserialize<Dictionary<string, ConfiguracionParciales>>(json);
+                if (datosDiccionario != null)
+                {
+                    return datosDiccionario;
+                }
+            }
+            catch
+            {
+                // Intento siguiente abajo
+            }
+
+            try
+            {
+                var configLegada = JsonSerializer.Deserialize<ConfiguracionParciales>(json);
+                if (configLegada != null)
+                {
+                    return new Dictionary<string, ConfiguracionParciales>
+                    {
+                        [ClaveGlobalLegada] = configLegada
+                    };
+                }
+            }
+            catch
+            {
+                // Se cae al return vacío
+            }
+        }
+        catch
+        {
+        }
+
+        return new Dictionary<string, ConfiguracionParciales>();
+    }
+
+    private void GuardarTodoInterno(Dictionary<string, ConfiguracionParciales> datos)
+    {
+        string json = JsonSerializer.Serialize(datos, _opciones);
+        File.WriteAllText(_rutaJson, json);
     }
 
     public ConfiguracionParciales ObtenerConfiguracion()
     {
-        try
+        return ObtenerConfiguracion(string.Empty);
+    }
+
+    public ConfiguracionParciales ObtenerConfiguracion(string claveMateria)
+    {
+        var datos = CargarTodoInterno();
+
+        if (!string.IsNullOrWhiteSpace(claveMateria) &&
+            datos.TryGetValue(claveMateria, out ConfiguracionParciales? configMateria) &&
+            configMateria != null)
         {
-            if (!File.Exists(_rutaJson))
-            {
-                var defecto = CrearConfiguracionPorDefecto();
-                GuardarConfiguracion(defecto);
-                return defecto;
-            }
-
-            string json = File.ReadAllText(_rutaJson);
-            var config = JsonSerializer.Deserialize<ConfiguracionParciales>(json);
-
-            if (config == null)
-            {
-                var defecto = CrearConfiguracionPorDefecto();
-                GuardarConfiguracion(defecto);
-                return defecto;
-            }
-
-            return config;
+            return configMateria;
         }
-        catch
+
+        if (datos.TryGetValue(ClaveGlobalLegada, out ConfiguracionParciales? configGlobal) &&
+            configGlobal != null)
         {
-            var defecto = CrearConfiguracionPorDefecto();
-            GuardarConfiguracion(defecto);
-            return defecto;
+            return configGlobal;
         }
+
+        return CrearConfiguracionPorDefecto();
     }
 
     public void GuardarConfiguracion(ConfiguracionParciales configuracion)
     {
-        string json = JsonSerializer.Serialize(configuracion, _opciones);
-        File.WriteAllText(_rutaJson, json);
+        GuardarConfiguracion(ClaveGlobalLegada, configuracion);
+    }
+
+    public void GuardarConfiguracion(string claveMateria, ConfiguracionParciales configuracion)
+    {
+        if (string.IsNullOrWhiteSpace(claveMateria))
+        {
+            claveMateria = ClaveGlobalLegada;
+        }
+
+        var datos = CargarTodoInterno();
+        datos[claveMateria] = configuracion ?? CrearConfiguracionPorDefecto();
+        GuardarTodoInterno(datos);
     }
 }

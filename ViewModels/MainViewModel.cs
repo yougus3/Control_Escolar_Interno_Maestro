@@ -77,12 +77,21 @@ public partial class MainViewModel : ObservableObject
 
     public void RecargarConfiguracionYArchivoActual()
     {
-        _configuracionActual = _configuracionService.ObtenerConfiguracion();
-
         if (!string.IsNullOrWhiteSpace(ArchivoSeleccionado))
         {
             CargarArchivoSeleccionado(ArchivoSeleccionado);
         }
+    }
+
+    private static string ObtenerClaveMateriaDesdeRuta(string? rutaCompleta)
+    {
+        if (string.IsNullOrWhiteSpace(rutaCompleta))
+            return string.Empty;
+
+        string nombre = Path.GetFileNameWithoutExtension(rutaCompleta);
+        return string.IsNullOrWhiteSpace(nombre)
+            ? string.Empty
+            : nombre.Trim().Replace(' ', '_');
     }
 
     private bool EvaluacionEstaHabilitada(string evaluacion)
@@ -164,6 +173,8 @@ public partial class MainViewModel : ObservableObject
         }
 
         _archivoCompletoActual = rutaCompleta;
+        string claveMateria = ObtenerClaveMateriaDesdeRuta(rutaCompleta);
+        _configuracionActual = _configuracionService.ObtenerConfiguracion(claveMateria);
 
         var resultado = _parserService.ProcesarArchivoCompleto(rutaCompleta);
 
@@ -266,7 +277,6 @@ public partial class MainViewModel : ObservableObject
             EvaluacionSeleccionada,
             idEval);
 
-        // Después de guardar cualquier evaluación, sincronizar SEM
         SincronizarCalificacionSemestral();
 
         MessageBox.Show(
@@ -279,7 +289,7 @@ public partial class MainViewModel : ObservableObject
     private void SincronizarCalificacionSemestral()
     {
         if (string.IsNullOrWhiteSpace(ArchivoSeleccionado)) return;
-    
+
         string claveMateria = string.Empty;
         if (!string.IsNullOrWhiteSpace(ArchivoCompletoActual))
         {
@@ -292,7 +302,7 @@ public partial class MainViewModel : ObservableObject
             {
             }
         }
-    
+
         if (string.IsNullOrWhiteSpace(claveMateria) && !string.IsNullOrWhiteSpace(ArchivoSeleccionado))
         {
             string texto = ArchivoSeleccionado.Trim();
@@ -305,23 +315,23 @@ public partial class MainViewModel : ObservableObject
                 claveMateria = string.IsNullOrWhiteSpace(nombre) ? clave : $"{clave}_{nombre}";
             }
         }
-    
+
         if (string.IsNullOrWhiteSpace(claveMateria)) return;
-    
+
         var jsonService = new ParcialJsonService();
         var m1 = jsonService.ObtenerMateria($"{claveMateria}_P1");
         var m2 = jsonService.ObtenerMateria($"{claveMateria}_P2");
         var m3 = jsonService.ObtenerMateria($"{claveMateria}_P3");
-    
+
         if (m1 == null || m2 == null || m3 == null) return;
-    
+
         bool p1Activa = m1.Calificaciones.TryGetValue("$CONFIG$", out var c1) &&
                         c1.TryGetValue("AsistenciaActiva", out var aa1) && aa1 > 0;
         bool p2Activa = m2.Calificaciones.TryGetValue("$CONFIG$", out var c2) &&
                         c2.TryGetValue("AsistenciaActiva", out var aa2) && aa2 > 0;
         bool p3Activa = m3.Calificaciones.TryGetValue("$CONFIG$", out var c3) &&
                         c3.TryGetValue("AsistenciaActiva", out var aa3) && aa3 > 0;
-    
+
         int totalClases = 0;
         if (p1Activa && p2Activa && p3Activa)
         {
@@ -330,25 +340,25 @@ public partial class MainViewModel : ObservableObject
             int clasesP3 = c3.TryGetValue("ClasesTotales", out var ct3) ? (int)ct3 : 0;
             totalClases = clasesP1 + clasesP2 + clasesP3;
         }
-    
+
         foreach (var alumno in Alumnos)
         {
             string? califP1Str = alumno.Calificación["P1"];
             string? califP2Str = alumno.Calificación["P2"];
             string? califP3Str = alumno.Calificación["P3"];
-    
+
             bool p1Valida = double.TryParse(califP1Str, out double p1Num);
             bool p2Valida = double.TryParse(califP2Str, out double p2Num);
             bool p3Valida = double.TryParse(califP3Str, out double p3Num);
-    
+
             if (!p1Valida || !p2Valida || !p3Valida)
             {
                 alumno.Calificación["SEM"] = "";
                 continue;
             }
-    
+
             double promedio = (p1Num + p2Num + p3Num) / 3.0;
-            int promedioRedondeado = RedondearPromedio(promedio);    
+            int promedioRedondeado = RedondearPromedio(promedio);
             bool cumpleAsistencia = true;
             if (p1Activa && p2Activa && p3Activa && totalClases > 0)
             {
@@ -363,7 +373,7 @@ public partial class MainViewModel : ObservableObject
                 double porcentajeAsistencia = ((double)asistencias / totalClases) * 100.0;
                 cumpleAsistencia = porcentajeAsistencia >= 80.0;
             }
-    
+
             if (cumpleAsistencia)
             {
                 alumno.Calificación["SEM"] =
@@ -375,7 +385,7 @@ public partial class MainViewModel : ObservableObject
             }
         }
     }
-    
+
     private int RedondearPromedio(double promedio)
     {
         if (promedio < 6.0)

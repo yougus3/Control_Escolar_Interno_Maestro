@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using System.Windows.Input;
 using System.IO;
 using System.Linq;
-using System.Windows.Input;
 using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -35,6 +35,7 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
     private bool _parcial3Habilitado;
     private bool _semestralHabilitado;
 
+    private string? _materiaSeleccionadaConfiguracion;
     private string? _materiaSeleccionadaDirecta;
     private string? _evaluacionSeleccionadaDirecta;
     private Alumno? _alumnoSeleccionadoDirecto;
@@ -95,6 +96,22 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
         }
     }
 
+    public string? MateriaSeleccionadaConfiguracion
+    {
+        get => _materiaSeleccionadaConfiguracion;
+        set
+        {
+            if (_materiaSeleccionadaConfiguracion == value) return;
+            _materiaSeleccionadaConfiguracion = value;
+            OnPropertyChanged();
+
+            if (!_cargandoDatos)
+            {
+                CargarConfiguracionMateriaSeleccionada();
+            }
+        }
+    }
+
     public string? MateriaSeleccionadaDirecta
     {
         get => _materiaSeleccionadaDirecta;
@@ -103,6 +120,7 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
             if (_materiaSeleccionadaDirecta == value) return;
             _materiaSeleccionadaDirecta = value;
             OnPropertyChanged();
+
             if (!_cargandoDatos)
             {
                 CargarMateriaDirecta();
@@ -215,22 +233,63 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
 
         DataContext = this;
 
-        CargarConfiguracionInicial();
         CargarMateriasDisponibles();
+        CargarConfiguracionMateriaSeleccionada();
 
         if (MateriasDisponibles.Any())
         {
-            MateriaSeleccionadaDirecta = MateriasDisponibles.FirstOrDefault();
+            _cargandoDatos = true;
+            try
+            {
+                var primera = MateriasDisponibles.FirstOrDefault();
+                MateriaSeleccionadaConfiguracion = primera;
+                MateriaSeleccionadaDirecta = primera;
+            }
+            finally
+            {
+                _cargandoDatos = false;
+            }
+
+            CargarConfiguracionMateriaSeleccionada();
+
+            if (!string.IsNullOrWhiteSpace(MateriaSeleccionadaDirecta))
+            {
+                CargarMateriaDirecta();
+            }
         }
     }
 
-    private void CargarConfiguracionInicial()
+    private void CargarConfiguracionMateriaSeleccionada()
     {
-        _configuracion = _configuracionService.ObtenerConfiguracion();
-
         _cargandoDatos = true;
         try
         {
+            if (string.IsNullOrWhiteSpace(MateriaSeleccionadaConfiguracion))
+            {
+                _configuracion = new ConfiguracionParciales
+                {
+                    CapturaDirectaHabilitada = false,
+                    Parcial1Habilitado = true,
+                    Parcial2Habilitado = false,
+                    Parcial3Habilitado = false,
+                    SemestralHabilitado = false
+                };
+            }
+            else
+            {
+                string claveMateria = ObtenerClaveMateriaSeleccionada();
+                _configuracion = string.IsNullOrWhiteSpace(claveMateria)
+                    ? new ConfiguracionParciales
+                    {
+                        CapturaDirectaHabilitada = false,
+                        Parcial1Habilitado = true,
+                        Parcial2Habilitado = false,
+                        Parcial3Habilitado = false,
+                        SemestralHabilitado = false
+                    }
+                    : _configuracionService.ObtenerConfiguracion(claveMateria);
+            }
+
             Parcial1Habilitado = _configuracion.Parcial1Habilitado;
             Parcial2Habilitado = _configuracion.Parcial2Habilitado;
             Parcial3Habilitado = _configuracion.Parcial3Habilitado;
@@ -240,6 +299,23 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
         {
             _cargandoDatos = false;
         }
+    }
+
+    private string ObtenerClaveMateriaSeleccionada()
+    {
+        if (string.IsNullOrWhiteSpace(MateriaSeleccionadaConfiguracion))
+            return string.Empty;
+
+        if (_mapaArchivos.TryGetValue(MateriaSeleccionadaConfiguracion, out string? rutaCompleta) &&
+            !string.IsNullOrWhiteSpace(rutaCompleta))
+        {
+            string nombre = Path.GetFileNameWithoutExtension(rutaCompleta);
+            return string.IsNullOrWhiteSpace(nombre)
+                ? string.Empty
+                : nombre.Trim().Replace(' ', '_');
+        }
+
+        return string.Empty;
     }
 
     private void CargarMateriasDisponibles()
@@ -396,23 +472,35 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
 
     private void GuardarConfiguracion_Click(object sender, RoutedEventArgs e)
     {
+        string claveMateria = ObtenerClaveMateriaSeleccionada();
+
+        if (string.IsNullOrWhiteSpace(claveMateria))
+        {
+            MessageBox.Show(
+                "Selecciona una materia antes de guardar la configuración.",
+                "Aviso",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
         _configuracion.Parcial1Habilitado = Parcial1Habilitado;
         _configuracion.Parcial2Habilitado = Parcial2Habilitado;
         _configuracion.Parcial3Habilitado = Parcial3Habilitado;
         _configuracion.SemestralHabilitado = SemestralHabilitado;
 
-        _configuracionService.GuardarConfiguracion(_configuracion);
+        _configuracionService.GuardarConfiguracion(claveMateria, _configuracion);
 
         _mainVm.RecargarConfiguracionYArchivoActual();
         CargarMateriasDisponibles();
 
-        if (!string.IsNullOrWhiteSpace(MateriaSeleccionadaDirecta))
+        if (!string.IsNullOrWhiteSpace(MateriaSeleccionadaConfiguracion))
         {
-            CargarMateriaDirecta();
+            CargarConfiguracionMateriaSeleccionada();
         }
 
         MessageBox.Show(
-            "Configuración guardada.",
+            "Configuración guardada para la materia seleccionada.",
             "OK",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
@@ -562,15 +650,13 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nombrePropiedad));
     }
-    
+
     private void Calificacion_PreviewTextInput(object sender, TextCompositionEventArgs e)
     {
         TextBox tb = (TextBox)sender;
-    
-        // Formamos el texto tal como quedaría si aceptamos la tecla
+
         string textoResultante = tb.Text.Insert(tb.CaretIndex, e.Text);
 
-        // 1. Regla del punto: Si contiene un punto, este DEBE estar estrictamente en la posición 1 (índice 1, es decir, el segundo carácter)
         int indicePunto = textoResultante.IndexOf('.');
         if (indicePunto != -1 && indicePunto != 1)
         {
@@ -578,12 +664,8 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
             return;
         }
 
-        // 2. Expresión regular que valida el formato paso a paso:
-        // - Permite un solo dígito del 0 al 9, opcionalmente seguido de un punto y otro dígito (ej: 0, 4, 4., 4.7)
-        // - O permite exactamente el número 10 (sin puntos)
         bool esFormatoValido = Regex.IsMatch(textoResultante, @"^([0-9](\.[0-9]?)?|10?)$");
 
-        // Si no cumple el formato, bloqueamos la tecla
         e.Handled = !esFormatoValido;
     }
 }

@@ -65,10 +65,6 @@ public class ParcialJsonService
             return materia;
         }
 
-        // Do not create and persist an empty MateriaParcial here to avoid
-        // pre-populating the JSON file with empty entries when the user only
-        // opens a subject. Return an in-memory empty object; it will be saved
-        // later by GuardarMateria when the user explicitly saves changes.
         return new MateriaParcial();
     }
 
@@ -78,5 +74,4 @@ public class ParcialJsonService
         datos[claveMateria] = materia;
         GuardarTodo(datos);
     }
-
 }

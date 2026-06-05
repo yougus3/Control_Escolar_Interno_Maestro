@@ -334,10 +334,25 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel>
-                            <TextBlock Text="Activa o desactiva las evaluaciones visibles en el sistema"
+                            <TextBlock Text="Selecciona una materia y activa o desactiva sus evaluaciones visibles en el sistema"
                                        Foreground="#475569"
                                        FontSize="13"
                                        Margin="0,0,0,12" />
+
+                            <StackPanel Orientation="Horizontal"
+                                        Margin="0,0,0,14">
+                                <TextBlock Text="Materia:"
+                                           VerticalAlignment="Center"
+                                           Foreground="#475569"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,8,0" />
+                                <ComboBox Width="320"
+                                          Height="32"
+                                          ItemsSource="{Binding MateriasDisponibles}"
+                                          SelectedItem="{Binding MateriaSeleccionadaConfiguracion, Mode=TwoWay}"
+                                          VerticalContentAlignment="Center"
+                                          Style="{StaticResource RoundedComboStyle}" />
+                            </StackPanel>
 
                             <CheckBox Content="P1"
                                       IsChecked="{Binding Parcial1Habilitado, Mode=TwoWay}"
@@ -372,10 +387,10 @@
                                 Padding="12"
                                 Margin="0,16,0,16">
                             <StackPanel>
-                                <TextBlock Text="Los cambios se guardan en configuracion_parciales.json"
+                                <TextBlock Text="Los cambios se guardan por materia en configuracion_parciales.json"
                                            Foreground="#64748B"
                                            FontSize="12" />
-                                <TextBlock Text="Al guardar, la pantalla principal se refresca con las evaluaciones activas."
+                                <TextBlock Text="Al guardar, la pantalla principal se refresca con las evaluaciones activas de esa materia."
                                            Foreground="#64748B"
                                            FontSize="12"
                                            Margin="0,4,0,0" />
