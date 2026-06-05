@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Información del Alumno" 
         Height="680" 
-        Width="760"
+        Width="768"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
@@ -115,6 +115,7 @@
                                     <RowDefinition Height="Auto"/> 
                                     <RowDefinition Height="Auto"/> 
                                     <RowDefinition Height="Auto"/> 
+                                    <RowDefinition Height="Auto"/> 
                                 </Grid.RowDefinitions>
                                 
                                 <Grid.ColumnDefinitions>
@@ -153,7 +154,6 @@
                                     </Border>
                                 </Border>
 
-                                <Border Grid.Row="2" Grid.ColumnSpan="4" Background="#F8FAFC"/> 
                                 <TextBlock Grid.Row="2" Grid.Column="0" Text="P2" FontWeight="Bold" Foreground="#334155" Padding="12" VerticalAlignment="Center"/>
                                 <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="12,0" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding P2Calif}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -200,11 +200,21 @@
                                     </Border>
                                 </Border>
 
-                                <Border Grid.Row="4" Grid.ColumnSpan="4" Height="2" Background="#E2E8F0"/>
+                                <!-- Fila PROM (Promedio de 3 Parciales) -->
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="PROM" FontWeight="Bold" Foreground="#1B365D" Padding="12" VerticalAlignment="Center" Background="#EFF6FF"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding PromedioParciales}" FontSize="15" FontWeight="Bold" Foreground="#1B365D" Padding="12" VerticalAlignment="Center" Background="#EFF6FF"/>
+                                <TextBlock Grid.Row="4" Grid.Column="2" Text="--" Foreground="#94A3B8" Padding="12" VerticalAlignment="Center" Background="#EFF6FF"/>
+                                <Border Grid.Row="4" Grid.Column="3" Margin="12,6" Background="#EFF6FF">
+                                    <Border Style="{StaticResource BadgeBorder}" Background="#DBEAFE">
+                                        <TextBlock Text="Promedio Parciales" Foreground="#1E40AF" FontSize="11" FontWeight="SemiBold"/>
+                                    </Border>
+                                </Border>
 
-                                <Border Grid.Row="5" Grid.ColumnSpan="4" Background="#F1F5F9" CornerRadius="0,0,8,8"/>
-                                <TextBlock Grid.Row="5" Grid.Column="0" Text="SEM" FontWeight="Black" Foreground="#0F172A" Padding="12" VerticalAlignment="Center"/>
-                                <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" Margin="12,0" VerticalAlignment="Center">
+                                <Border Grid.Row="5" Grid.ColumnSpan="4" Height="2" Background="#E2E8F0"/>
+
+                                <Border Grid.Row="6" Grid.ColumnSpan="4" Background="#F1F5F9" CornerRadius="0,0,8,8"/>
+                                <TextBlock Grid.Row="6" Grid.Column="0" Text="SEM" FontWeight="Black" Foreground="#0F172A" Padding="12" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Margin="12,0" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding SEMCalif}" FontSize="16" FontWeight="Black" Foreground="#0F172A" VerticalAlignment="Center"/>
                                     <TextBlock Text=" - NP (NO SE PRESENTÓ)" FontSize="14" FontWeight="Bold" Foreground="#D97706" Margin="6,0,0,0" VerticalAlignment="Center">
                                         <TextBlock.Style>
@@ -219,8 +229,8 @@
                                         </TextBlock.Style>
                                     </TextBlock>
                                 </StackPanel>
-                                <TextBlock Grid.Row="5" Grid.Column="2" Text="--" Foreground="#94A3B8" Padding="12" VerticalAlignment="Center"/>
-                                <Border Grid.Row="5" Grid.Column="3" Margin="12,6">
+                                <TextBlock Grid.Row="6" Grid.Column="2" Text="--" Foreground="#94A3B8" Padding="12" VerticalAlignment="Center"/>
+                                <Border Grid.Row="6" Grid.Column="3" Margin="12,6">
                                     <Border Style="{StaticResource BadgeBorder}" Tag="{Binding SEMEstado}">
                                         <TextBlock Text="{Binding SEMEstado}" Style="{StaticResource BadgeText}"/>
                                     </Border>

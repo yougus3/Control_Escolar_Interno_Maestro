@@ -279,6 +279,17 @@ public partial class MainViewModel : ObservableObject
 
         SincronizarCalificacionSemestral();
 
+        // Guardar automáticamente la calificación SEM
+        if (!string.Equals(EvaluacionSeleccionada, "SEM", StringComparison.OrdinalIgnoreCase) &&
+            _evaluacionIdPorNombre.TryGetValue("SEM", out var idSem))
+        {
+            _writerService.GuardarEvaluacion(
+                _archivoCompletoActual,
+                Alumnos.ToList(),
+                "SEM",
+                idSem);
+        }
+
         MessageBox.Show(
             ok ? "Guardado correcto." : "No se pudo guardar el archivo CAP.",
             ok ? "OK" : "Error",
@@ -363,11 +374,17 @@ public partial class MainViewModel : ObservableObject
             if (p1Activa && p2Activa && p3Activa && totalClases > 0)
             {
                 int faltasP1 = m1.Calificaciones.TryGetValue(alumno.Matricula, out var cap1) &&
-                               cap1.TryGetValue("__Inasistencias__", out var f1) ? (int)f1 : 0;
+                               cap1.TryGetValue("__Inasistencias__", out var f1)
+                    ? (int)f1
+                    : 0;
                 int faltasP2 = m2.Calificaciones.TryGetValue(alumno.Matricula, out var cap2) &&
-                               cap2.TryGetValue("__Inasistencias__", out var f2) ? (int)f2 : 0;
+                               cap2.TryGetValue("__Inasistencias__", out var f2)
+                    ? (int)f2
+                    : 0;
                 int faltasP3 = m3.Calificaciones.TryGetValue(alumno.Matricula, out var cap3) &&
-                               cap3.TryGetValue("__Inasistencias__", out var f3) ? (int)f3 : 0;
+                               cap3.TryGetValue("__Inasistencias__", out var f3)
+                    ? (int)f3
+                    : 0;
                 int totalFaltas = faltasP1 + faltasP2 + faltasP3;
                 int asistencias = totalClases - totalFaltas;
                 double porcentajeAsistencia = ((double)asistencias / totalClases) * 100.0;

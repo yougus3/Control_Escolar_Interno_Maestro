@@ -44,11 +44,14 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
         public string P3Asistencia { get; set; } = "N/A";
         public string P3Estado { get; set; } = "Sin evaluar";
 
+        // PROM (Promedio de 3 Parciales)
+        public string PromedioParciales { get; set; } = "N/A";
+
         // SEM
         public string SEMCalif { get; set; } = "N/A";
         public string SEMEstado { get; set; } = "Sin evaluar";
 
-        // Promedio
+        // Promedio Final
         public string PromedioFinal { get; set; } = "N/A";
 
         public InfoAlumnoWindow(Alumno alumno, Dictionary<string, (string calif, string estado, int faltas, int totalClases)> datosParciales)
@@ -87,10 +90,10 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
                         {
                             var bi = new BitmapImage();
                             bi.BeginInit();
-                            bi.CacheOption = BitmapCacheOption.OnLoad; // Obliga a cargar de inmediato a memoria
+                            bi.CacheOption = BitmapCacheOption.OnLoad;
                             bi.StreamSource = stream;
                             bi.EndInit();
-                            bi.Freeze(); // Crucial para pasarla al hilo de la UI sin crashear
+                            bi.Freeze();
                             return bi;
                         }
                     }
@@ -153,17 +156,37 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
             if (double.TryParse(P2Calif, out double p2) && p2 >= 0) { suma += p2; count++; }
             if (double.TryParse(P3Calif, out double p3) && p3 >= 0) { suma += p3; count++; }
 
-            if (count > 0)
+            if (count == 3)
             {
-                double promedio = suma / count;
-        
-                // Truncar a 1 decimal (sin redondear)
-                double promedioTruncado = Math.Truncate(promedio * 10) / 10;
-        
-                PromedioFinal = promedioTruncado.ToString("0.0");
+                // Paso 1: Promedio de los 3 parciales (solo primer decimal, SIN redondear)
+                double promedioParciales = suma / 3.0;
+                double promedioParcialesTruncado = Math.Truncate(promedioParciales * 10) / 10;
+                
+                // Asignar el promedio de parciales para mostrar en la tabla
+                PromedioParciales = promedioParcialesTruncado.ToString("0.0");
+                
+                // Paso 2: Obtener SEM
+                double sem = 0;
+                bool tieneSem = double.TryParse(SEMCalif, out sem) && sem >= 0;
+                
+                if (tieneSem)
+                {
+                    // Paso 3: Promedio Final = (PromedioParcialesTruncado + SEM) / 2
+                    double promedioFinal = (promedioParcialesTruncado + sem) / 2.0;
+                    // Redondear al entero más cercano (.5 hacia arriba)
+                    int promedioFinalRedondeado = (int)Math.Round(promedioFinal, 0, MidpointRounding.AwayFromZero);
+                    PromedioFinal = promedioFinalRedondeado.ToString();
+                }
+                else
+                {
+                    // Redondear al entero más cercano (.5 hacia arriba)
+                    int promedioParcialesRedondeado = (int)Math.Round(promedioParcialesTruncado, 0, MidpointRounding.AwayFromZero);
+                    PromedioFinal = promedioParcialesRedondeado.ToString();
+                }
             }
             else
             {
+                PromedioParciales = "N/A";
                 PromedioFinal = "N/A";
             }
         }
