@@ -157,16 +157,24 @@ public class CapParserService
 
         var mapaGrupos = CargarMapaGrupos();
         var mapaEvaluaciones = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        bool containsExtra = false;
+
+        bool enSeccionEvaluaciones = false;
 
         foreach (var linea in lineas)
         {
             string l = linea.Trim();
 
-            if (l.IndexOf("EXTRA", StringComparison.OrdinalIgnoreCase) >= 0)
+            if (string.IsNullOrWhiteSpace(l))
+                continue;
+
+            if (l.StartsWith("[", StringComparison.OrdinalIgnoreCase) && l.EndsWith("]"))
             {
-                containsExtra = true;
+                enSeccionEvaluaciones = l.Equals("[Evaluaciones]", StringComparison.OrdinalIgnoreCase);
+                continue;
             }
+
+            if (!enSeccionEvaluaciones)
+                continue;
 
             if (l.StartsWith("ID_EVAL", StringComparison.OrdinalIgnoreCase) &&
                 l.Contains('=') &&
@@ -195,14 +203,15 @@ public class CapParserService
             }
         }
 
-        // If this CAP contains an EXTRA evaluation, treat it as an EXTRA-only CAP.
-        if (containsExtra || mapaEvaluaciones.Values.Any(v => string.Equals(v, "EXTRA", StringComparison.OrdinalIgnoreCase)))
+        bool contieneExtra = mapaEvaluaciones.Values.Any(v =>
+            string.Equals(v, "EXTRA", StringComparison.OrdinalIgnoreCase));
+
+        if (contieneExtra)
         {
             resultado.EvaluacionesDisponibles.Add("EXTRA");
         }
         else
         {
-            // Default to parcial evaluations P1, P2, P3 and SEM for non-EXTRA CAPs
             resultado.EvaluacionesDisponibles.Add("P1");
             resultado.EvaluacionesDisponibles.Add("P2");
             resultado.EvaluacionesDisponibles.Add("P3");

@@ -10,6 +10,7 @@
         <UseWPF>true</UseWPF>
         <PlatformTarget>x86</PlatformTarget>
         <ApplicationIcon>logo.ico</ApplicationIcon>
+        <Platforms>AnyCPU;x86</Platforms>
     </PropertyGroup>
 
     <ItemGroup>
