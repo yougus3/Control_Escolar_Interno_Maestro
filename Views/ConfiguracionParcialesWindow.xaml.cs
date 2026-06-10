@@ -60,6 +60,7 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
             if (_parcial1Habilitado == value) return;
             _parcial1Habilitado = value;
             OnPropertyChanged();
+            if (!_cargandoDatos) SaveConfigurationIfReady();
         }
     }
 
@@ -71,6 +72,7 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
             if (_parcial2Habilitado == value) return;
             _parcial2Habilitado = value;
             OnPropertyChanged();
+            if (!_cargandoDatos) SaveConfigurationIfReady();
         }
     }
 
@@ -82,6 +84,7 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
             if (_parcial3Habilitado == value) return;
             _parcial3Habilitado = value;
             OnPropertyChanged();
+            if (!_cargandoDatos) SaveConfigurationIfReady();
         }
     }
 
@@ -93,6 +96,28 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
             if (_semestralHabilitado == value) return;
             _semestralHabilitado = value;
             OnPropertyChanged();
+            if (!_cargandoDatos) SaveConfigurationIfReady();
+        }
+    }
+
+    private void SaveConfigurationIfReady()
+    {
+        try
+        {
+            string claveMateria = ObtenerClaveMateriaSeleccionada();
+            if (string.IsNullOrWhiteSpace(claveMateria)) return;
+
+            _configuracion.Parcial1Habilitado = Parcial1Habilitado;
+            _configuracion.Parcial2Habilitado = Parcial2Habilitado;
+            _configuracion.Parcial3Habilitado = Parcial3Habilitado;
+            _configuracion.SemestralHabilitado = SemestralHabilitado;
+
+            _configuracionService.GuardarConfiguracion(claveMateria, _configuracion);
+            _mainVm.RecargarConfiguracionYArchivoActual();
+        }
+        catch
+        {
+            // silent
         }
     }
 
@@ -472,38 +497,15 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
 
     private void GuardarConfiguracion_Click(object sender, RoutedEventArgs e)
     {
+        // Keep for compatibility; prefer to use immediate-saving handlers instead
         string claveMateria = ObtenerClaveMateriaSeleccionada();
-
-        if (string.IsNullOrWhiteSpace(claveMateria))
-        {
-            MessageBox.Show(
-                "Selecciona una materia antes de guardar la configuración.",
-                "Aviso",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-            return;
-        }
-
+        if (string.IsNullOrWhiteSpace(claveMateria)) return;
         _configuracion.Parcial1Habilitado = Parcial1Habilitado;
         _configuracion.Parcial2Habilitado = Parcial2Habilitado;
         _configuracion.Parcial3Habilitado = Parcial3Habilitado;
         _configuracion.SemestralHabilitado = SemestralHabilitado;
-
         _configuracionService.GuardarConfiguracion(claveMateria, _configuracion);
-
         _mainVm.RecargarConfiguracionYArchivoActual();
-        CargarMateriasDisponibles();
-
-        if (!string.IsNullOrWhiteSpace(MateriaSeleccionadaConfiguracion))
-        {
-            CargarConfiguracionMateriaSeleccionada();
-        }
-
-        MessageBox.Show(
-            "Configuración guardada para la materia seleccionada.",
-            "OK",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
     }
 
     private void GuardarDirecta_Click(object sender, RoutedEventArgs e)
@@ -568,37 +570,14 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
             return;
         }
 
+        // Keep for compatibility: perform same action but without modal; call silent save
         AlumnoSeleccionadoDirecto.ValorSeleccionado = valorNormalizado;
         AlumnoSeleccionadoDirecto.Calificación[EvaluacionSeleccionadaDirecta] = valorNormalizado;
-
-        SincronizarConMainVm(EvaluacionSeleccionadaDirecta, AlumnoSeleccionadoDirecto.Matricula, valorNormalizado);
-
-        var ok = _writerService.GuardarEvaluacion(
-            rutaCompleta,
-            AlumnosDirectos.ToList(),
-            EvaluacionSeleccionadaDirecta,
-            idEval);
-
-        if (ok)
-        {
-            CalificacionActualDirecta = valorNormalizado;
-            CalificacionNuevaDirecta = valorNormalizado;
-            EstadoDirecto = "Calificación guardada en el CAP.";
-
-            MessageBox.Show(
-                "Calificación guardada correctamente.",
-                "OK",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-        }
-        else
-        {
-            MessageBox.Show(
-                "No se pudo guardar el archivo CAP.",
-                "Error",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-        }
+        SincronizarConMainVm(EvaluacionSeleccionadaDirecta, this.AlumnoSeleccionadoDirecto.Matricula, valorNormalizado);
+        _writerService.GuardarEvaluacion(rutaCompleta, AlumnosDirectos.ToList(), EvaluacionSeleccionadaDirecta, idEval);
+        CalificacionActualDirecta = valorNormalizado;
+        CalificacionNuevaDirecta = valorNormalizado;
+        EstadoDirecto = "Calificación guardada en el CAP.";
     }
 
     private void SincronizarConMainVm(string evaluacion, string matricula, string valor)

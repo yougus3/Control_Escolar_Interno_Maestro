@@ -346,7 +346,7 @@
                                            Foreground="#475569"
                                            FontWeight="SemiBold"
                                            Margin="0,0,8,0" />
-                                <ComboBox Width="320"
+                                <ComboBox Width="400"
                                           Height="32"
                                           ItemsSource="{Binding MateriasDisponibles}"
                                           SelectedItem="{Binding MateriaSeleccionadaConfiguracion, Mode=TwoWay}"
@@ -400,11 +400,7 @@
                         <StackPanel Grid.Row="2"
                                     Orientation="Horizontal"
                                     HorizontalAlignment="Right">
-                            <Button Content="Guardar configuración"
-                                    Width="170"
-                                    Height="34"
-                                    Style="{StaticResource PrimaryButtonStyle}"
-                                    Click="GuardarConfiguracion_Click" />
+                            <!-- Guardar configuración eliminado: los cambios se guardan automáticamente -->
                         </StackPanel>
                     </Grid>
                 </TabItem>

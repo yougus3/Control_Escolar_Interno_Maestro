@@ -19,6 +19,119 @@ public partial class ParcialesView : UserControl
         InitializeComponent();
     }
 
+    private void PuntajeObtenido_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter) return;
+
+        // When user presses Enter on a puntaje textbox, advance to next activity or next student.
+        var vm = DataContext as ParcialesViewModel;
+        if (vm == null) return;
+
+        // Find the TextBox and its data context (Actividad)
+        var tb = sender as TextBox;
+        if (tb == null) return;
+
+        // mark as having changes
+        vm.PrepararGuardado(); // ensure calculations and mark saved? We'll instead mark dirty below
+
+        // Find index of current activity
+        var actividad = tb.DataContext as ActividadParcialEditor;
+        int actividadIndex = -1;
+        if (actividad != null)
+        {
+            actividadIndex = vm.Actividades.IndexOf(actividad);
+        }
+
+        // If there is a next active activity for this student, move focus to it
+        int nextIndex = -1;
+        for (int i = actividadIndex + 1; i < vm.Actividades.Count; i++)
+        {
+            if (vm.Actividades[i].Activa)
+            {
+                nextIndex = i; break;
+            }
+        }
+
+        if (nextIndex >= 0)
+        {
+            // Move focus to the corresponding TextBox in the items control
+            var container = PuntajesItemsControl.ItemContainerGenerator.ContainerFromIndex(nextIndex) as FrameworkElement;
+            if (container != null)
+            {
+                var nextTb = FindVisualChild<TextBox>(container);
+                if (nextTb != null)
+                {
+                    nextTb.Focus();
+                    nextTb.SelectAll();
+                }
+            }
+            e.Handled = true;
+            return;
+        }
+
+        // Otherwise, all active activities filled for this student — move to next student
+        var vmMain = vm;
+        var alumnos = vmMain.Alumnos;
+        if (vmMain.AlumnoSeleccionado != null && alumnos.Any())
+        {
+            int idx = alumnos.IndexOf(vmMain.AlumnoSeleccionado);
+            if (idx < alumnos.Count - 1)
+            {
+                vmMain.AlumnoSeleccionado = alumnos[idx + 1];
+                // set focus to first active activity textbox of new student
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    for (int i = 0; i < vmMain.Actividades.Count; i++)
+                    {
+                        if (vmMain.Actividades[i].Activa)
+                        {
+                            var container = PuntajesItemsControl.ItemContainerGenerator.ContainerFromIndex(i) as FrameworkElement;
+                            if (container != null)
+                            {
+                                var tb2 = FindVisualChild<TextBox>(container);
+                                if (tb2 != null)
+                                {
+                                    tb2.Focus(); tb2.SelectAll(); break;
+                                }
+                            }
+                        }
+                    }
+                }));
+            }
+            else
+            {
+                // Last student evaluated
+                var info = new MessageBoxResult();
+                MessageBox.Show("Se evaluaron todos los alumnos.", "Fin de captura", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        e.Handled = true;
+    }
+
+    private void Puntaje_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (DataContext is ParcialesViewModel vm)
+        {
+            vm.MarkUserEdited();
+        }
+    }
+
+    // Helper to find child control of specific type
+    private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+    {
+        if (parent == null) return null;
+        int children = System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent);
+        for (int i = 0; i < children; i++)
+        {
+            var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
+            if (child is T t) return t;
+            var result = FindVisualChild<T>(child);
+            if (result != null) return result;
+        }
+        return null;
+    }
+
     private void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
         if (DataContext is MainViewModel mainVm)
@@ -72,6 +185,22 @@ public partial class ParcialesView : UserControl
     {
         Regex regex = new Regex("[^0-9]+");
         e.Handled = regex.IsMatch(e.Text);
+    }
+
+    private void ActividadProp_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (DataContext is ParcialesViewModel vm)
+        {
+            vm.MarkUserEdited();
+        }
+    }
+
+    private void ActividadActiva_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is ParcialesViewModel vm)
+        {
+            vm.MarkUserEdited();
+        }
     }
 
     private void PapelButton_Click(object sender, RoutedEventArgs e)

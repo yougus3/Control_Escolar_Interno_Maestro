@@ -424,13 +424,7 @@
                           Height="32"
                           VerticalContentAlignment="Center" />
 
-                <Button Grid.Column="7"
-                        Content="Guardar"
-                        Command="{Binding GuardarCommand}"
-                        Style="{StaticResource GreenButtonStyle}"
-                        Height="32"
-                        Width="80"
-                        Margin="15,0,0,0" />
+                <!-- Guardar button removed: changes are saved automatically -->
             </Grid>
         </Border>
 

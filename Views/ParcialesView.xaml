@@ -299,7 +299,8 @@
                                     <Border x:Name="ActividadBorder">
                                         <StackPanel>
                                             <CheckBox Content="Actividad activa"
-                                                      IsChecked="{Binding Activa, Mode=TwoWay}" />
+                                                      IsChecked="{Binding Activa, Mode=TwoWay}"
+                                                      Click="ActividadActiva_Click" />
 
                                             <Grid Margin="0,3,0,0">
                                                 <Grid.ColumnDefinitions>
@@ -317,7 +318,8 @@
                                                          FontSize="11"
                                                          VerticalContentAlignment="Center"
                                                          IsEnabled="{Binding Activa}"
-                                                         Style="{StaticResource RoundedTextBoxStyle}" />
+                                                         Style="{StaticResource RoundedTextBoxStyle}"
+                                                         TextChanged="ActividadProp_TextChanged" />
                                             </Grid>
 
                                             <TextBlock Grid.Column="0"
@@ -364,7 +366,8 @@
                                                          IsEnabled="{Binding Activa}"
                                                          MaxLength="3"
                                                          PreviewTextInput="Numeros_PreviewTextInput"
-                                                         DataObject.Pasting="Numeros_Pasting" />
+                                                         DataObject.Pasting="Numeros_Pasting"
+                                                         TextChanged="ActividadProp_TextChanged" />
 
                                                 <TextBlock Grid.Column="2"
                                                            Text="%"
@@ -390,7 +393,8 @@
                                                          MaxLength="3"
                                                          Style="{StaticResource RoundedTextBoxStyle}"
                                                          PreviewTextInput="Numeros_PreviewTextInput"
-                                                         DataObject.Pasting="Numeros_Pasting" />
+                                                         DataObject.Pasting="Numeros_Pasting"
+                                                         TextChanged="ActividadProp_TextChanged" />
                                             </Grid>
                                         </StackPanel>
 
@@ -573,16 +577,26 @@
                                                            Foreground="#334155"
                                                            FontSize="14"
                                                            VerticalAlignment="Center" />
-
                                                 <Button Grid.Column="2"
-                                                        Content="📄"
-                                                        FontSize="15"
                                                         Style="{StaticResource IconButtonStyle}"
                                                         ToolTip="Ver detalles del alumno"
                                                         HorizontalAlignment="Right"
                                                         VerticalAlignment="Center"
                                                         Click="PapelButton_Click"
-                                                        Tag="{Binding}" />
+                                                        Tag="{Binding}">
+
+                                                    <Viewbox Width="15" Height="15">
+                                                        <Path Stroke="Black"
+                                                              Fill="Transparent"
+                                                              StrokeThickness="1.5"
+                                                              Data="M6,2 L14,2 L18,6 L18,22 L6,22 Z
+                                                                    M14,2 L14,6 L18,6
+                                                                    M9,10 L15,10
+                                                                    M9,13 L15,13
+                                                                    M9,16 L13,16"/>
+                                                    </Viewbox>
+
+                                                </Button>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -636,7 +650,7 @@
                                                Margin="0,0,0,6"
                                                FontSize="12" />
 
-                                    <ItemsControl ItemsSource="{Binding Actividades}">
+                                    <ItemsControl x:Name="PuntajesItemsControl" ItemsSource="{Binding Actividades}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Grid Margin="0,1">
@@ -664,7 +678,10 @@
                                                              MaxLength="3"
                                                              Style="{StaticResource RoundedTextBoxStyle}"
                                                              PreviewTextInput="Numeros_PreviewTextInput"
-                                                             DataObject.Pasting="Numeros_Pasting" />
+                                                             DataObject.Pasting="Numeros_Pasting"
+                                                             IsEnabled="{Binding Activa}"
+                                                             KeyDown="PuntajeObtenido_KeyDown"
+                                                             TextChanged="Puntaje_TextChanged" />
 
                                                     <TextBlock Grid.Column="2"
                                                                Text="{Binding FraccionTexto}"
@@ -700,9 +717,11 @@
                                                  HorizontalContentAlignment="Center"
                                                  VerticalContentAlignment="Center"
                                                  MaxLength="3"
-                                                 Style="{StaticResource RoundedTextBoxStyle}"
-                                                 PreviewTextInput="NumerosEnteros_PreviewTextInput"
-                                                 DataObject.Pasting="Numeros_Pasting" />
+                                             Style="{StaticResource RoundedTextBoxStyle}"
+                                             PreviewTextInput="NumerosEnteros_PreviewTextInput"
+                                             DataObject.Pasting="Numeros_Pasting"
+                                             IsEnabled="{Binding AsistenciaActiva}"
+                                             TextChanged="Puntaje_TextChanged" />
                                     </StackPanel>
                                 </StackPanel>
 

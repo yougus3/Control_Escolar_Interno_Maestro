@@ -25,11 +25,17 @@ public partial class ParcialesViewModel : ObservableObject
     private string _claveMateria = string.Empty;
     private string _evaluacionActual = string.Empty;
     private string? _ultimaMatriculaSeleccionada;
+    private bool _tieneCambios = false;
+    private string? _lastArchivoSeleccionado;
+    private string? _lastEvaluacionSeleccionada;
+    private bool _isReady = false;
+    private bool _suspendUserEditMarking = false;
+    private DateTime? _lastUserEditTime;
+    private DateTime _lastLoadOrSaveTime = DateTime.MinValue;
 
     public ObservableCollection<Alumno> Alumnos => _mainVm.Alumnos;
     public ObservableCollection<ActividadParcialEditor> Actividades { get; } = new();
     public MainViewModel MainVm => _mainVm;
-
 
     [ObservableProperty] private Alumno? _alumnoSeleccionado;
     [ObservableProperty] private string _nombreMateria = string.Empty;
@@ -68,16 +74,48 @@ public partial class ParcialesViewModel : ObservableObject
         CargarContextoActual();
     }
 
-    partial void OnAsistenciaActivaChanged(bool value) => RecalcularTodo(guardarJson: false);
-    partial void OnClasesTotalesChanged(int value) => RecalcularTodo(guardarJson: false);
-    partial void OnInasistenciasChanged(int value) => RecalcularTodo(guardarJson: false);
+    private void EditorChanged()
+    {
+        // Called by editors to notify change — do not assume it's user input.
+        RecalcularTodo(guardarJson: false);
+    }
+
+    partial void OnAsistenciaActivaChanged(bool value)
+    {
+        RecalcularTodo(guardarJson: false);
+    }
+
+    partial void OnClasesTotalesChanged(int value)
+    {
+        RecalcularTodo(guardarJson: false);
+    }
+
+    partial void OnInasistenciasChanged(int value)
+    {
+        RecalcularTodo(guardarJson: false);
+    }
+
+    // Called explicitly from UI handlers when the user types or changes fields
+    public void MarkUserEdited()
+    {
+        if (!_cargando && !_suspendUserEditMarking)
+        {
+            _tieneCambios = true;
+            _lastUserEditTime = DateTime.UtcNow;
+            try
+            {
+                _mainVm?.GuardarSilencioso();
+            }
+            catch { }
+        }
+    }
 
     [RelayCommand]
     private void AgregarActividad()
     {
         if (Actividades.Count >= 4) return;
 
-        var nueva = new ActividadParcialEditor(() => RecalcularTodo(guardarJson: false));
+        var nueva = new ActividadParcialEditor(() => EditorChanged());
         nueva.Activa = false;
         nueva.Nombre = string.Empty;
         nueva.Porcentaje = string.Empty;
@@ -129,7 +167,59 @@ public partial class ParcialesViewModel : ObservableObject
         if (e.PropertyName == nameof(MainViewModel.ArchivoSeleccionado) ||
             e.PropertyName == nameof(MainViewModel.EvaluacionSeleccionada))
         {
-            CargarContextoActual();
+            try
+            {
+                var main = sender as MainViewModel;
+                string? nuevoArchivo = main?.ArchivoSeleccionado;
+                string? nuevaEval = main?.EvaluacionSeleccionada;
+
+                if (!_isReady)
+                {
+                    _lastArchivoSeleccionado = nuevoArchivo;
+                    _lastEvaluacionSeleccionada = nuevaEval;
+                    _isReady = true;
+                    return;
+                }
+
+                bool archivoCambio = !string.Equals(nuevoArchivo, _lastArchivoSeleccionado, StringComparison.OrdinalIgnoreCase);
+                bool evalCambio = !string.Equals(nuevaEval, _lastEvaluacionSeleccionada, StringComparison.OrdinalIgnoreCase);
+
+                bool userEditedAfterLoad = _lastUserEditTime.HasValue && _lastUserEditTime.Value > _lastLoadOrSaveTime;
+
+                if ((_tieneCambios && userEditedAfterLoad) && (archivoCambio || evalCambio))
+                {
+                    var res = System.Windows.MessageBox.Show("Hay cambios sin guardar. ¿Deseas guardar antes de cambiar de materia/evaluación?\nSí = Guardar, No = Descartar, Cancelar = Volver a la selección previa.",
+                        "Cambios sin guardar", System.Windows.MessageBoxButton.YesNoCancel, System.Windows.MessageBoxImage.Warning);
+
+                    if (res == System.Windows.MessageBoxResult.Cancel)
+                    {
+                        if (archivoCambio && main != null)
+                            main.ArchivoSeleccionado = _lastArchivoSeleccionado;
+                        if (evalCambio && main != null)
+                            main.EvaluacionSeleccionada = _lastEvaluacionSeleccionada;
+                        return;
+                    }
+
+                    if (res == System.Windows.MessageBoxResult.Yes)
+                    {
+                        PrepararGuardado();
+                        _tieneCambios = false;
+                        _lastUserEditTime = null;
+                    }
+
+                    if (res == System.Windows.MessageBoxResult.No)
+                    {
+                        _tieneCambios = false;
+                        _lastUserEditTime = null;
+                    }
+                }
+
+                CargarContextoActual();
+            }
+            catch
+            {
+                CargarContextoActual();
+            }
         }
     }
 
@@ -146,13 +236,12 @@ public partial class ParcialesViewModel : ObservableObject
 
         ActualizarDatosAlumnoSeleccionado();
         CargarCapturasDelAlumnoSeleccionado();
-        RecalcularTodo(guardarJson: false);
+        RecalcularTodo(guardarJson: false, marcarCambios: false);
     }
 
     private void CargarContextoActual()
     {
         _cargando = true;
-
         try
         {
             NombreMateria = _mainVm.ArchivoSeleccionado ?? string.Empty;
@@ -189,17 +278,33 @@ public partial class ParcialesViewModel : ObservableObject
             OnPropertyChanged(nameof(ClasesTotales));
 
             NormalizarActividadesEnMateria();
+            _suspendUserEditMarking = true;
             ReconstruirActividadesEnPantalla();
             RestaurarAlumnoSeleccionado();
             ActualizarDatosAlumnoSeleccionado();
             CargarCapturasDelAlumnoSeleccionado();
+            _suspendUserEditMarking = false;
         }
         finally
         {
             _cargando = false;
         }
 
-        RecalcularTodo(guardarJson: false);
+        // Re-proteger contra eventos que pudieran haberse encolado
+        _cargando = true;
+        try
+        {
+            RecalcularTodo(guardarJson: false, esCargaInicial: true, marcarCambios: false);
+            _tieneCambios = false;
+            _lastUserEditTime = null;
+            _lastArchivoSeleccionado = _mainVm.ArchivoSeleccionado;
+            _lastEvaluacionSeleccionada = _mainVm.EvaluacionSeleccionada;
+            _lastLoadOrSaveTime = DateTime.UtcNow;
+        }
+        finally
+        {
+            _cargando = false;
+        }
     }
 
     private void LimpiarVista()
@@ -299,7 +404,7 @@ public partial class ParcialesViewModel : ObservableObject
         for (int i = 0; i < _materia.Actividades.Count; i++)
         {
             var modelo = _materia.Actividades[i];
-            var editor = new ActividadParcialEditor(() => RecalcularTodo(guardarJson: false));
+            var editor = new ActividadParcialEditor(() => EditorChanged());
             editor.CargarDesdeModelo(modelo);
             Actividades.Add(editor);
         }
@@ -311,7 +416,7 @@ public partial class ParcialesViewModel : ObservableObject
 
     private ActividadParcialEditor CreateBlankEditor()
     {
-        var ed = new ActividadParcialEditor(() => RecalcularTodo(guardarJson: false));
+        var ed = new ActividadParcialEditor(() => EditorChanged());
         ed.Activa = false;
         ed.Nombre = string.Empty;
         ed.Porcentaje = string.Empty;
@@ -327,7 +432,7 @@ public partial class ParcialesViewModel : ObservableObject
         var capturas = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
         foreach (var actividad in Actividades)
         {
-            if (actividad.Activa && !string.IsNullOrWhiteSpace(actividad.Nombre))
+            if (!string.IsNullOrWhiteSpace(actividad.Nombre))
             {
                 if (double.TryParse(actividad.PuntajeObtenido, NumberStyles.Any, CultureInfo.InvariantCulture, out double obt))
                 {
@@ -343,7 +448,7 @@ public partial class ParcialesViewModel : ObservableObject
         _materia.Calificaciones[matricula] = capturas;
     }
 
-    private void RecalcularTodo(bool guardarJson)
+    private void RecalcularTodo(bool guardarJson, bool esCargaInicial = false, bool marcarCambios = true)
     {
         if (_cargando) return;
 
@@ -401,7 +506,7 @@ public partial class ParcialesViewModel : ObservableObject
         SumaPorcentajesTexto = $"{TruncarUnDecimal(sumaPorcentajes):0.0}%";
 
         bool porcentajesCorrectos = Math.Abs(sumaPorcentajes - 100m) < 0.0001m;
-        
+
         if (sumaPorcentajes > 100m) PorcentajeEstado = "Over";
         else if (sumaPorcentajes < 100m) PorcentajeEstado = "Under";
         else PorcentajeEstado = "Ok";
@@ -438,8 +543,13 @@ public partial class ParcialesViewModel : ObservableObject
         }
 
         if (guardarJson) GuardarEnJsonLocal();
-
         EstadoGuardado = guardarJson ? "Guardado correcto en JSON." : string.Empty;
+
+        if (!guardarJson && marcarCambios)
+        {
+            _tieneCambios = true;
+            _lastUserEditTime = DateTime.UtcNow;
+        }
     }
 
     private void GuardarEnJsonLocal()
@@ -476,6 +586,12 @@ public partial class ParcialesViewModel : ObservableObject
 
         string claveMateriaEval = $"{_claveMateria}_{_evaluacionActual}";
         _parcialJsonService.GuardarMateria(claveMateriaEval, _materia);
+
+        _tieneCambios = false;
+        _lastUserEditTime = null;
+        _lastArchivoSeleccionado = _mainVm.ArchivoSeleccionado;
+        _lastEvaluacionSeleccionada = _mainVm.EvaluacionSeleccionada;
+        _lastLoadOrSaveTime = DateTime.UtcNow;
     }
 
     private static string ObtenerClaveMateriaDesdeNombreVisual(string? nombreVisual)
@@ -596,7 +712,18 @@ public partial class ActividadParcialEditor : ObservableObject
         }
     }
 
-    partial void OnActivaChanged(bool value) => NotificarActualizacion();
+    partial void OnActivaChanged(bool value)
+    {
+        if (value)
+        {
+            if (string.IsNullOrWhiteSpace(_nombre)) _nombre = "Actividad";
+            if (string.IsNullOrWhiteSpace(_porcentaje)) _porcentaje = "0";
+            OnPropertyChanged(nameof(Nombre));
+            OnPropertyChanged(nameof(Porcentaje));
+        }
+
+        NotificarActualizacion();
+    }
     partial void OnNombreChanged(string value) => _notificarCambio?.Invoke();
     partial void OnPorcentajeChanged(string value) => NotificarActualizacion();
     partial void OnPuntajeMaximoChanged(string value) => NotificarActualizacion();
