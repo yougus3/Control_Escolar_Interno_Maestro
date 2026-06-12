@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
+using LiteDB;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
@@ -10,17 +10,14 @@ public class ConfiguracionParcialesService
 {
     private const string ClaveGlobalLegada = "__DEFAULT__";
 
-    private readonly string _rutaJson;
-
-    private static readonly JsonSerializerOptions _opciones = new()
-    {
-        WriteIndented = true
-    };
+    private readonly string _dbPath;
 
     public ConfiguracionParcialesService()
     {
-        _rutaJson = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "configuracion_parciales.json");
-        CrearArchivoSiNoExiste();
+        var carpeta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+        if (!Directory.Exists(carpeta)) Directory.CreateDirectory(carpeta);
+        _dbPath = Path.Combine(carpeta, "data.db");
+        ParcialJsonService.EnsureMigration();
     }
 
     private static ConfiguracionParciales CrearConfiguracionPorDefecto()
@@ -35,73 +32,52 @@ public class ConfiguracionParcialesService
         };
     }
 
-    private void CrearArchivoSiNoExiste()
-    {
-        string? carpeta = Path.GetDirectoryName(_rutaJson);
-
-        if (!string.IsNullOrWhiteSpace(carpeta) && !Directory.Exists(carpeta))
-        {
-            Directory.CreateDirectory(carpeta);
-        }
-
-        if (!File.Exists(_rutaJson))
-        {
-            File.WriteAllText(_rutaJson, "{}");
-        }
-    }
-
     private Dictionary<string, ConfiguracionParciales> CargarTodoInterno()
     {
         try
         {
-            string json = File.ReadAllText(_rutaJson);
-
-            if (string.IsNullOrWhiteSpace(json))
+            using var db = new LiteDatabase($"Filename={_dbPath};Connection=shared");
+            var col = db.GetCollection<StoredConfig>("configuraciones");
+            var dict = new Dictionary<string, ConfiguracionParciales>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in col.FindAll())
             {
-                return new Dictionary<string, ConfiguracionParciales>();
+                if (item != null && item.Id != null) dict[item.Id] = item.Value ?? CrearConfiguracionPorDefecto();
             }
-
-            try
-            {
-                var datosDiccionario = JsonSerializer.Deserialize<Dictionary<string, ConfiguracionParciales>>(json);
-                if (datosDiccionario != null)
-                {
-                    return datosDiccionario;
-                }
-            }
-            catch
-            {
-                // Intento siguiente abajo
-            }
-
-            try
-            {
-                var configLegada = JsonSerializer.Deserialize<ConfiguracionParciales>(json);
-                if (configLegada != null)
-                {
-                    return new Dictionary<string, ConfiguracionParciales>
-                    {
-                        [ClaveGlobalLegada] = configLegada
-                    };
-                }
-            }
-            catch
-            {
-                // Se cae al return vacío
-            }
+            return dict;
         }
         catch
         {
+            return new Dictionary<string, ConfiguracionParciales>();
         }
-
-        return new Dictionary<string, ConfiguracionParciales>();
     }
 
     private void GuardarTodoInterno(Dictionary<string, ConfiguracionParciales> datos)
     {
-        string json = JsonSerializer.Serialize(datos, _opciones);
-        File.WriteAllText(_rutaJson, json);
+        using var db = new LiteDatabase($"Filename={_dbPath};Connection=shared");
+        var col = db.GetCollection<StoredConfig>("configuraciones");
+        col.DeleteAll();
+        foreach (var kv in datos)
+        {
+            col.Upsert(new StoredConfig { Id = kv.Key, Value = kv.Value ?? CrearConfiguracionPorDefecto() });
+        }
     }
+
+    public class StoredConfig
+    {
+        public string Id { get; set; } = string.Empty;
+        public ConfiguracionParciales Value { get; set; } = new ConfiguracionParciales();
+    }
+    // Public API to load/save the entire collection
+    public Dictionary<string, ConfiguracionParciales> CargarTodo()
+    {
+        return CargarTodoInterno();
+    }
+
+    public void GuardarTodo(Dictionary<string, ConfiguracionParciales> datos)
+    {
+        GuardarTodoInterno(datos ?? new Dictionary<string, ConfiguracionParciales>());
+    }
+
 
     public ConfiguracionParciales ObtenerConfiguracion()
     {

@@ -409,14 +409,7 @@
                                                         <Setter Property="BorderBrush" Value="#DC2626" />
                                                         <Setter Property="Background" Value="#FFFBFA" />
                                                     </DataTrigger>
-                                                    <MultiDataTrigger>
-                                                        <MultiDataTrigger.Conditions>
-                                                            <Condition Binding="{Binding Activa}" Value="False" />
-                                                            <Condition Binding="{Binding Nombre}" Value="" />
-                                                        </MultiDataTrigger.Conditions>
-                                                        <Setter Property="BorderBrush" Value="#D7DEE8" />
-                                                        <Setter Property="Background" Value="#FAFBFD" />
-                                                    </MultiDataTrigger>
+
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
@@ -679,7 +672,7 @@
                                                              Style="{StaticResource RoundedTextBoxStyle}"
                                                              PreviewTextInput="Numeros_PreviewTextInput"
                                                              DataObject.Pasting="Numeros_Pasting"
-                                                             IsEnabled="{Binding Activa}"
+                                                             IsEnabled="{Binding IsPuntajeEditable}"
                                                              KeyDown="PuntajeObtenido_KeyDown"
                                                              TextChanged="Puntaje_TextChanged" />
 
@@ -702,6 +695,13 @@
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
 
+                                    <TextBlock Text="{Binding LeyendaCapturaDirecta}"
+                                               Foreground="#B91C1C"
+                                               FontSize="12"
+                                               Margin="0,8,0,0"
+                                               TextWrapping="Wrap"
+                                               Visibility="{Binding AlumnoConCapturaDirecta, Converter={StaticResource BoolToVis}}" />
+
                                     <StackPanel Orientation="Horizontal"
                                                 Margin="0,6,0,0"
                                                 VerticalAlignment="Center">
@@ -717,11 +717,22 @@
                                                  HorizontalContentAlignment="Center"
                                                  VerticalContentAlignment="Center"
                                                  MaxLength="3"
-                                             Style="{StaticResource RoundedTextBoxStyle}"
-                                             PreviewTextInput="NumerosEnteros_PreviewTextInput"
-                                             DataObject.Pasting="Numeros_Pasting"
-                                             IsEnabled="{Binding AsistenciaActiva}"
-                                             TextChanged="Puntaje_TextChanged" />
+                                                 PreviewTextInput="NumerosEnteros_PreviewTextInput"
+                                                 DataObject.Pasting="Numeros_Pasting"
+                                                 TextChanged="Puntaje_TextChanged">
+                                            <TextBox.Style>
+                                                <Style TargetType="TextBox" BasedOn="{StaticResource RoundedTextBoxStyle}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding AsistenciaActiva}" Value="False">
+                                                            <Setter Property="IsEnabled" Value="False" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding AlumnoConCapturaDirecta}" Value="True">
+                                                            <Setter Property="IsEnabled" Value="False" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBox.Style>
+                                        </TextBox>
                                     </StackPanel>
                                 </StackPanel>
 
@@ -746,9 +757,21 @@
                                                Margin="0,-1,0,0" />
                                     <Border Style="{StaticResource BlueGradeBlock}"
                                             Margin="0,6,0,0">
-                                        <TextBlock Text="{Binding CalificacionParcialTexto}"
-                                                   Style="{StaticResource BlueGradeText}" />
+                                        <TextBox Text="{Binding CalificacionParcialTexto, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource RoundedTextBoxStyle}"
+                                                 FontSize="22"
+                                                 FontWeight="Black"
+                                                 HorizontalContentAlignment="Center"
+                                                 VerticalContentAlignment="Center"
+                                                 Foreground="#1E3A8A"
+                                                 Width="100"
+                                                 IsEnabled="{Binding AlumnoConCapturaDirecta}"
+                                                 TextChanged="CalificacionParcial_TextChanged" />
                                     </Border>
+                                    <CheckBox Content="Calificación directa (solo este alumno)"
+                                              IsChecked="{Binding AlumnoConCapturaDirecta, Mode=TwoWay}"
+                                              Margin="0,8,0,0"
+                                              ToolTip="Si está activado, este alumno tiene calificación directa y no se permite editar sus puntajes locales." />
                                 </StackPanel>
                             </Grid>
                         </GroupBox>

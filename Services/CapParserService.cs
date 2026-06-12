@@ -4,24 +4,48 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using LiteDB;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 
 public class CapParserService
 {
+    public CapParserService()
+    {
+        ParcialJsonService.EnsureMigration();
+    }
+
     private Dictionary<string, string> CargarMapaGrupos()
     {
         var mapa = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        string rutaJson = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "grupo.json");
+        var carpeta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+        var rutaJson = Path.Combine(carpeta, "grupo.json");
+        var dbPath = Path.Combine(carpeta, "data.db");
 
-        if (!File.Exists(rutaJson))
-            return mapa;
+        // Try LiteDB first
+        try
+        {
+            if (File.Exists(dbPath))
+            {
+                using var db = new LiteDatabase($"Filename={dbPath};Connection=shared");
+                var col = db.GetCollection<GrupoEntry>("grupos");
+                foreach (var g in col.FindAll())
+                {
+                    if (!string.IsNullOrWhiteSpace(g.Matricula) && !mapa.ContainsKey(g.Matricula))
+                        mapa[g.Matricula] = g.Grupo ?? string.Empty;
+                }
+                return mapa;
+            }
+        }
+        catch { }
 
+        // Fallback to legacy grupo.json and optionally migrate it
+        if (!File.Exists(rutaJson)) return mapa;
         try
         {
             string jsonContent = File.ReadAllText(rutaJson, Encoding.UTF8);
-            var datos = JsonSerializer.Deserialize<List<List<string>>>(jsonContent);
+            var datos = System.Text.Json.JsonSerializer.Deserialize<List<List<string>>>(jsonContent);
 
             if (datos != null)
             {
@@ -31,22 +55,63 @@ public class CapParserService
                     {
                         string matricula = relacion[0].Trim();
                         string grupo = relacion[1].Trim();
-
-                        // Keep the first mapping found for a matricula (do not overwrite),
-                        // to match original program behavior when grupo.json contains duplicates.
-                        if (!mapa.ContainsKey(matricula))
-                        {
-                            mapa.Add(matricula, grupo);
-                        }
+                        if (!mapa.ContainsKey(matricula)) mapa.Add(matricula, grupo);
                     }
                 }
+
+                // Migrate into LiteDB for future runs
+                try
+                {
+                    using var db = new LiteDatabase($"Filename={dbPath};Connection=shared");
+                    var col = db.GetCollection<GrupoEntry>("grupos");
+                    col.DeleteAll();
+                    foreach (var kv in mapa)
+                    {
+                        col.Insert(new GrupoEntry { Matricula = kv.Key, Grupo = kv.Value });
+                    }
+                }
+                catch { }
             }
         }
-        catch
-        {
-        }
+        catch { }
 
         return mapa;
+    }
+
+    public class GrupoEntry
+    {
+        public int Id { get; set; }
+        public string Matricula { get; set; } = string.Empty;
+        public string Grupo { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Public API: load all groups from data.db (migrates from grupo.json if needed).
+    /// </summary>
+    public Dictionary<string, string> ObtenerTodosGrupos()
+    {
+        return CargarMapaGrupos();
+    }
+
+    /// <summary>
+    /// Public API: save all groups into data.db (overwrites existing grupos collection).
+    /// </summary>
+    public void GuardarTodosGrupos(Dictionary<string, string> grupos)
+    {
+        try
+        {
+            var carpeta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+            if (!Directory.Exists(carpeta)) Directory.CreateDirectory(carpeta);
+            var dbPath = Path.Combine(carpeta, "data.db");
+            using var db = new LiteDatabase($"Filename={dbPath};Connection=shared");
+            var col = db.GetCollection<GrupoEntry>("grupos");
+            col.DeleteAll();
+            foreach (var kv in grupos)
+            {
+                col.Insert(new GrupoEntry { Matricula = kv.Key, Grupo = kv.Value });
+            }
+        }
+        catch { }
     }
 
     public string ObtenerNombreVisualArchivo(string filePath)

@@ -117,6 +117,14 @@ public partial class ParcialesView : UserControl
         }
     }
 
+    private void CalificacionParcial_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (DataContext is ParcialesViewModel vm)
+        {
+            vm.MarkUserEdited();
+        }
+    }
+
     // Helper to find child control of specific type
     private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
     {

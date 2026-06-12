@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using LiteDB;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
@@ -56,6 +57,9 @@ public partial class ParcialesViewModel : ObservableObject
     [ObservableProperty] private bool _asistenciaActiva;
     [ObservableProperty] private int _clasesTotales;
     [ObservableProperty] private int _inasistencias;
+    [ObservableProperty] private bool _alumnoConCapturaDirecta;
+    [ObservableProperty] private bool _capturaDirectaActiva;
+    [ObservableProperty] private string _leyendaCapturaDirecta = string.Empty;
 
     public ParcialesViewModel(MainViewModel mainVm)
     {
@@ -95,6 +99,35 @@ public partial class ParcialesViewModel : ObservableObject
         RecalcularTodo(guardarJson: false);
     }
 
+    partial void OnCalificacionParcialTextoChanged(string value)
+    {
+        if (AlumnoSeleccionado == null || string.IsNullOrWhiteSpace(_evaluacionActual)) return;
+
+        if (!AlumnoConCapturaDirecta) return;
+
+        try
+        {
+            // persist final grade for this student
+            AlumnoSeleccionado.Calificación[_evaluacionActual] = value ?? string.Empty;
+
+            if (_materia.Calificaciones.TryGetValue(AlumnoSeleccionado.Matricula, out var capturas) && capturas != null)
+            {
+                if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out double dval))
+                {
+                    capturas["__CALIF_DIRECTA__"] = dval;
+                }
+                else if (capturas.ContainsKey("__CALIF_DIRECTA__"))
+                {
+                    capturas.Remove("__CALIF_DIRECTA__");
+                }
+            }
+
+            PersistirCapturasTemporales(AlumnoSeleccionado.Matricula);
+            GuardarEnJsonLocal();
+        }
+        catch { }
+    }
+
     // Called explicitly from UI handlers when the user types or changes fields
     public void MarkUserEdited()
     {
@@ -104,6 +137,8 @@ public partial class ParcialesViewModel : ObservableObject
             _lastUserEditTime = DateTime.UtcNow;
             try
             {
+                // Persist to persistent storage immediately (LiteDB) and also attempt CAP save
+                try { GuardarEnJsonLocal(); } catch { }
                 _mainVm?.GuardarSilencioso();
             }
             catch { }
@@ -239,6 +274,41 @@ public partial class ParcialesViewModel : ObservableObject
         RecalcularTodo(guardarJson: false, marcarCambios: false);
     }
 
+    partial void OnAlumnoConCapturaDirectaChanged(bool value)
+    {
+        if (AlumnoSeleccionado == null || string.IsNullOrWhiteSpace(AlumnoSeleccionado.Matricula))
+            return;
+
+        // update capture flag in current materia captures for selected student
+        var matricula = AlumnoSeleccionado.Matricula;
+
+        if (!_materia.Calificaciones.TryGetValue(matricula, out var capturas) || capturas == null)
+        {
+            capturas = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+            _materia.Calificaciones[matricula] = capturas;
+        }
+
+        if (value)
+        {
+            capturas["__CAPTURA_DIRECTA__"] = 1;
+        }
+        else
+        {
+            if (capturas.ContainsKey("__CAPTURA_DIRECTA__")) capturas.Remove("__CAPTURA_DIRECTA__");
+        }
+
+        // Apply bloqueo to editors immediately for selected student
+        foreach (var ed in Actividades) ed.SetBloqueadoPorCapturaDirecta(value);
+
+        // Persist changes immediately
+        try
+        {
+            PersistirCapturasTemporales(matricula);
+            GuardarEnJsonLocal();
+        }
+        catch { }
+    }
+
     private void CargarContextoActual()
     {
         _cargando = true;
@@ -365,13 +435,21 @@ public partial class ParcialesViewModel : ObservableObject
         if (AlumnoSeleccionado == null)
         {
             foreach (var actividad in Actividades) actividad.PuntajeObtenido = "";
-            _inasistencias = 0;
+        _inasistencias = 0;
+        AlumnoConCapturaDirecta = false;
+        LeyendaCapturaDirecta = string.Empty;
+        foreach (var ed in Actividades) ed.SetBloqueadoPorCapturaDirecta(false);
             OnPropertyChanged(nameof(Inasistencias));
             return;
         }
 
         if (_materia.Calificaciones.TryGetValue(AlumnoSeleccionado.Matricula, out var capturas))
         {
+            // Detect per-student direct capture flag
+            bool alumnoCapturaDirecta = capturas.TryGetValue("__CAPTURA_DIRECTA__", out var cdVal) && cdVal > 0;
+            AlumnoConCapturaDirecta = alumnoCapturaDirecta;
+            LeyendaCapturaDirecta = alumnoCapturaDirecta ? "Calificación directa habilitada para este alumno — para cambios diríjase al área de Servicios Escolares." : string.Empty;
+
             foreach (var actividad in Actividades)
             {
                 if (!string.IsNullOrWhiteSpace(actividad.Nombre) && capturas.TryGetValue(actividad.Nombre, out var valor))
@@ -382,6 +460,11 @@ public partial class ParcialesViewModel : ObservableObject
                 {
                     actividad.PuntajeObtenido = "";
                 }
+            }
+            // Apply editor bloqueo per student
+            foreach (var ed in Actividades)
+            {
+                ed.SetBloqueadoPorCapturaDirecta(AlumnoConCapturaDirecta);
             }
             _inasistencias = capturas.TryGetValue("__Inasistencias__", out var ina) ? (int)ina : 0;
             OnPropertyChanged(nameof(Inasistencias));
@@ -428,8 +511,12 @@ public partial class ParcialesViewModel : ObservableObject
     private void PersistirCapturasTemporales(string? matricula)
     {
         if (string.IsNullOrWhiteSpace(matricula) || matricula == "$CONFIG$") return;
-
         var capturas = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        // Preserve existing __CAPTURA_DIRECTA__ flag if present
+        if (_materia.Calificaciones.TryGetValue(matricula, out var existente) && existente != null && existente.TryGetValue("__CAPTURA_DIRECTA__", out var cd))
+        {
+            capturas["__CAPTURA_DIRECTA__"] = cd;
+        }
         foreach (var actividad in Actividades)
         {
             if (!string.IsNullOrWhiteSpace(actividad.Nombre))
@@ -521,11 +608,15 @@ public partial class ParcialesViewModel : ObservableObject
         if (sumaPorcentajes > 0m && logicaCorrecta)
         {
             decimal calificacion = TruncarUnDecimal(acumulado / 10m);
-            CalificacionParcialTexto = calificacion.ToString("0.0", CultureInfo.InvariantCulture);
-
-            if (AlumnoSeleccionado != null && !string.IsNullOrWhiteSpace(_evaluacionActual))
+            // Only overwrite the displayed final grade when the selected student does not have direct capture
+            if (!AlumnoConCapturaDirecta)
             {
-                AlumnoSeleccionado.Calificación[_evaluacionActual] = CalificacionParcialTexto;
+                CalificacionParcialTexto = calificacion.ToString("0.0", CultureInfo.InvariantCulture);
+
+                if (AlumnoSeleccionado != null && !string.IsNullOrWhiteSpace(_evaluacionActual))
+                {
+                    AlumnoSeleccionado.Calificación[_evaluacionActual] = CalificacionParcialTexto;
+                }
             }
         }
         else
@@ -631,10 +722,25 @@ public partial class ParcialesViewModel : ObservableObject
         _mapaGrupos.Clear();
         try
         {
-            string rutaJson = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "grupo.json");
+            var carpeta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+            var dbPath = Path.Combine(carpeta, "data.db");
+
+            if (File.Exists(dbPath))
+            {
+                using var db = new LiteDatabase($"Filename={dbPath};Connection=shared");
+                var col = db.GetCollection<CapParserService.GrupoEntry>("grupos");
+                foreach (var g in col.FindAll())
+                {
+                    if (!string.IsNullOrWhiteSpace(g.Matricula)) _mapaGrupos[g.Matricula] = g.Grupo ?? string.Empty;
+                }
+                return;
+            }
+
+            // fallback to legacy JSON file
+            string rutaJson = Path.Combine(carpeta, "grupo.json");
             if (!File.Exists(rutaJson)) return;
             string json = File.ReadAllText(rutaJson, Encoding.UTF8);
-            var datos = JsonSerializer.Deserialize<List<List<string>>>(json);
+            var datos = System.Text.Json.JsonSerializer.Deserialize<List<List<string>>>(json);
             if (datos == null) return;
             foreach (var relacion in datos.Where(r => r.Count >= 2))
             {
@@ -642,6 +748,18 @@ public partial class ParcialesViewModel : ObservableObject
                 string grupo = relacion[1].Trim();
                 _mapaGrupos[matricula] = grupo;
             }
+            // attempt migration into LiteDB
+            try
+            {
+                using var db = new LiteDatabase($"Filename={dbPath};Connection=shared");
+                var col = db.GetCollection<CapParserService.GrupoEntry>("grupos");
+                col.DeleteAll();
+                foreach (var kv in _mapaGrupos)
+                {
+                    col.Insert(new CapParserService.GrupoEntry { Matricula = kv.Key, Grupo = kv.Value });
+                }
+            }
+            catch { }
         }
         catch { }
     }
@@ -657,6 +775,7 @@ public partial class ParcialesViewModel : ObservableObject
 public partial class ActividadParcialEditor : ObservableObject
 {
     private readonly Action _notificarCambio;
+    private bool _bloqueadoPorCapturaDirecta = false;
 
     [ObservableProperty] private bool _activa;
     [ObservableProperty] private string _nombre = string.Empty;
@@ -668,6 +787,14 @@ public partial class ActividadParcialEditor : ObservableObject
     {
         _notificarCambio = notificarCambio;
     }
+
+    public void SetBloqueadoPorCapturaDirecta(bool bloqueado)
+    {
+        _bloqueadoPorCapturaDirecta = bloqueado;
+        OnPropertyChanged(nameof(IsPuntajeEditable));
+    }
+
+    public bool IsPuntajeEditable => !_bloqueadoPorCapturaDirecta && Activa;
 
     public void CargarDesdeModelo(ActividadParcial modelo)
     {
@@ -716,7 +843,7 @@ public partial class ActividadParcialEditor : ObservableObject
     {
         if (value)
         {
-            if (string.IsNullOrWhiteSpace(_nombre)) _nombre = "Actividad";
+            // Do not auto-fill the name when activating — keep fields empty so user can type.
             if (string.IsNullOrWhiteSpace(_porcentaje)) _porcentaje = "0";
             OnPropertyChanged(nameof(Nombre));
             OnPropertyChanged(nameof(Porcentaje));
@@ -728,6 +855,7 @@ public partial class ActividadParcialEditor : ObservableObject
     partial void OnPorcentajeChanged(string value) => NotificarActualizacion();
     partial void OnPuntajeMaximoChanged(string value) => NotificarActualizacion();
     partial void OnPuntajeObtenidoChanged(string value) => NotificarActualizacion();
+
 
     private void NotificarActualizacion()
     {
