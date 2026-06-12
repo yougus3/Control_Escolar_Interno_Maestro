@@ -25,7 +25,9 @@
 
     <ItemGroup>
       <None Remove="logo.jpg" />
-      <Content Include="logo.ico" />
+      <Content Include="logo.ico">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
       <Resource Include="logo.jpg">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Resource>

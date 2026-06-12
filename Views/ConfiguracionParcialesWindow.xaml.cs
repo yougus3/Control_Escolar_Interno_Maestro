@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
-using System.Windows.Input;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.ViewModels;
@@ -30,10 +31,17 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
     private ConfiguracionParciales _configuracion = new();
     private bool _cargandoDatos;
 
+    // Configuración existente
     private bool _parcial1Habilitado;
     private bool _parcial2Habilitado;
     private bool _parcial3Habilitado;
     private bool _semestralHabilitado;
+
+    // Nuevos campos para modo Global / Por materia
+    private bool _modoGlobalConfiguracion;
+    private bool _modoPorMateriaConfiguracion = true;
+    private string? _evaluacionGlobalSeleccionada;
+    private readonly ObservableCollection<string> _evaluacionesGlobalesDisponibles = new();
 
     private string? _materiaSeleccionadaConfiguracion;
     private string? _materiaSeleccionadaDirecta;
@@ -52,6 +60,7 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    // ========== Propiedades existentes ==========
     public bool Parcial1Habilitado
     {
         get => _parcial1Habilitado;
@@ -60,7 +69,8 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
             if (_parcial1Habilitado == value) return;
             _parcial1Habilitado = value;
             OnPropertyChanged();
-            if (!_cargandoDatos) SaveConfigurationIfReady();
+            if (!_cargandoDatos && ModoPorMateriaConfiguracion)
+                GuardarConfiguracionMateriaActual();
         }
     }
 
@@ -72,7 +82,8 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
             if (_parcial2Habilitado == value) return;
             _parcial2Habilitado = value;
             OnPropertyChanged();
-            if (!_cargandoDatos) SaveConfigurationIfReady();
+            if (!_cargandoDatos && ModoPorMateriaConfiguracion)
+                GuardarConfiguracionMateriaActual();
         }
     }
 
@@ -84,7 +95,8 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
             if (_parcial3Habilitado == value) return;
             _parcial3Habilitado = value;
             OnPropertyChanged();
-            if (!_cargandoDatos) SaveConfigurationIfReady();
+            if (!_cargandoDatos && ModoPorMateriaConfiguracion)
+                GuardarConfiguracionMateriaActual();
         }
     }
 
@@ -96,31 +108,92 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
             if (_semestralHabilitado == value) return;
             _semestralHabilitado = value;
             OnPropertyChanged();
-            if (!_cargandoDatos) SaveConfigurationIfReady();
+            if (!_cargandoDatos && ModoPorMateriaConfiguracion)
+                GuardarConfiguracionMateriaActual();
         }
     }
 
-    private void SaveConfigurationIfReady()
+    // ========== Nuevas propiedades para el modo Global / Por materia ==========
+    public bool ModoGlobalConfiguracion
     {
-        try
+        get => _modoGlobalConfiguracion;
+        set
         {
-            string claveMateria = ObtenerClaveMateriaSeleccionada();
-            if (string.IsNullOrWhiteSpace(claveMateria)) return;
-
-            _configuracion.Parcial1Habilitado = Parcial1Habilitado;
-            _configuracion.Parcial2Habilitado = Parcial2Habilitado;
-            _configuracion.Parcial3Habilitado = Parcial3Habilitado;
-            _configuracion.SemestralHabilitado = SemestralHabilitado;
-
-            _configuracionService.GuardarConfiguracion(claveMateria, _configuracion);
-            _mainVm.RecargarConfiguracionYArchivoActual();
-        }
-        catch
-        {
-            // silent
+            if (_modoGlobalConfiguracion == value) return;
+            _modoGlobalConfiguracion = value;
+            _modoPorMateriaConfiguracion = !value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ModoPorMateriaConfiguracion));
+            OnPropertyChanged(nameof(GlobalVisible));
+            OnPropertyChanged(nameof(PorMateriaVisible));
+            OnPropertyChanged(nameof(InfoGuardado));
+            if (!_cargandoDatos)
+            {
+                if (value)
+                {
+                    CargarEvaluacionesGlobales();
+                    GuardarConfiguracionGlobal(); // Esto aplica a todas las materias
+                }
+                else
+                {
+                    CargarConfiguracionMateriaSeleccionada();
+                }
+                // Guardar el modo en el archivo global
+                GuardarConfiguracionGlobal();
+            }
         }
     }
 
+    public bool ModoPorMateriaConfiguracion
+    {
+        get => _modoPorMateriaConfiguracion;
+        set
+        {
+            if (_modoPorMateriaConfiguracion == value) return;
+            _modoPorMateriaConfiguracion = value;
+            _modoGlobalConfiguracion = !value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ModoGlobalConfiguracion));
+            OnPropertyChanged(nameof(GlobalVisible));
+            OnPropertyChanged(nameof(PorMateriaVisible));
+            OnPropertyChanged(nameof(InfoGuardado));
+            if (!_cargandoDatos)
+            {
+                if (value)
+                    CargarConfiguracionMateriaSeleccionada();
+                else
+                {
+                    CargarEvaluacionesGlobales();
+                    GuardarConfiguracionGlobal();
+                }
+                GuardarConfiguracionGlobal();
+            }
+        }
+    }
+
+    public bool GlobalVisible => ModoGlobalConfiguracion;
+    public bool PorMateriaVisible => ModoPorMateriaConfiguracion;
+
+    public string InfoGuardado => ModoGlobalConfiguracion
+        ? "Modo GLOBAL: aplica a todas las materias"
+        : "Modo POR MATERIA: guardado por separado";
+
+    public ObservableCollection<string> EvaluacionesGlobalesDisponibles => _evaluacionesGlobalesDisponibles;
+
+    public string? EvaluacionGlobalSeleccionada
+    {
+        get => _evaluacionGlobalSeleccionada;
+        set
+        {
+            if (_evaluacionGlobalSeleccionada == value) return;
+            _evaluacionGlobalSeleccionada = value;
+            OnPropertyChanged();
+            if (!_cargandoDatos)
+                GuardarConfiguracionGlobal();
+        }
+    }
+
+    // Propiedades existentes para la interfaz
     public string? MateriaSeleccionadaConfiguracion
     {
         get => _materiaSeleccionadaConfiguracion;
@@ -129,11 +202,8 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
             if (_materiaSeleccionadaConfiguracion == value) return;
             _materiaSeleccionadaConfiguracion = value;
             OnPropertyChanged();
-
-            if (!_cargandoDatos)
-            {
+            if (!_cargandoDatos && ModoPorMateriaConfiguracion)
                 CargarConfiguracionMateriaSeleccionada();
-            }
         }
     }
 
@@ -145,11 +215,8 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
             if (_materiaSeleccionadaDirecta == value) return;
             _materiaSeleccionadaDirecta = value;
             OnPropertyChanged();
-
             if (!_cargandoDatos)
-            {
                 CargarMateriaDirecta();
-            }
         }
     }
 
@@ -162,9 +229,7 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
             _evaluacionSeleccionadaDirecta = value;
             OnPropertyChanged();
             if (!_cargandoDatos)
-            {
                 RefrescarAlumnosParaEvaluacion();
-            }
         }
     }
 
@@ -246,6 +311,7 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
         }
     }
 
+    // ========== Constructor ==========
     public ConfiguracionParcialesWindow(MainViewModel mainVm)
     {
         InitializeComponent();
@@ -259,8 +325,16 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
         DataContext = this;
 
         CargarMateriasDisponibles();
-        CargarConfiguracionMateriaSeleccionada();
+        CargarEstadoGlobal();   // Carga el modo guardado y evaluación global
+        CargarEvaluacionesGlobales();
 
+        // Si el modo actual es "Por materia", cargar configuración de la primera materia
+        if (ModoPorMateriaConfiguracion)
+        {
+            CargarConfiguracionMateriaSeleccionada();
+        }
+
+        // Inicializar la selección de materia
         if (MateriasDisponibles.Any())
         {
             _cargandoDatos = true;
@@ -275,17 +349,155 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
                 _cargandoDatos = false;
             }
 
-            CargarConfiguracionMateriaSeleccionada();
+            if (ModoPorMateriaConfiguracion)
+                CargarConfiguracionMateriaSeleccionada();
 
             if (!string.IsNullOrWhiteSpace(MateriaSeleccionadaDirecta))
-            {
                 CargarMateriaDirecta();
-            }
         }
     }
 
+    // ========== Métodos nuevos para el modo Global ==========
+    private void CargarEvaluacionesGlobales()
+    {
+        if (_evaluacionesGlobalesDisponibles.Count > 0) return;
+
+        _evaluacionesGlobalesDisponibles.Clear();
+        _evaluacionesGlobalesDisponibles.Add("P1");
+        _evaluacionesGlobalesDisponibles.Add("P2");
+        _evaluacionesGlobalesDisponibles.Add("P3");
+        _evaluacionesGlobalesDisponibles.Add("SEM");
+
+        // Si no hay selección, asignar por defecto
+        if (string.IsNullOrWhiteSpace(_evaluacionGlobalSeleccionada))
+            EvaluacionGlobalSeleccionada = "P1";
+    }
+
+    private void CargarEstadoGlobal()
+    {
+        var rutaGlobal = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "configuracion_global.json");
+        if (File.Exists(rutaGlobal))
+        {
+            try
+            {
+                var json = File.ReadAllText(rutaGlobal);
+                var data = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+                if (data != null)
+                {
+                    if (data.TryGetValue("ModoGlobal", out var modoStr) && bool.TryParse(modoStr, out var modo))
+                        _modoGlobalConfiguracion = modo;
+                    if (data.TryGetValue("EvaluacionGlobal", out var eval))
+                        _evaluacionGlobalSeleccionada = eval;
+                }
+            }
+            catch { }
+        }
+
+        // Asegurar consistencia
+        if (_modoGlobalConfiguracion)
+            _modoPorMateriaConfiguracion = false;
+        else
+            _modoPorMateriaConfiguracion = true;
+
+        // Si estamos en modo Global, aplicar la configuración global a todas las materias
+        if (_modoGlobalConfiguracion && !string.IsNullOrWhiteSpace(_evaluacionGlobalSeleccionada))
+        {
+            AplicarConfiguracionGlobal();
+        }
+
+        OnPropertyChanged(nameof(ModoGlobalConfiguracion));
+        OnPropertyChanged(nameof(ModoPorMateriaConfiguracion));
+    }
+
+    private void AplicarConfiguracionGlobal()
+{
+    if (!ModoGlobalConfiguracion) return;
+    if (string.IsNullOrWhiteSpace(EvaluacionGlobalSeleccionada)) return;
+
+    var configGlobal = new ConfiguracionParciales
+    {
+        Parcial1Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P1", StringComparison.OrdinalIgnoreCase),
+        Parcial2Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P2", StringComparison.OrdinalIgnoreCase),
+        Parcial3Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P3", StringComparison.OrdinalIgnoreCase),
+        SemestralHabilitado = string.Equals(EvaluacionGlobalSeleccionada, "SEM", StringComparison.OrdinalIgnoreCase),
+        CapturaDirectaHabilitada = true
+    };
+    var service = new ConfiguracionParcialesService();
+    
+    // Usar el diccionario _mapaArchivos para obtener la ruta real de cada materia
+    foreach (var kvp in _mapaArchivos)
+    {
+        string claveMateria = ObtenerClaveMateriaDesdeRuta(kvp.Value);
+        if (!string.IsNullOrWhiteSpace(claveMateria))
+            service.GuardarConfiguracion(claveMateria, configGlobal);
+    }
+    _mainVm.RecargarConfiguracionYArchivoActual();
+}
+
+private void GuardarConfiguracionGlobal()
+{
+    try
+    {
+        // Guardar el modo en un archivo aparte (solo para recordar el modo al abrir)
+        var data = new Dictionary<string, string>
+        {
+            ["ModoGlobal"] = ModoGlobalConfiguracion.ToString(),
+            ["EvaluacionGlobal"] = EvaluacionGlobalSeleccionada ?? "P1"
+        };
+        var json = JsonSerializer.Serialize(data);
+        var rutaGlobal = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "configuracion_global.json");
+        File.WriteAllText(rutaGlobal, json);
+
+        // Si estamos en modo Global, guardar la configuración para TODAS las materias
+        if (ModoGlobalConfiguracion && !string.IsNullOrWhiteSpace(EvaluacionGlobalSeleccionada))
+        {
+            var configGlobal = new ConfiguracionParciales
+            {
+                Parcial1Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P1", StringComparison.OrdinalIgnoreCase),
+                Parcial2Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P2", StringComparison.OrdinalIgnoreCase),
+                Parcial3Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P3", StringComparison.OrdinalIgnoreCase),
+                SemestralHabilitado = string.Equals(EvaluacionGlobalSeleccionada, "SEM", StringComparison.OrdinalIgnoreCase),
+                CapturaDirectaHabilitada = true
+            };
+            var service = new ConfiguracionParcialesService();
+            foreach (var kvp in _mapaArchivos)
+            {
+                string claveMateria = ObtenerClaveMateriaDesdeRuta(kvp.Value);
+                if (!string.IsNullOrWhiteSpace(claveMateria))
+                {
+                    service.GuardarConfiguracion(claveMateria, configGlobal);
+                }
+            }
+        }
+
+        _mainVm.RecargarConfiguracionYArchivoActual();
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show($"Error al guardar configuración global: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+    }
+}
+
+    private void GuardarConfiguracionMateriaActual()
+    {
+        if (!ModoPorMateriaConfiguracion) return;
+        string claveMateria = ObtenerClaveMateriaSeleccionada();
+        if (string.IsNullOrWhiteSpace(claveMateria)) return;
+
+        _configuracion.Parcial1Habilitado = Parcial1Habilitado;
+        _configuracion.Parcial2Habilitado = Parcial2Habilitado;
+        _configuracion.Parcial3Habilitado = Parcial3Habilitado;
+        _configuracion.SemestralHabilitado = SemestralHabilitado;
+
+        _configuracionService.GuardarConfiguracion(claveMateria, _configuracion);
+        _mainVm.RecargarConfiguracionYArchivoActual();
+    }
+
+    // ========== Métodos existentes modificados ==========
     private void CargarConfiguracionMateriaSeleccionada()
     {
+        if (!ModoPorMateriaConfiguracion) return;
+
         _cargandoDatos = true;
         try
         {
@@ -343,6 +555,18 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
         return string.Empty;
     }
 
+    private string ObtenerClaveMateriaDesdeNombreVisual(string nombreVisual)
+    {
+        if (string.IsNullOrWhiteSpace(nombreVisual)) return string.Empty;
+        string texto = nombreVisual.Trim();
+        int indexEspacio = texto.IndexOf(' ');
+        if (indexEspacio <= 0)
+            return texto.Replace(' ', '_');
+        string clave = texto[..indexEspacio].Trim();
+        string nombre = texto[(indexEspacio + 1)..].Trim();
+        return string.IsNullOrWhiteSpace(nombre) ? clave : $"{clave}_{nombre}";
+    }
+
     private void CargarMateriasDisponibles()
     {
         MateriasDisponibles.Clear();
@@ -370,6 +594,11 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
         if (string.IsNullOrWhiteSpace(evaluacion))
             return false;
 
+        // En modo Global, solo está habilitada la evaluación seleccionada
+        if (ModoGlobalConfiguracion)
+            return string.Equals(evaluacion.Trim(), EvaluacionGlobalSeleccionada, StringComparison.OrdinalIgnoreCase);
+
+        // Modo Por materia
         return evaluacion.Trim().ToUpperInvariant() switch
         {
             "P1" => _configuracion.Parcial1Habilitado,
@@ -497,15 +726,10 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
 
     private void GuardarConfiguracion_Click(object sender, RoutedEventArgs e)
     {
-        // Keep for compatibility; prefer to use immediate-saving handlers instead
-        string claveMateria = ObtenerClaveMateriaSeleccionada();
-        if (string.IsNullOrWhiteSpace(claveMateria)) return;
-        _configuracion.Parcial1Habilitado = Parcial1Habilitado;
-        _configuracion.Parcial2Habilitado = Parcial2Habilitado;
-        _configuracion.Parcial3Habilitado = Parcial3Habilitado;
-        _configuracion.SemestralHabilitado = SemestralHabilitado;
-        _configuracionService.GuardarConfiguracion(claveMateria, _configuracion);
-        _mainVm.RecargarConfiguracionYArchivoActual();
+        if (ModoPorMateriaConfiguracion)
+            GuardarConfiguracionMateriaActual();
+        else
+            GuardarConfiguracionGlobal();
     }
 
     private void GuardarDirecta_Click(object sender, RoutedEventArgs e)
@@ -570,10 +794,9 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
             return;
         }
 
-        // Keep for compatibility: perform same action but without modal; call silent save
         AlumnoSeleccionadoDirecto.ValorSeleccionado = valorNormalizado;
         AlumnoSeleccionadoDirecto.Calificación[EvaluacionSeleccionadaDirecta] = valorNormalizado;
-        SincronizarConMainVm(EvaluacionSeleccionadaDirecta, this.AlumnoSeleccionadoDirecto.Matricula, valorNormalizado);
+        SincronizarConMainVm(EvaluacionSeleccionadaDirecta, AlumnoSeleccionadoDirecto.Matricula, valorNormalizado);
         _writerService.GuardarEvaluacion(rutaCompleta, AlumnosDirectos.ToList(), EvaluacionSeleccionadaDirecta, idEval);
         CalificacionActualDirecta = valorNormalizado;
         CalificacionNuevaDirecta = valorNormalizado;
@@ -646,5 +869,11 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
         bool esFormatoValido = Regex.IsMatch(textoResultante, @"^([0-9](\.[0-9]?)?|10?)$");
 
         e.Handled = !esFormatoValido;
+    }
+    private string ObtenerClaveMateriaDesdeRuta(string rutaCompleta)
+    {
+        if (string.IsNullOrWhiteSpace(rutaCompleta)) return string.Empty;
+        string nombre = Path.GetFileNameWithoutExtension(rutaCompleta);
+        return string.IsNullOrWhiteSpace(nombre) ? string.Empty : nombre.Trim().Replace(' ', '_');
     }
 }
