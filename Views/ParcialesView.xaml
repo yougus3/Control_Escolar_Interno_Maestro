@@ -11,7 +11,6 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
 
-        <!-- Paleta principal -->
         <SolidColorBrush x:Key="AppBlue" Color="#1B365D" />
         <SolidColorBrush x:Key="AppBlueDark" Color="#172F52" />
         <SolidColorBrush x:Key="AppBlueSoft" Color="#EFF6FF" />
@@ -22,7 +21,6 @@
         <SolidColorBrush x:Key="AppTextPrimary" Color="#0F172A" />
         <SolidColorBrush x:Key="AppTextSecondary" Color="#64748B" />
 
-        <!-- CheckBox -->
         <Style TargetType="CheckBox">
             <Setter Property="Margin" Value="0,2,0,2" />
             <Setter Property="VerticalAlignment" Value="Center" />
@@ -31,7 +29,6 @@
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
 
-        <!-- Botón base azul -->
         <Style x:Key="BlueButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource AppBlue}" />
             <Setter Property="Foreground" Value="White" />
@@ -68,7 +65,6 @@
             </Setter>
         </Style>
 
-        <!-- Botón icono / transparente -->
         <Style x:Key="IconButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
@@ -98,7 +94,6 @@
             </Setter>
         </Style>
 
-        <!-- TextBox redondeado -->
         <Style x:Key="RoundedTextBoxStyle" TargetType="TextBox">
             <Setter Property="Background" Value="White" />
             <Setter Property="BorderBrush" Value="#CBD5E1" />
@@ -139,7 +134,6 @@
             </Setter>
         </Style>
 
-        <!-- GroupBox tipo tarjeta -->
         <Style x:Key="CardGroupBoxStyle" TargetType="GroupBox">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
@@ -182,7 +176,6 @@
             </Setter>
         </Style>
 
-        <!-- Border de actividad -->
         <Style x:Key="ActividadBorderStyle" TargetType="Border">
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="8" />
@@ -192,14 +185,12 @@
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 
-        <!-- Texto de suma de porcentajes -->
         <Style x:Key="SumaPorcText" TargetType="TextBlock">
             <Setter Property="FontSize" Value="18" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="Foreground" Value="#1B365D" />
         </Style>
 
-        <!-- Bloque azul para la calificación parcial -->
         <Style x:Key="BlueGradeBlock" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource AppBlueSoft}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBlueSoftBorder}" />
@@ -231,7 +222,6 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <!-- Header -->
                 <Border Background="#1B365D"
                         CornerRadius="10"
                         Padding="12,10"
@@ -276,14 +266,12 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Contenido principal -->
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1.6*" />
                         <ColumnDefinition Width="1.4*" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- COLUMNA IZQUIERDA -->
                     <Grid Grid.Column="0" Margin="0,0,12,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -291,7 +279,6 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <!-- Propiedades de Actividades -->
                         <GroupBox Header="Propiedades de Actividades"
                                   Style="{StaticResource CardGroupBoxStyle}">
                             <GroupBox.Resources>
@@ -409,7 +396,6 @@
                                                         <Setter Property="BorderBrush" Value="#DC2626" />
                                                         <Setter Property="Background" Value="#FFFBFA" />
                                                     </DataTrigger>
-
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
@@ -450,7 +436,6 @@
                             </Grid>
                         </GroupBox>
 
-                        <!-- Configuración de Asistencias -->
                         <GroupBox Grid.Row="1"
                                   Header="Configuración de Asistencias"
                                   Margin="0,5,0,0"
@@ -489,7 +474,6 @@
                             </Border>
                         </GroupBox>
 
-                        <!-- Suma de porcentajes -->
                         <Border Grid.Row="2"
                                 Background="#EAF0F8"
                                 BorderBrush="#D7DEE8"
@@ -521,15 +505,13 @@
                         </Border>
                     </Grid>
 
-                    <!-- COLUMNA DERECHA -->
                     <Grid Grid.Column="1" Margin="12,0,0,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /> </Grid.RowDefinitions>
 
-                        <!-- Lista de Alumnos -->
                         <GroupBox Header="Alumnos"
                                   Margin="0,0,0,5"
                                   Style="{StaticResource CardGroupBoxStyle}">
@@ -597,7 +579,6 @@
                             </ListBox>
                         </GroupBox>
 
-                        <!-- Botones de navegación -->
                         <StackPanel Grid.Row="1"
                                     Orientation="Horizontal"
                                     HorizontalAlignment="Center"
@@ -623,7 +604,6 @@
                                     Style="{StaticResource BlueButtonStyle}" />
                         </StackPanel>
 
-                        <!-- Puntajes obtenidos -->
                         <GroupBox Grid.Row="2"
                                   Header="Puntajes obtenidos:"
                                   Margin="0,0,0,0"
@@ -635,7 +615,6 @@
                                     <ColumnDefinition Width="120" />
                                 </Grid.ColumnDefinitions>
 
-                                <!-- Izquierda: actividades + inasistencias -->
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="{Binding NombreAlumno}"
                                                FontWeight="Bold"
@@ -736,13 +715,11 @@
                                     </StackPanel>
                                 </StackPanel>
 
-                                <!-- Línea vertical -->
                                 <Border Grid.Column="1"
                                         Width="1"
                                         Background="#D7DEE8"
                                         Margin="10,0" />
 
-                                <!-- Derecha: calificación -->
                                 <StackPanel Grid.Column="2"
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center">
@@ -775,6 +752,17 @@
                                 </StackPanel>
                             </Grid>
                         </GroupBox>
+
+                        <Button Grid.Row="3"
+                                Content="💾 Guardar Cambios"
+                                Command="{Binding MainVm.GuardarCommand}"
+                                Height="36"
+                                Width="180"
+                                Margin="0,10,0,5"
+                                HorizontalAlignment="Right"
+                                Style="{StaticResource BlueButtonStyle}"
+                                ToolTip="Guardar calificaciones en el archivo JSON local y actualizar el CAP" />
+
                     </Grid>
                 </Grid>
             </Grid>

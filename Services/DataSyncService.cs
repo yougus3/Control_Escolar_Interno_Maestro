@@ -1,85 +1,75 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using LiteDB;
+using System.Text.Json;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
 {
     public class DataSyncService
     {
-        private readonly string _dbPath;
+        private readonly string _carpeta;
 
         public DataSyncService()
         {
-            var carpeta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-            if (!Directory.Exists(carpeta)) Directory.CreateDirectory(carpeta);
-            _dbPath = Path.Combine(carpeta, "data.db");
+            _carpeta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+            if (!Directory.Exists(_carpeta)) Directory.CreateDirectory(_carpeta);
         }
 
         public IEnumerable<(string Key, MateriaParcial Value)> CargarParciales()
         {
-            using var db = new LiteDatabase($"Filename={_dbPath};Connection=shared");
-            var col = db.GetCollection<ParcialJsonService.StoredMateria>("parciales");
-            foreach (var item in col.FindAll())
-            {
-                yield return (item.Id, item.Value ?? new MateriaParcial());
-            }
+            var ruta = Path.Combine(_carpeta, "parciales.json");
+            if (!File.Exists(ruta)) yield break;
+            var dict = JsonSerializer.Deserialize<Dictionary<string, MateriaParcial>>(File.ReadAllText(ruta));
+            if (dict != null) foreach (var kv in dict) yield return (kv.Key, kv.Value);
         }
 
         public void GuardarParciales(IEnumerable<(string Key, MateriaParcial Value)> items)
         {
-            using var db = new LiteDatabase($"Filename={_dbPath};Connection=shared");
-            var col = db.GetCollection<ParcialJsonService.StoredMateria>("parciales");
-            col.DeleteAll();
-            foreach (var kv in items)
-            {
-                col.Upsert(new ParcialJsonService.StoredMateria { Id = kv.Key, Value = kv.Value ?? new MateriaParcial() });
-            }
+            var ruta = Path.Combine(_carpeta, "parciales.json");
+            var dict = new Dictionary<string, MateriaParcial>();
+            foreach (var kv in items) dict[kv.Key] = kv.Value;
+            File.WriteAllText(ruta, JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true }));
         }
 
         public IEnumerable<(string Key, ConfiguracionParciales Value)> CargarConfiguraciones()
         {
-            using var db = new LiteDatabase($"Filename={_dbPath};Connection=shared");
-            var col = db.GetCollection<ConfiguracionParcialesService.StoredConfig>("configuraciones");
-            foreach (var item in col.FindAll())
-            {
-                yield return (item.Id, item.Value ?? new ConfiguracionParciales());
-            }
+            var ruta = Path.Combine(_carpeta, "configuracion_parciales.json");
+            if (!File.Exists(ruta)) yield break;
+            var dict = JsonSerializer.Deserialize<Dictionary<string, ConfiguracionParciales>>(File.ReadAllText(ruta));
+            if (dict != null) foreach (var kv in dict) yield return (kv.Key, kv.Value);
         }
 
         public void GuardarConfiguraciones(IEnumerable<(string Key, ConfiguracionParciales Value)> items)
         {
-            using var db = new LiteDatabase($"Filename={_dbPath};Connection=shared");
-            var col = db.GetCollection<ConfiguracionParcialesService.StoredConfig>("configuraciones");
-            col.DeleteAll();
-            foreach (var kv in items)
-            {
-                col.Upsert(new ConfiguracionParcialesService.StoredConfig { Id = kv.Key, Value = kv.Value ?? new ConfiguracionParciales() });
-            }
+            var ruta = Path.Combine(_carpeta, "configuracion_parciales.json");
+            var dict = new Dictionary<string, ConfiguracionParciales>();
+            foreach (var kv in items) dict[kv.Key] = kv.Value;
+            File.WriteAllText(ruta, JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true }));
         }
 
         public Dictionary<string, string> CargarGrupos()
         {
+            var ruta = Path.Combine(_carpeta, "grupo.json");
             var mapa = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            using var db = new LiteDatabase($"Filename={_dbPath};Connection=shared");
-            var col = db.GetCollection<CapParserService.GrupoEntry>("grupos");
-            foreach (var g in col.FindAll())
-            {
-                if (!string.IsNullOrWhiteSpace(g.Matricula) && !mapa.ContainsKey(g.Matricula)) mapa[g.Matricula] = g.Grupo ?? string.Empty;
-            }
+            if (!File.Exists(ruta)) return mapa;
+            try {
+                var datos = JsonSerializer.Deserialize<List<List<string>>>(File.ReadAllText(ruta));
+                if (datos != null) {
+                    foreach (var rel in datos) {
+                        if (rel.Count >= 2) mapa[rel[0].Trim()] = rel[1].Trim();
+                    }
+                }
+            } catch { }
             return mapa;
         }
 
         public void GuardarGrupos(Dictionary<string, string> grupos)
         {
-            using var db = new LiteDatabase($"Filename={_dbPath};Connection=shared");
-            var col = db.GetCollection<CapParserService.GrupoEntry>("grupos");
-            col.DeleteAll();
-            foreach (var kv in grupos)
-            {
-                col.Insert(new CapParserService.GrupoEntry { Matricula = kv.Key, Grupo = kv.Value });
-            }
+            var ruta = Path.Combine(_carpeta, "grupo.json");
+            var lista = new List<List<string>>();
+            foreach (var kv in grupos) lista.Add(new List<string> { kv.Key, kv.Value });
+            File.WriteAllText(ruta, JsonSerializer.Serialize(lista, new JsonSerializerOptions { WriteIndented = true }));
         }
     }
 }

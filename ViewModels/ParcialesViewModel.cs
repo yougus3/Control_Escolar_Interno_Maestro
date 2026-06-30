@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
-using LiteDB;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
@@ -23,6 +22,7 @@ public partial class ParcialesViewModel : ObservableObject
 
     private MateriaParcial _materia = new();
     private bool _cargando;
+    private int _cargasActivas = 0; // Contador antibug para bloquear eventos de la UI
     private string _claveMateria = string.Empty;
     private string _evaluacionActual = string.Empty;
     private string? _ultimaMatriculaSeleccionada;
@@ -80,7 +80,6 @@ public partial class ParcialesViewModel : ObservableObject
 
     private void EditorChanged()
     {
-        // Called by editors to notify change — do not assume it's user input.
         RecalcularTodo(guardarJson: false);
     }
 
@@ -107,7 +106,6 @@ public partial class ParcialesViewModel : ObservableObject
 
         try
         {
-            // persist final grade for this student
             AlumnoSeleccionado.Calificación[_evaluacionActual] = value ?? string.Empty;
 
             if (_materia.Calificaciones.TryGetValue(AlumnoSeleccionado.Matricula, out var capturas) && capturas != null)
@@ -123,26 +121,19 @@ public partial class ParcialesViewModel : ObservableObject
             }
 
             PersistirCapturasTemporales(AlumnoSeleccionado.Matricula);
-            GuardarEnJsonLocal();
+            MarkUserEdited(); 
         }
         catch { }
     }
 
-    // Called explicitly from UI handlers when the user types or changes fields
     public void MarkUserEdited()
     {
-        if (!_cargando && !_suspendUserEditMarking)
-        {
-            _tieneCambios = true;
-            _lastUserEditTime = DateTime.UtcNow;
-            try
-            {
-                // Persist to persistent storage immediately (LiteDB) and also attempt CAP save
-                try { GuardarEnJsonLocal(); } catch { }
-                _mainVm?.GuardarSilencioso();
-            }
-            catch { }
-        }
+        // Si hay una sola carga activa o el escudo está activado, ignoramos el evento
+        if (_cargasActivas > 0 || _cargando || _suspendUserEditMarking)
+            return;
+
+        _tieneCambios = true;
+        _lastUserEditTime = DateTime.UtcNow;
     }
 
     [RelayCommand]
@@ -260,7 +251,8 @@ public partial class ParcialesViewModel : ObservableObject
 
     partial void OnAlumnoSeleccionadoChanged(Alumno? value)
     {
-        if (_cargando) return;
+        // Ignoramos la selección si el sistema de la UI está cargando la lista
+        if (_cargando || _cargasActivas > 0) return;
 
         if (!string.IsNullOrWhiteSpace(_ultimaMatriculaSeleccionada))
         {
@@ -269,49 +261,39 @@ public partial class ParcialesViewModel : ObservableObject
 
         _ultimaMatriculaSeleccionada = value?.Matricula;
 
-        ActualizarDatosAlumnoSeleccionado();
-        CargarCapturasDelAlumnoSeleccionado();
-        RecalcularTodo(guardarJson: false, marcarCambios: false);
+        AplicarCambioAlumnoAsync();
     }
 
-    partial void OnAlumnoConCapturaDirectaChanged(bool value)
+    // Nuevo método para que al cambiar de alumno también absorba el evento TextChanged de la UI
+    private async void AplicarCambioAlumnoAsync()
     {
-        if (AlumnoSeleccionado == null || string.IsNullOrWhiteSpace(AlumnoSeleccionado.Matricula))
-            return;
+        _cargasActivas++;
+        _suspendUserEditMarking = true;
 
-        // update capture flag in current materia captures for selected student
-        var matricula = AlumnoSeleccionado.Matricula;
-
-        if (!_materia.Calificaciones.TryGetValue(matricula, out var capturas) || capturas == null)
-        {
-            capturas = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
-            _materia.Calificaciones[matricula] = capturas;
-        }
-
-        if (value)
-        {
-            capturas["__CAPTURA_DIRECTA__"] = 1;
-        }
-        else
-        {
-            if (capturas.ContainsKey("__CAPTURA_DIRECTA__")) capturas.Remove("__CAPTURA_DIRECTA__");
-        }
-
-        // Apply bloqueo to editors immediately for selected student
-        foreach (var ed in Actividades) ed.SetBloqueadoPorCapturaDirecta(value);
-
-        // Persist changes immediately
         try
         {
-            PersistirCapturasTemporales(matricula);
-            GuardarEnJsonLocal();
+            ActualizarDatosAlumnoSeleccionado();
+            CargarCapturasDelAlumnoSeleccionado();
+            RecalcularTodo(guardarJson: false, esCargaInicial: true, marcarCambios: false);
         }
-        catch { }
+        finally
+        {
+            await System.Threading.Tasks.Task.Delay(250);
+            _cargasActivas--;
+            if (_cargasActivas <= 0)
+            {
+                _cargasActivas = 0;
+                _suspendUserEditMarking = false;
+            }
+        }
     }
 
-    private void CargarContextoActual()
+    private async void CargarContextoActual()
     {
+        _cargasActivas++;
         _cargando = true;
+        _suspendUserEditMarking = true;
+        
         try
         {
             NombreMateria = _mainVm.ArchivoSeleccionado ?? string.Empty;
@@ -348,23 +330,13 @@ public partial class ParcialesViewModel : ObservableObject
             OnPropertyChanged(nameof(ClasesTotales));
 
             NormalizarActividadesEnMateria();
-            _suspendUserEditMarking = true;
             ReconstruirActividadesEnPantalla();
             RestaurarAlumnoSeleccionado();
             ActualizarDatosAlumnoSeleccionado();
             CargarCapturasDelAlumnoSeleccionado();
-            _suspendUserEditMarking = false;
-        }
-        finally
-        {
-            _cargando = false;
-        }
-
-        // Re-proteger contra eventos que pudieran haberse encolado
-        _cargando = true;
-        try
-        {
+            
             RecalcularTodo(guardarJson: false, esCargaInicial: true, marcarCambios: false);
+            
             _tieneCambios = false;
             _lastUserEditTime = null;
             _lastArchivoSeleccionado = _mainVm.ArchivoSeleccionado;
@@ -373,7 +345,15 @@ public partial class ParcialesViewModel : ObservableObject
         }
         finally
         {
-            _cargando = false;
+            // Espera a que los controles de la UI terminen de actualizarse
+            await System.Threading.Tasks.Task.Delay(400); 
+            _cargasActivas--;
+            if (_cargasActivas <= 0)
+            {
+                _cargasActivas = 0;
+                _suspendUserEditMarking = false;
+                _cargando = false;
+            }
         }
     }
 
@@ -397,6 +377,9 @@ public partial class ParcialesViewModel : ObservableObject
         OnPropertyChanged(nameof(AsistenciaActiva));
         OnPropertyChanged(nameof(ClasesTotales));
         OnPropertyChanged(nameof(Inasistencias));
+
+        _tieneCambios = false;
+        _lastUserEditTime = null;
     }
 
     private void RestaurarAlumnoSeleccionado()
@@ -435,17 +418,16 @@ public partial class ParcialesViewModel : ObservableObject
         if (AlumnoSeleccionado == null)
         {
             foreach (var actividad in Actividades) actividad.PuntajeObtenido = "";
-        _inasistencias = 0;
-        AlumnoConCapturaDirecta = false;
-        LeyendaCapturaDirecta = string.Empty;
-        foreach (var ed in Actividades) ed.SetBloqueadoPorCapturaDirecta(false);
+            _inasistencias = 0;
+            AlumnoConCapturaDirecta = false;
+            LeyendaCapturaDirecta = string.Empty;
+            foreach (var ed in Actividades) ed.SetBloqueadoPorCapturaDirecta(false);
             OnPropertyChanged(nameof(Inasistencias));
             return;
         }
 
         if (_materia.Calificaciones.TryGetValue(AlumnoSeleccionado.Matricula, out var capturas))
         {
-            // Detect per-student direct capture flag
             bool alumnoCapturaDirecta = capturas.TryGetValue("__CAPTURA_DIRECTA__", out var cdVal) && cdVal > 0;
             AlumnoConCapturaDirecta = alumnoCapturaDirecta;
             LeyendaCapturaDirecta = alumnoCapturaDirecta ? "Calificación directa habilitada para este alumno — para cambios diríjase al área de Servicios Escolares." : string.Empty;
@@ -461,7 +443,7 @@ public partial class ParcialesViewModel : ObservableObject
                     actividad.PuntajeObtenido = "";
                 }
             }
-            // Apply editor bloqueo per student
+            
             foreach (var ed in Actividades)
             {
                 ed.SetBloqueadoPorCapturaDirecta(AlumnoConCapturaDirecta);
@@ -512,7 +494,7 @@ public partial class ParcialesViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(matricula) || matricula == "$CONFIG$") return;
         var capturas = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
-        // Preserve existing __CAPTURA_DIRECTA__ flag if present
+        
         if (_materia.Calificaciones.TryGetValue(matricula, out var existente) && existente != null && existente.TryGetValue("__CAPTURA_DIRECTA__", out var cd))
         {
             capturas["__CAPTURA_DIRECTA__"] = cd;
@@ -537,7 +519,8 @@ public partial class ParcialesViewModel : ObservableObject
 
     private void RecalcularTodo(bool guardarJson, bool esCargaInicial = false, bool marcarCambios = true)
     {
-        if (_cargando) return;
+        // Si hay procesos de carga activos que NO autorizaron un recalculo inicial, cortamos
+        if (_cargasActivas > 0 && !esCargaInicial) return;
 
         decimal sumaPorcentajes = 0m;
         decimal acumulado = 0m;
@@ -608,7 +591,6 @@ public partial class ParcialesViewModel : ObservableObject
         if (sumaPorcentajes > 0m && logicaCorrecta)
         {
             decimal calificacion = TruncarUnDecimal(acumulado / 10m);
-            // Only overwrite the displayed final grade when the selected student does not have direct capture
             if (!AlumnoConCapturaDirecta)
             {
                 CalificacionParcialTexto = calificacion.ToString("0.0", CultureInfo.InvariantCulture);
@@ -636,7 +618,8 @@ public partial class ParcialesViewModel : ObservableObject
         if (guardarJson) GuardarEnJsonLocal();
         EstadoGuardado = guardarJson ? "Guardado correcto en JSON." : string.Empty;
 
-        if (!guardarJson && marcarCambios)
+        // Solo marcamos como cambio de usuario si no estamos amparados bajo el escudo antibug
+        if (!guardarJson && marcarCambios && _cargasActivas == 0 && !_suspendUserEditMarking)
         {
             _tieneCambios = true;
             _lastUserEditTime = DateTime.UtcNow;
@@ -722,22 +705,7 @@ public partial class ParcialesViewModel : ObservableObject
         _mapaGrupos.Clear();
         try
         {
-            var carpeta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-            var dbPath = Path.Combine(carpeta, "data.db");
-
-            if (File.Exists(dbPath))
-            {
-                using var db = new LiteDatabase($"Filename={dbPath};Connection=shared");
-                var col = db.GetCollection<CapParserService.GrupoEntry>("grupos");
-                foreach (var g in col.FindAll())
-                {
-                    if (!string.IsNullOrWhiteSpace(g.Matricula)) _mapaGrupos[g.Matricula] = g.Grupo ?? string.Empty;
-                }
-                return;
-            }
-
-            // fallback to legacy JSON file
-            string rutaJson = Path.Combine(carpeta, "grupo.json");
+            string rutaJson = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "grupo.json");
             if (!File.Exists(rutaJson)) return;
             string json = File.ReadAllText(rutaJson, Encoding.UTF8);
             var datos = System.Text.Json.JsonSerializer.Deserialize<List<List<string>>>(json);
@@ -748,18 +716,6 @@ public partial class ParcialesViewModel : ObservableObject
                 string grupo = relacion[1].Trim();
                 _mapaGrupos[matricula] = grupo;
             }
-            // attempt migration into LiteDB
-            try
-            {
-                using var db = new LiteDatabase($"Filename={dbPath};Connection=shared");
-                var col = db.GetCollection<CapParserService.GrupoEntry>("grupos");
-                col.DeleteAll();
-                foreach (var kv in _mapaGrupos)
-                {
-                    col.Insert(new CapParserService.GrupoEntry { Matricula = kv.Key, Grupo = kv.Value });
-                }
-            }
-            catch { }
         }
         catch { }
     }
@@ -843,7 +799,6 @@ public partial class ActividadParcialEditor : ObservableObject
     {
         if (value)
         {
-            // Do not auto-fill the name when activating — keep fields empty so user can type.
             if (string.IsNullOrWhiteSpace(_porcentaje)) _porcentaje = "0";
             OnPropertyChanged(nameof(Nombre));
             OnPropertyChanged(nameof(Porcentaje));

@@ -75,37 +75,6 @@ public partial class MainViewModel : ObservableObject
         EscanearUsb();
     }
 
-    // Silent save used by other VMs to persist changes automatically without messageboxes
-    public void GuardarSilencioso()
-    {
-        if (string.IsNullOrWhiteSpace(_archivoCompletoActual)) return;
-        if (string.IsNullOrWhiteSpace(EvaluacionSeleccionada)) return;
-
-        if (!_evaluacionIdPorNombre.TryGetValue(EvaluacionSeleccionada, out var idEval)) return;
-
-        if (string.Equals(CurrentView, "Parciales", StringComparison.OrdinalIgnoreCase))
-        {
-            ParcialesVm.PrepararGuardado();
-        }
-
-        _writerService.GuardarEvaluacion(
-            _archivoCompletoActual,
-            Alumnos.ToList(),
-            EvaluacionSeleccionada,
-            idEval);
-
-        // also try to save SEM silently
-        if (!string.Equals(EvaluacionSeleccionada, "SEM", StringComparison.OrdinalIgnoreCase) &&
-            _evaluacionIdPorNombre.TryGetValue("SEM", out var idSem))
-        {
-            _writerService.GuardarEvaluacion(
-                _archivoCompletoActual,
-                Alumnos.ToList(),
-                "SEM",
-                idSem);
-        }
-    }
-
     public void RecargarConfiguracionYArchivoActual()
     {
         if (!string.IsNullOrWhiteSpace(ArchivoSeleccionado))
@@ -310,7 +279,6 @@ public partial class MainViewModel : ObservableObject
 
         SincronizarCalificacionSemestral();
 
-        // Guardar automáticamente la calificación SEM
         if (!string.Equals(EvaluacionSeleccionada, "SEM", StringComparison.OrdinalIgnoreCase) &&
             _evaluacionIdPorNombre.TryGetValue("SEM", out var idSem))
         {
