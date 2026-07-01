@@ -705,16 +705,11 @@ public partial class ParcialesViewModel : ObservableObject
         _mapaGrupos.Clear();
         try
         {
-            string rutaJson = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "grupo.json");
-            if (!File.Exists(rutaJson)) return;
-            string json = File.ReadAllText(rutaJson, Encoding.UTF8);
-            var datos = System.Text.Json.JsonSerializer.Deserialize<List<List<string>>>(json);
-            if (datos == null) return;
-            foreach (var relacion in datos.Where(r => r.Count >= 2))
+            using var lite = new LiteDbService();
+            var grupos = lite.GetGrupos();
+            foreach (var kv in grupos)
             {
-                string matricula = relacion[0].Trim();
-                string grupo = relacion[1].Trim();
-                _mapaGrupos[matricula] = grupo;
+                _mapaGrupos[kv.Key] = kv.Value;
             }
         }
         catch { }

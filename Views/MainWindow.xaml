@@ -433,19 +433,32 @@
                         Content="{Binding}">
             <ContentControl.Style>
                 <Style TargetType="ContentControl">
+                    <!-- Por defecto mostramos la vista de Parciales -->
                     <Setter Property="ContentTemplate">
                         <Setter.Value>
                             <DataTemplate>
-                                <views:TablaView />
+                                <views:ParcialesView />
                             </DataTemplate>
                         </Setter.Value>
                     </Setter>
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding CurrentView}" Value="Parciales">
+                        <!-- Extra -> usar ExtraView (antes TablaView) -->
+                        <DataTrigger Binding="{Binding CurrentView}" Value="Extra">
                             <Setter Property="ContentTemplate">
                                 <Setter.Value>
                                     <DataTemplate>
-                                        <views:ParcialesView />
+                                        <views:ExtraView />
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+
+                        <!-- Semestral -> vista placeholder separada -->
+                        <DataTrigger Binding="{Binding CurrentView}" Value="Semestral">
+                            <Setter Property="ContentTemplate">
+                                <Setter.Value>
+                                    <DataTemplate>
+                                        <views:SemestralView />
                                     </DataTemplate>
                                 </Setter.Value>
                             </Setter>

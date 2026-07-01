@@ -26,35 +26,40 @@ public class ConfiguracionParcialesService
             Parcial1Habilitado = true,
             Parcial2Habilitado = false,
             Parcial3Habilitado = false,
-            SemestralHabilitado = false
+            SemestralHabilitado = false,
+            ExtraHabilitado = false
         };
     }
 
     private Dictionary<string, ConfiguracionParciales> CargarTodoInterno()
     {
-        if (!File.Exists(_rutaConfig)) return new Dictionary<string, ConfiguracionParciales>(StringComparer.OrdinalIgnoreCase);
-
+        var resultado = new Dictionary<string, ConfiguracionParciales>(StringComparer.OrdinalIgnoreCase);
         try
         {
-            var json = File.ReadAllText(_rutaConfig);
-            var dict = JsonSerializer.Deserialize<Dictionary<string, ConfiguracionParciales>>(json);
-            return dict != null
-                ? new Dictionary<string, ConfiguracionParciales>(dict, StringComparer.OrdinalIgnoreCase)
-                : new Dictionary<string, ConfiguracionParciales>(StringComparer.OrdinalIgnoreCase);
+            using var lite = new LiteDbService();
+            foreach (var (key, val) in lite.GetAllConfiguraciones())
+            {
+                resultado[key] = val ?? CrearConfiguracionPorDefecto();
+            }
         }
         catch
         {
-            return new Dictionary<string, ConfiguracionParciales>(StringComparer.OrdinalIgnoreCase);
+            // si LiteDB falla, devolvemos la configuración por defecto vacía
         }
+
+        return resultado;
     }
 
     private void GuardarTodoInterno(Dictionary<string, ConfiguracionParciales> datos)
     {
         try
         {
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            var json = JsonSerializer.Serialize(datos, options);
-            File.WriteAllText(_rutaConfig, json);
+            using var lite = new LiteDbService();
+            if (datos == null) return;
+            foreach (var kv in datos)
+            {
+                lite.SaveConfiguracion(kv.Key, kv.Value ?? CrearConfiguracionPorDefecto());
+            }
         }
         catch { }
     }

@@ -8,4 +8,6 @@ public class ConfiguracionParciales
     public bool Parcial2Habilitado { get; set; }
     public bool Parcial3Habilitado { get; set; }
     public bool SemestralHabilitado { get; set; }
+    // Permite que la evaluación EXTRA sea visible/usable cuando lo autorice Servicios Escolares
+    public bool ExtraHabilitado { get; set; }
 }

@@ -311,6 +311,21 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
         }
     }
 
+    // Nueva propiedad para EXTRA
+    private bool _extraHabilitado;
+    public bool ExtraHabilitado
+    {
+        get => _extraHabilitado;
+        set
+        {
+            if (_extraHabilitado == value) return;
+            _extraHabilitado = value;
+            OnPropertyChanged();
+            if (!_cargandoDatos && ModoPorMateriaConfiguracion)
+                GuardarConfiguracionMateriaActual();
+        }
+    }
+
     // ========== Constructor ==========
     public ConfiguracionParcialesWindow(MainViewModel mainVm)
     {
@@ -367,6 +382,8 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
         _evaluacionesGlobalesDisponibles.Add("P2");
         _evaluacionesGlobalesDisponibles.Add("P3");
         _evaluacionesGlobalesDisponibles.Add("SEM");
+        // Añadir EXTRA como opción global (mayúsc/minúsc handled elsewhere con IgnoreCase)
+        _evaluacionesGlobalesDisponibles.Add("EXTRA");
 
         // Si no hay selección, asignar por defecto
         if (string.IsNullOrWhiteSpace(_evaluacionGlobalSeleccionada))
@@ -414,12 +431,13 @@ public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChang
     if (!ModoGlobalConfiguracion) return;
     if (string.IsNullOrWhiteSpace(EvaluacionGlobalSeleccionada)) return;
 
-    var configGlobal = new ConfiguracionParciales
+        var configGlobal = new ConfiguracionParciales
     {
         Parcial1Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P1", StringComparison.OrdinalIgnoreCase),
         Parcial2Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P2", StringComparison.OrdinalIgnoreCase),
         Parcial3Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P3", StringComparison.OrdinalIgnoreCase),
         SemestralHabilitado = string.Equals(EvaluacionGlobalSeleccionada, "SEM", StringComparison.OrdinalIgnoreCase),
+        ExtraHabilitado = string.Equals(EvaluacionGlobalSeleccionada, "EXTRA", StringComparison.OrdinalIgnoreCase),
         CapturaDirectaHabilitada = true
     };
     var service = new ConfiguracionParcialesService();
@@ -457,6 +475,7 @@ private void GuardarConfiguracionGlobal()
                 Parcial2Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P2", StringComparison.OrdinalIgnoreCase),
                 Parcial3Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P3", StringComparison.OrdinalIgnoreCase),
                 SemestralHabilitado = string.Equals(EvaluacionGlobalSeleccionada, "SEM", StringComparison.OrdinalIgnoreCase),
+                ExtraHabilitado = string.Equals(EvaluacionGlobalSeleccionada, "EXTRA", StringComparison.OrdinalIgnoreCase),
                 CapturaDirectaHabilitada = true
             };
             var service = new ConfiguracionParcialesService();
@@ -488,6 +507,7 @@ private void GuardarConfiguracionGlobal()
         _configuracion.Parcial2Habilitado = Parcial2Habilitado;
         _configuracion.Parcial3Habilitado = Parcial3Habilitado;
         _configuracion.SemestralHabilitado = SemestralHabilitado;
+        _configuracion.ExtraHabilitado = ExtraHabilitado;
 
         _configuracionService.GuardarConfiguracion(claveMateria, _configuracion);
         _mainVm.RecargarConfiguracionYArchivoActual();
@@ -509,7 +529,8 @@ private void GuardarConfiguracionGlobal()
                     Parcial1Habilitado = true,
                     Parcial2Habilitado = false,
                     Parcial3Habilitado = false,
-                    SemestralHabilitado = false
+                    SemestralHabilitado = false,
+                    ExtraHabilitado = false
                 };
             }
             else
@@ -522,7 +543,8 @@ private void GuardarConfiguracionGlobal()
                         Parcial1Habilitado = true,
                         Parcial2Habilitado = false,
                         Parcial3Habilitado = false,
-                        SemestralHabilitado = false
+                        SemestralHabilitado = false,
+                        ExtraHabilitado = false
                     }
                     : _configuracionService.ObtenerConfiguracion(claveMateria);
             }
@@ -531,6 +553,7 @@ private void GuardarConfiguracionGlobal()
             Parcial2Habilitado = _configuracion.Parcial2Habilitado;
             Parcial3Habilitado = _configuracion.Parcial3Habilitado;
             SemestralHabilitado = _configuracion.SemestralHabilitado;
+            ExtraHabilitado = _configuracion.ExtraHabilitado;
         }
         finally
         {

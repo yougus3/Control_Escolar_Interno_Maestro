@@ -1,81 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
-using System.Threading;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 
+// Este servicio mantiene la API previa pero persiste en LiteDB en lugar de JSON plano.
 public class ParcialJsonService
 {
-    private readonly string _rutaParciales;
-
     public ParcialJsonService()
     {
-        var carpeta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-        if (!Directory.Exists(carpeta)) Directory.CreateDirectory(carpeta);
-        _rutaParciales = Path.Combine(carpeta, "parciales.json");
     }
 
     public Dictionary<string, MateriaParcial> CargarTodo()
     {
-        if (!File.Exists(_rutaParciales)) return new Dictionary<string, MateriaParcial>();
-
-        const int maxAttempts = 3;
-        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        var dict = new Dictionary<string, MateriaParcial>(StringComparer.OrdinalIgnoreCase);
+        using var lite = new LiteDbService();
+        foreach (var (key, val) in lite.GetAllParciales())
         {
-            try
-            {
-                var json = File.ReadAllText(_rutaParciales);
-                return JsonSerializer.Deserialize<Dictionary<string, MateriaParcial>>(json) ?? new Dictionary<string, MateriaParcial>();
-            }
-            catch (IOException) when (attempt < maxAttempts - 1)
-            {
-                Thread.Sleep(100);
-            }
-            catch
-            {
-                return new Dictionary<string, MateriaParcial>();
-            }
+            dict[key] = val ?? new MateriaParcial();
         }
-        return new Dictionary<string, MateriaParcial>();
+        return dict;
     }
 
     public void GuardarTodo(Dictionary<string, MateriaParcial> datos)
     {
-        const int maxAttempts = 3;
-        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        using var lite = new LiteDbService();
+        if (datos == null) return;
+        foreach (var kv in datos)
         {
-            try
-            {
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                var json = JsonSerializer.Serialize(datos, options);
-                File.WriteAllText(_rutaParciales, json);
-                return;
-            }
-            catch (IOException) when (attempt < maxAttempts - 1)
-            {
-                Thread.Sleep(100);
-            }
-            catch
-            {
-                // swallow any other exceptions to avoid crashing UI
-                return;
-            }
+            lite.SaveMateria(kv.Key, kv.Value ?? new MateriaParcial());
         }
     }
 
     public MateriaParcial ObtenerMateria(string claveMateria)
     {
-        var todo = CargarTodo();
-        return todo.TryGetValue(claveMateria, out var materia) ? materia : new MateriaParcial();
+        using var lite = new LiteDbService();
+        return lite.GetMateria(claveMateria) ?? new MateriaParcial();
     }
 
     public void GuardarMateria(string claveMateria, MateriaParcial materia)
     {
-        var todo = CargarTodo();
-        todo[claveMateria] = materia ?? new MateriaParcial();
-        GuardarTodo(todo);
+        using var lite = new LiteDbService();
+        lite.SaveMateria(claveMateria, materia ?? new MateriaParcial());
     }
 }

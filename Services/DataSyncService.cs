@@ -18,58 +18,38 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
 
         public IEnumerable<(string Key, MateriaParcial Value)> CargarParciales()
         {
-            var ruta = Path.Combine(_carpeta, "parciales.json");
-            if (!File.Exists(ruta)) yield break;
-            var dict = JsonSerializer.Deserialize<Dictionary<string, MateriaParcial>>(File.ReadAllText(ruta));
-            if (dict != null) foreach (var kv in dict) yield return (kv.Key, kv.Value);
+            using var lite = new LiteDbService();
+            foreach (var kv in lite.GetAllParciales()) yield return kv;
         }
 
         public void GuardarParciales(IEnumerable<(string Key, MateriaParcial Value)> items)
         {
-            var ruta = Path.Combine(_carpeta, "parciales.json");
-            var dict = new Dictionary<string, MateriaParcial>();
-            foreach (var kv in items) dict[kv.Key] = kv.Value;
-            File.WriteAllText(ruta, JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true }));
+            using var lite = new LiteDbService();
+            foreach (var kv in items) lite.SaveMateria(kv.Key, kv.Value ?? new MateriaParcial());
         }
 
         public IEnumerable<(string Key, ConfiguracionParciales Value)> CargarConfiguraciones()
         {
-            var ruta = Path.Combine(_carpeta, "configuracion_parciales.json");
-            if (!File.Exists(ruta)) yield break;
-            var dict = JsonSerializer.Deserialize<Dictionary<string, ConfiguracionParciales>>(File.ReadAllText(ruta));
-            if (dict != null) foreach (var kv in dict) yield return (kv.Key, kv.Value);
+            using var lite = new LiteDbService();
+            foreach (var kv in lite.GetAllConfiguraciones()) yield return kv;
         }
 
         public void GuardarConfiguraciones(IEnumerable<(string Key, ConfiguracionParciales Value)> items)
         {
-            var ruta = Path.Combine(_carpeta, "configuracion_parciales.json");
-            var dict = new Dictionary<string, ConfiguracionParciales>();
-            foreach (var kv in items) dict[kv.Key] = kv.Value;
-            File.WriteAllText(ruta, JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true }));
+            using var lite = new LiteDbService();
+            foreach (var kv in items) lite.SaveConfiguracion(kv.Key, kv.Value ?? new ConfiguracionParciales());
         }
 
         public Dictionary<string, string> CargarGrupos()
         {
-            var ruta = Path.Combine(_carpeta, "grupo.json");
-            var mapa = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            if (!File.Exists(ruta)) return mapa;
-            try {
-                var datos = JsonSerializer.Deserialize<List<List<string>>>(File.ReadAllText(ruta));
-                if (datos != null) {
-                    foreach (var rel in datos) {
-                        if (rel.Count >= 2) mapa[rel[0].Trim()] = rel[1].Trim();
-                    }
-                }
-            } catch { }
-            return mapa;
+            using var lite = new LiteDbService();
+            return lite.GetGrupos();
         }
 
         public void GuardarGrupos(Dictionary<string, string> grupos)
         {
-            var ruta = Path.Combine(_carpeta, "grupo.json");
-            var lista = new List<List<string>>();
-            foreach (var kv in grupos) lista.Add(new List<string> { kv.Key, kv.Value });
-            File.WriteAllText(ruta, JsonSerializer.Serialize(lista, new JsonSerializerOptions { WriteIndented = true }));
+            using var lite = new LiteDbService();
+            lite.SaveGrupos(grupos ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
         }
     }
 }

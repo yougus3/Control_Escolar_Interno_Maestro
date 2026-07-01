@@ -1,10 +1,10 @@
-﻿using System.Windows.Controls;
+using System.Windows.Controls;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views;
 
-public partial class TablaView : UserControl
+public partial class ExtraView : UserControl
 {
-    public TablaView()
+    public ExtraView()
     {
         InitializeComponent();
     }

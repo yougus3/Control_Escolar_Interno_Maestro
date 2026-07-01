@@ -105,6 +105,7 @@ public partial class MainViewModel : ObservableObject
             "P2" => _configuracionActual.Parcial2Habilitado,
             "P3" => _configuracionActual.Parcial3Habilitado,
             "SEM" => _configuracionActual.SemestralHabilitado,
+            "EXTRA" => _configuracionActual.ExtraHabilitado,
             _ => true
         };
     }
@@ -191,6 +192,13 @@ public partial class MainViewModel : ObservableObject
             }
         }
 
+        // Si no quedó ninguna evaluación visible por la configuración, forzamos P1 como opción
+        // de arranque para CAPs nuevos (bloqueo en P1 por requerimiento funcional).
+        if (EvaluacionesDisponibles.Count == 0)
+        {
+            EvaluacionesDisponibles.Add("P1");
+        }
+
         foreach (var alumno in resultado.Alumnos)
         {
             Alumnos.Add(alumno);
@@ -212,13 +220,14 @@ public partial class MainViewModel : ObservableObject
 
         string valorMayusculas = value.ToUpperInvariant();
 
-        if (valorMayusculas == "SEM" || valorMayusculas == "EXTRA")
+        if (valorMayusculas == "SEM")
         {
-            CurrentView = "List";
-            if (valorMayusculas == "SEM")
-            {
-                SincronizarCalificacionSemestral();
-            }
+            CurrentView = "Semestral";
+            SincronizarCalificacionSemestral();
+        }
+        else if (valorMayusculas == "EXTRA")
+        {
+            CurrentView = "Extra";
         }
         else
         {

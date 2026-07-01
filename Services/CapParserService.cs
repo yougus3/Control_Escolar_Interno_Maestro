@@ -16,33 +16,15 @@ public class CapParserService
 
     private Dictionary<string, string> CargarMapaGrupos()
     {
-        var mapa = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var carpeta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-        var rutaJson = Path.Combine(carpeta, "grupo.json");
-
-        if (!File.Exists(rutaJson)) return mapa;
-
         try
         {
-            string jsonContent = File.ReadAllText(rutaJson, Encoding.UTF8);
-            var datos = JsonSerializer.Deserialize<List<List<string>>>(jsonContent);
-
-            if (datos != null)
-            {
-                foreach (var relacion in datos)
-                {
-                    if (relacion.Count >= 2)
-                    {
-                        string matricula = relacion[0].Trim();
-                        string grupo = relacion[1].Trim();
-                        if (!mapa.ContainsKey(matricula)) mapa.Add(matricula, grupo);
-                    }
-                }
-            }
+            using var lite = new LiteDbService();
+            return lite.GetGrupos();
         }
-        catch { }
-
-        return mapa;
+        catch
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        }
     }
 
     public Dictionary<string, string> ObtenerTodosGrupos()
@@ -54,15 +36,8 @@ public class CapParserService
     {
         try
         {
-            var carpeta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-            if (!Directory.Exists(carpeta)) Directory.CreateDirectory(carpeta);
-            var rutaJson = Path.Combine(carpeta, "grupo.json");
-            
-            var lista = new List<List<string>>();
-            foreach (var kv in grupos) lista.Add(new List<string> { kv.Key, kv.Value });
-            
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            File.WriteAllText(rutaJson, JsonSerializer.Serialize(lista, options), Encoding.UTF8);
+            using var lite = new LiteDbService();
+            lite.SaveGrupos(grupos ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
         }
         catch { }
     }
@@ -217,12 +192,37 @@ public class CapParserService
             }
         }
 
-        bool contieneExtra = mapaEvaluaciones.Values.Any(v =>
-            string.Equals(v, "EXTRA", StringComparison.OrdinalIgnoreCase));
-
-        if (contieneExtra)
+        // Construimos la lista de evaluaciones disponibles a partir de las ID leídas
+        // Si el archivo CAP declara evaluaciones las respetamos (P1,P2,P3,SEM,EXTRA, etc.).
+        // Solo cuando no hay ninguna evaluación declarada aplicamos la lista por defecto.
+        if (mapaEvaluaciones.Count > 0)
         {
-            resultado.EvaluacionesDisponibles.Add("EXTRA");
+            // Queremos respetar el orden lógico P1,P2,P3,SEM si existen, y luego cualquier otra (p.ej. EXTRA)
+            var ordenPreferente = new[] { "P1", "P2", "P3", "SEM" };
+            var yaAgregadas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var o in ordenPreferente)
+            {
+                if (mapaEvaluaciones.Values.Any(v => string.Equals(v, o, StringComparison.OrdinalIgnoreCase)))
+                {
+                    resultado.EvaluacionesDisponibles.Add(o);
+                    yaAgregadas.Add(o);
+                }
+            }
+
+            foreach (var nombre in mapaEvaluaciones.Values.Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(nombre)) continue;
+                if (yaAgregadas.Contains(nombre)) continue;
+                // Excluir nombres reservados por seguridad
+                if (string.Equals(nombre, "RESFINAL", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(nombre, "PROMSEM", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(nombre, "RESULSEM", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                resultado.EvaluacionesDisponibles.Add(nombre);
+                yaAgregadas.Add(nombre);
+            }
         }
         else
         {
