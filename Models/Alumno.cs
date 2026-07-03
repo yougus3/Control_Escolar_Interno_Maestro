@@ -26,11 +26,16 @@ public partial class Alumno : ObservableObject
         ValorSeleccionado = Calificación[key ?? string.Empty];
     }
 
-    partial void OnValorSeleccionadoChanged(string? value)
+    partial void OnValorSeleccionadoChanged(string value)
     {
         if (string.IsNullOrWhiteSpace(_evaluacionActual))
             return;
 
-        Calificación[_evaluacionActual] = value;
+        var newVal = value ?? string.Empty;
+        // Evitar asignaciones redundantes que pueden provocar notificaciones recursivas
+        if (Calificación[_evaluacionActual] == newVal)
+            return;
+
+        Calificación[_evaluacionActual] = newVal;
     }
 }

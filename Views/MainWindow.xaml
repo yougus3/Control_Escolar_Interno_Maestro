@@ -1,4 +1,4 @@
-﻿<Window x:Class="Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.MainWindow"
+<Window x:Class="Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -19,16 +19,12 @@
     <Window.Resources>
         <converters:InverseBooleanConverter x:Key="InverseBoolConverter" />
 
-        <!-- SVG para Configuración (engranaje) -->
         <Geometry x:Key="SettingsGeometry">M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z</Geometry>
 
-        <!-- SVG para Minimizar (guión) -->
         <Geometry x:Key="MinimizeGeometry">M19,13H5v-2h14V13z</Geometry>
 
-        <!-- SVG para Cerrar (X) -->
         <Geometry x:Key="CloseGeometry">M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41z</Geometry>
 
-        <!-- Colores -->
         <SolidColorBrush x:Key="AppBlue" Color="#1B365D" />
         <SolidColorBrush x:Key="AppBlueDark" Color="#172F52" />
         <SolidColorBrush x:Key="AppBlueSoft" Color="#EFF6FF" />
@@ -40,7 +36,6 @@
         <SolidColorBrush x:Key="AppTextPrimary" Color="#0F172A" />
         <SolidColorBrush x:Key="AppTextSecondary" Color="#64748B" />
 
-        <!-- Botón principal -->
         <Style x:Key="BlueButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource AppBlue}" />
             <Setter Property="Foreground" Value="White" />
@@ -81,7 +76,7 @@
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Cursor" Value="Hand" />
 
-            <Setter Property="Template">
+             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Bd"
@@ -109,7 +104,6 @@
             </Setter>
         </Style>
 
-        <!-- Botón de ícono -->
         <Style x:Key="IconButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
@@ -138,7 +132,6 @@
             </Setter>
         </Style>
 
-        <!-- TextBox -->
         <Style x:Key="RoundedTextBoxStyle" TargetType="TextBox">
             <Setter Property="Background" Value="White" />
             <Setter Property="BorderBrush" Value="#CBD5E1" />
@@ -170,9 +163,8 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
+         </Style>
 
-        <!-- ComboBox -->
         <Style x:Key="RoundedComboStyle" TargetType="ComboBox">
             <Setter Property="Background" Value="White" />
             <Setter Property="BorderBrush" Value="#CBD5E1" />
@@ -401,14 +393,34 @@
                            Foreground="#475569"
                            Margin="15,0,5,0" />
 
-                <ComboBox Grid.Column="4"
-                          Style="{StaticResource RoundedComboStyle}"
-                          ItemsSource="{Binding ArchivosDisponibles}"
-                          SelectedItem="{Binding ArchivoSeleccionado}"
-                          Height="32"
-                          Width="400"
-                          HorizontalAlignment="Left"
-                          VerticalContentAlignment="Center" />
+                <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <ComboBox Style="{StaticResource RoundedComboStyle}"
+                              ItemsSource="{Binding ArchivosDisponibles}"
+                              SelectedItem="{Binding ArchivoSeleccionado}"
+                              Height="32"
+                              Width="400"
+                              VerticalContentAlignment="Center" />
+                              
+                    <Button Command="{Binding GuardarCommand}"
+                            Height="32"
+                            Margin="10,0,0,0"
+                            ToolTip="Guardar calificaciones en el archivo JSON local y actualizar el CAP"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            Background="#1B365D"
+                            Foreground="White"
+                            BorderThickness="0">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="8"/>
+                            </Style>
+                        </Button.Resources>
+                        <StackPanel Orientation="Horizontal" Margin="20,0,20,0" VerticalAlignment="Center">
+                            <TextBlock Text="💾" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Guardar Cambios" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
 
                 <TextBlock Grid.Column="5"
                            Text="Eval:"
@@ -423,8 +435,6 @@
                           SelectedItem="{Binding EvaluacionSeleccionada}"
                           Height="32"
                           VerticalContentAlignment="Center" />
-
-                <!-- Guardar button removed: changes are saved automatically -->
             </Grid>
         </Border>
 
@@ -433,7 +443,6 @@
                         Content="{Binding}">
             <ContentControl.Style>
                 <Style TargetType="ContentControl">
-                    <!-- Por defecto mostramos la vista de Parciales -->
                     <Setter Property="ContentTemplate">
                         <Setter.Value>
                             <DataTemplate>
@@ -442,7 +451,6 @@
                         </Setter.Value>
                     </Setter>
                     <Style.Triggers>
-                        <!-- Extra -> usar ExtraView (antes TablaView) -->
                         <DataTrigger Binding="{Binding CurrentView}" Value="Extra">
                             <Setter Property="ContentTemplate">
                                 <Setter.Value>
@@ -453,7 +461,6 @@
                             </Setter>
                         </DataTrigger>
 
-                        <!-- Semestral -> vista placeholder separada -->
                         <DataTrigger Binding="{Binding CurrentView}" Value="Semestral">
                             <Setter Property="ContentTemplate">
                                 <Setter.Value>

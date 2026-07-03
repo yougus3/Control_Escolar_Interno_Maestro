@@ -8,111 +8,54 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 
 public class ConfiguracionParcialesService
 {
-    private const string ClaveGlobalLegada = "__DEFAULT__";
-    private readonly string _rutaConfig;
+    private readonly string _configPath;
 
     public ConfiguracionParcialesService()
     {
-        var carpeta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-        if (!Directory.Exists(carpeta)) Directory.CreateDirectory(carpeta);
-        _rutaConfig = Path.Combine(carpeta, "configuracion_parciales.json");
+        _configPath = Path.Combine(AppContext.BaseDirectory, "Data", "configuraciones.json");
     }
 
-    private static ConfiguracionParciales CrearConfiguracionPorDefecto()
+    public ConfiguracionParciales ObtenerConfiguracion(string claveMateria = "")
     {
-        return new ConfiguracionParciales
-        {
-            CapturaDirectaHabilitada = false,
-            Parcial1Habilitado = true,
-            Parcial2Habilitado = false,
-            Parcial3Habilitado = false,
-            SemestralHabilitado = false,
-            ExtraHabilitado = false
-        };
-    }
-
-    private Dictionary<string, ConfiguracionParciales> CargarTodoInterno()
-    {
-        var resultado = new Dictionary<string, ConfiguracionParciales>(StringComparer.OrdinalIgnoreCase);
         try
         {
-            using var lite = new LiteDbService();
-            foreach (var (key, val) in lite.GetAllConfiguraciones())
-            {
-                resultado[key] = val ?? CrearConfiguracionPorDefecto();
-            }
+            if (!File.Exists(_configPath)) return new ConfiguracionParciales();
+            var text = File.ReadAllText(_configPath);
+            if (string.IsNullOrWhiteSpace(text)) return new ConfiguracionParciales();
+            var dict = JsonSerializer.Deserialize<Dictionary<string, ConfiguracionParciales>>(text, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (dict == null) return new ConfiguracionParciales();
+            if (string.IsNullOrWhiteSpace(claveMateria)) return dict.Values.FirstOrDefault() ?? new ConfiguracionParciales();
+            if (dict.TryGetValue(claveMateria, out var cfg)) return cfg;
+            return new ConfiguracionParciales();
         }
         catch
         {
-            // si LiteDB falla, devolvemos la configuración por defecto vacía
+            return new ConfiguracionParciales();
         }
-
-        return resultado;
     }
 
-    private void GuardarTodoInterno(Dictionary<string, ConfiguracionParciales> datos)
+    public void GuardarConfiguracion(string claveMateria, ConfiguracionParciales cfg)
     {
         try
         {
-            using var lite = new LiteDbService();
-            if (datos == null) return;
-            foreach (var kv in datos)
+            Dictionary<string, ConfiguracionParciales> dict = new();
+            if (File.Exists(_configPath))
             {
-                lite.SaveConfiguracion(kv.Key, kv.Value ?? CrearConfiguracionPorDefecto());
+                var text = File.ReadAllText(_configPath);
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    var loaded = JsonSerializer.Deserialize<Dictionary<string, ConfiguracionParciales>>(text, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    if (loaded != null)
+                        dict = loaded;
+                }
             }
+
+            dict[claveMateria] = cfg ?? new ConfiguracionParciales();
+            var outText = JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(_configPath, outText);
         }
-        catch { }
-    }
-
-    public Dictionary<string, ConfiguracionParciales> CargarTodo()
-    {
-        return CargarTodoInterno();
-    }
-
-    public void GuardarTodo(Dictionary<string, ConfiguracionParciales> datos)
-    {
-        GuardarTodoInterno(datos ?? new Dictionary<string, ConfiguracionParciales>(StringComparer.OrdinalIgnoreCase));
-    }
-
-    public ConfiguracionParciales ObtenerConfiguracion()
-    {
-        return ObtenerConfiguracion(string.Empty);
-    }
-
-    public ConfiguracionParciales ObtenerConfiguracion(string claveMateria)
-    {
-        var datos = CargarTodoInterno();
-
-        if (!string.IsNullOrWhiteSpace(claveMateria) &&
-            datos.TryGetValue(claveMateria, out ConfiguracionParciales? configMateria) &&
-            configMateria != null)
+        catch
         {
-            return configMateria;
         }
-
-        if (datos.TryGetValue(ClaveGlobalLegada, out ConfiguracionParciales? configGlobal) &&
-            configGlobal != null)
-        {
-            return configGlobal;
-        }
-
-        return CrearConfiguracionPorDefecto();
-    }
-
-    public void GuardarConfiguracion(ConfiguracionParciales configuracion)
-    {
-        GuardarConfiguracion(ClaveGlobalLegada, configuracion);
-    }
-
-    public void GuardarConfiguracion(string claveMateria, ConfiguracionParciales configuracion)
-    {
-        if (string.IsNullOrWhiteSpace(claveMateria))
-        {
-            claveMateria = ClaveGlobalLegada;
-        }
-
-        var datos = CargarTodoInterno();
-        datos[claveMateria] = configuracion ?? CrearConfiguracionPorDefecto();
-        GuardarTodoInterno(datos);
     }
 }

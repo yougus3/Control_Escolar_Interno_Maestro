@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -41,6 +42,11 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<string> EvaluacionesDisponibles { get; } = new();
     public ObservableCollection<string> ArchivosDisponibles { get; } = new();
     public ObservableCollection<Alumno> Alumnos { get; } = new();
+
+    [ObservableProperty]
+    private bool _tieneCambios;
+
+    private readonly System.Collections.Generic.List<Alumno> _subscribedAlumnos = new();
 
     public bool EsExtraSeleccionado =>
         string.Equals(EvaluacionSeleccionada, "EXTRA", StringComparison.OrdinalIgnoreCase);
@@ -204,6 +210,9 @@ public partial class MainViewModel : ObservableObject
             Alumnos.Add(alumno);
         }
 
+        // Suscribir cambios por alumno para detectar ediciones (por ejemplo SEM)
+        SuscribirAlumnos();
+
         EvaluacionSeleccionada = EvaluacionesDisponibles.FirstOrDefault();
 
         OnPropertyChanged(nameof(EsExtraSeleccionado));
@@ -297,6 +306,10 @@ public partial class MainViewModel : ObservableObject
                 "SEM",
                 idSem);
         }
+
+        // Después de guardar limpiamos la bandera de cambios
+        TieneCambios = false;
+        ParcialesVm.TieneCambios = false;
 
         MessageBox.Show(
             ok ? "Guardado correcto." : "No se pudo guardar el archivo CAP.",
@@ -417,5 +430,34 @@ public partial class MainViewModel : ObservableObject
             return (int)Math.Floor(promedio);
 
         return (int)Math.Round(promedio, MidpointRounding.AwayFromZero);
+    }
+
+    private void SuscribirAlumnos()
+    {
+        // Quitar manejadores previos
+        foreach (var a in _subscribedAlumnos)
+        {
+            try { a.Calificación.PropertyChanged -= Alumno_CalificacionChanged; } catch { }
+        }
+        _subscribedAlumnos.Clear();
+
+        // Suscribir a los actuales
+        foreach (var alumno in Alumnos)
+        {
+            if (alumno?.Calificación != null)
+            {
+                alumno.Calificación.PropertyChanged += Alumno_CalificacionChanged;
+                _subscribedAlumnos.Add(alumno);
+            }
+        }
+    }
+
+    private void Alumno_CalificacionChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e?.PropertyName != null && e.PropertyName.StartsWith("Item["))
+        {
+            // Marca la vista como con cambios pendientes
+            TieneCambios = true;
+        }
     }
 }

@@ -1,121 +1,172 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using LiteDB;
+using System.Text.Json;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 
+// Implementación ligera de persistencia basada en archivos JSON para sustituir a LiteDB
+// Provee la API mínima que usan los servicios de la aplicación.
 public class LiteDbService : IDisposable
 {
-    private readonly string _rutaDb;
-    private readonly LiteDatabase _db;
+    private readonly string _dataFolder;
+    private readonly string _parcialesPath;
+    private readonly string _gruposPath;
+
+    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        PropertyNameCaseInsensitive = true,
+        WriteIndented = true
+    };
 
     public LiteDbService()
     {
-        var carpeta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-        if (!Directory.Exists(carpeta)) Directory.CreateDirectory(carpeta);
-        _rutaDb = Path.Combine(carpeta, "appdata.db");
-        _db = new LiteDatabase($"Filename={_rutaDb};Connection=shared");
+        _dataFolder = Path.Combine(AppContext.BaseDirectory, "Data");
+        if (!Directory.Exists(_dataFolder)) Directory.CreateDirectory(_dataFolder);
+        _parcialesPath = Path.Combine(_dataFolder, "parciales.json");
+        _gruposPath = Path.Combine(_dataFolder, "grupo.json");
     }
 
-    // Grupos
-    public Dictionary<string, string> GetGrupos()
-    {
-        var col = _db.GetCollection<GrupoDoc>("grupos");
-        var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var g in col.FindAll())
-        {
-            if (!string.IsNullOrWhiteSpace(g.Matricula) && !string.IsNullOrWhiteSpace(g.Grupo))
-                dict[g.Matricula] = g.Grupo;
-        }
-        return dict;
-    }
-
-    public void SaveGrupos(Dictionary<string, string> grupos)
-    {
-        var col = _db.GetCollection<GrupoDoc>("grupos");
-        col.DeleteAll();
-        if (grupos == null) return;
-        foreach (var kv in grupos)
-        {
-            col.Insert(new GrupoDoc { Matricula = kv.Key, Grupo = kv.Value });
-        }
-    }
-
-    // Configuraciones
-    public ConfiguracionParciales GetConfiguracion(string claveMateria)
-    {
-        var col = _db.GetCollection<ConfiguracionDoc>("configuraciones");
-        var doc = col.FindById(claveMateria ?? "__DEFAULT__");
-        return doc != null ? doc.Configuracion : null;
-    }
-
-    public IEnumerable<(string Key, ConfiguracionParciales Value)> GetAllConfiguraciones()
-    {
-        var col = _db.GetCollection<ConfiguracionDoc>("configuraciones");
-        foreach (var d in col.FindAll())
-        {
-            yield return (d.Id, d.Configuracion);
-        }
-    }
-
-    public void SaveConfiguracion(string claveMateria, ConfiguracionParciales config)
-    {
-        var col = _db.GetCollection<ConfiguracionDoc>("configuraciones");
-        if (string.IsNullOrWhiteSpace(claveMateria)) claveMateria = "__DEFAULT__";
-        var doc = new ConfiguracionDoc { Id = claveMateria, Configuracion = config ?? new ConfiguracionParciales() };
-        col.Upsert(doc);
-    }
-
-    // Parciales
-    public MateriaParcial GetMateria(string claveMateria)
-    {
-        var col = _db.GetCollection<ParcialDoc>("parciales");
-        var doc = col.FindById(claveMateria);
-        return doc != null ? doc.Materia : null;
-    }
-
+    // Devuelve como tuplas para permitir deconstrucción: foreach (var (key,val) in lite.GetAllParciales())
     public IEnumerable<(string Key, MateriaParcial Value)> GetAllParciales()
     {
-        var col = _db.GetCollection<ParcialDoc>("parciales");
-        foreach (var d in col.FindAll())
+        var dict = LoadParcialesFile();
+        foreach (var kv in dict)
+            yield return (kv.Key, kv.Value);
+    }
+
+    public MateriaParcial? GetMateria(string clave)
+    {
+        if (string.IsNullOrWhiteSpace(clave)) return null;
+        var dict = LoadParcialesFile();
+        if (dict.TryGetValue(clave, out var materia)) return materia;
+        return null;
+    }
+
+    public void SaveMateria(string clave, MateriaParcial materia)
+    {
+        if (string.IsNullOrWhiteSpace(clave)) return;
+        var dict = LoadParcialesFile();
+        dict[clave] = materia ?? new MateriaParcial();
+        SaveParcialesFile(dict);
+    }
+
+    public Dictionary<string, string> GetGrupos()
+    {
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        try
         {
-            yield return (d.Id, d.Materia);
+            if (!File.Exists(_gruposPath))
+                return result;
+
+            using var fs = File.OpenRead(_gruposPath);
+            using var doc = JsonDocument.Parse(fs);
+            if (doc.RootElement.ValueKind != JsonValueKind.Array) return result;
+
+            foreach (var item in doc.RootElement.EnumerateArray())
+            {
+                if (item.ValueKind == JsonValueKind.Array && item.GetArrayLength() >= 2)
+                {
+                    var mat = item[0].GetString() ?? string.Empty;
+                    var grp = item[1].GetString() ?? string.Empty;
+                    if (!string.IsNullOrWhiteSpace(mat) && !string.IsNullOrWhiteSpace(grp))
+                        result[mat.Trim()] = grp.Trim();
+                }
+            }
+        }
+        catch
+        {
+            // ignore and return empty map
+        }
+        return result;
+    }
+
+    public void SaveGrupos(Dictionary<string,string> grupos)
+    {
+        try
+        {
+            var text = JsonSerializer.Serialize(grupos ?? new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase), _jsonOptions);
+            File.WriteAllText(_gruposPath, text);
+        }
+        catch
+        {
         }
     }
 
-    public void SaveMateria(string claveMateria, MateriaParcial materia)
+    // Configuraciones (API mínima)
+    public IEnumerable<(string Key, Models.ConfiguracionParciales Value)> GetAllConfiguraciones()
     {
-        var col = _db.GetCollection<ParcialDoc>("parciales");
-        if (string.IsNullOrWhiteSpace(claveMateria)) return;
-        var doc = new ParcialDoc { Id = claveMateria, Materia = materia ?? new MateriaParcial() };
-        col.Upsert(doc);
+        var result = new List<(string Key, Models.ConfiguracionParciales Value)>();
+        var path = Path.Combine(_dataFolder, "configuraciones.json");
+        if (!File.Exists(path)) return result;
+        try
+        {
+            var text = File.ReadAllText(path);
+            if (string.IsNullOrWhiteSpace(text)) return result;
+            var dict = JsonSerializer.Deserialize<Dictionary<string, Models.ConfiguracionParciales>>(text, _jsonOptions);
+            if (dict == null) return result;
+            foreach (var kv in dict)
+                result.Add((kv.Key, kv.Value));
+        }
+        catch { }
+        return result;
+    }
+
+    public void SaveConfiguracion(string clave, Models.ConfiguracionParciales cfg)
+    {
+        var path = Path.Combine(_dataFolder, "configuraciones.json");
+        try
+        {
+            Dictionary<string, Models.ConfiguracionParciales> dict = new(StringComparer.OrdinalIgnoreCase);
+            if (File.Exists(path))
+            {
+                var text = File.ReadAllText(path);
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    var loaded = JsonSerializer.Deserialize<Dictionary<string, Models.ConfiguracionParciales>>(text, _jsonOptions);
+                    if (loaded != null) dict = loaded;
+                }
+            }
+            dict[clave] = cfg ?? new Models.ConfiguracionParciales();
+            var outText = JsonSerializer.Serialize(dict, _jsonOptions);
+            File.WriteAllText(path, outText);
+        }
+        catch { }
+    }
+
+    private Dictionary<string, MateriaParcial> LoadParcialesFile()
+    {
+        try
+        {
+            if (!File.Exists(_parcialesPath)) return new Dictionary<string, MateriaParcial>(StringComparer.OrdinalIgnoreCase);
+            var text = File.ReadAllText(_parcialesPath);
+            if (string.IsNullOrWhiteSpace(text)) return new Dictionary<string, MateriaParcial>(StringComparer.OrdinalIgnoreCase);
+            var dict = JsonSerializer.Deserialize<Dictionary<string, MateriaParcial>>(text, _jsonOptions);
+            if (dict == null) return new Dictionary<string, MateriaParcial>(StringComparer.OrdinalIgnoreCase);
+            return new Dictionary<string, MateriaParcial>(dict, StringComparer.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return new Dictionary<string, MateriaParcial>(StringComparer.OrdinalIgnoreCase);
+        }
+    }
+
+    private void SaveParcialesFile(Dictionary<string, MateriaParcial> dict)
+    {
+        try
+        {
+            var text = JsonSerializer.Serialize(dict, _jsonOptions);
+            File.WriteAllText(_parcialesPath, text);
+        }
+        catch
+        {
+            // ignore write failures for now
+        }
     }
 
     public void Dispose()
     {
-        _db?.Dispose();
-    }
-
-    private class GrupoDoc
-    {
-        public int Id { get; set; }
-        public string Matricula { get; set; } = string.Empty;
-        public string Grupo { get; set; } = string.Empty;
-    }
-
-    private class ConfiguracionDoc
-    {
-        [BsonId]
-        public string Id { get; set; } = "__DEFAULT__";
-        public ConfiguracionParciales Configuracion { get; set; } = new ConfiguracionParciales();
-    }
-
-    private class ParcialDoc
-    {
-        [BsonId]
-        public string Id { get; set; } = string.Empty;
-        public MateriaParcial Materia { get; set; } = new MateriaParcial();
+        // nothing to dispose
     }
 }
