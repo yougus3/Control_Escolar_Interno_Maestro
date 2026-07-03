@@ -18,13 +18,12 @@
                 Margin="0">
             <Grid>
                 <Grid.Resources>
-                    <!-- Registered converters -->
                     <BooleanToVisibilityConverter x:Key="BoolToVis" />
                     <converters:PromediosConverter x:Key="PromediosConverter" />
                     <converters:CalifOrdinariaConverter x:Key="CalifOrdinariaConverter" />
                     <converters:ExtraFinalConverter x:Key="ExtraFinalConverter" />
+                    <converters:CalificacionColorConverter x:Key="ColorCalifConverter" />
 
-                    <!-- Styles inspired on ParcialesView: row/block/grade input -->
                     <SolidColorBrush x:Key="AppBlue" Color="#1B365D" />
                     <SolidColorBrush x:Key="AppBlueSoft" Color="#EFF6FF" />
                     <SolidColorBrush x:Key="AppBlueSoftBorder" Color="#BFDBFE" />
@@ -52,16 +51,16 @@
                                     </Border>
                                     <ControlTemplate.Triggers>
                                          <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="Bd" Property="BorderBrush" Value="#93C5FD" />
+                                             <Setter TargetName="Bd" Property="BorderBrush" Value="#93C5FD" />
                                         </Trigger>
                                         <Trigger Property="IsKeyboardFocused" Value="True">
                                             <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AppBlue}" />
                                             <Setter TargetName="Bd" Property="BorderThickness" Value="1.5" />
                                         </Trigger>
                                         <Trigger Property="IsEnabled" Value="False">
-                                            <Setter TargetName="Bd" Property="Background" Value="#F3F4F6" />
+                                             <Setter TargetName="Bd" Property="Background" Value="#F3F4F6" />
                                              <Setter TargetName="Bd" Property="BorderBrush" Value="#CBD5E1" />
-                                            <Setter Property="Foreground" Value="#94A3B8" />
+                                             <Setter Property="Foreground" Value="#94A3B8" />
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -72,14 +71,16 @@
                     <Style x:Key="BlueGradeBlock" TargetType="Border">
                         <Setter Property="Background" Value="{StaticResource AppBlueSoft}" />
                         <Setter Property="BorderBrush" Value="{StaticResource AppBlueSoftBorder}" />
-                         <Setter Property="BorderThickness" Value="1" />
+                        <Setter Property="BorderThickness" Value="1" />
                         <Setter Property="CornerRadius" Value="8" />
                         <Setter Property="Padding" Value="10,4" />
                         <Setter Property="HorizontalAlignment" Value="Center" />
                         <Setter Property="VerticalAlignment" Value="Center" />
                     </Style>
                 </Grid.Resources>
+                
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
@@ -92,17 +93,27 @@
                     <StackPanel Orientation="Horizontal" Grid.Column="0" VerticalAlignment="Center">
                         <TextBlock Text="Evaluación: SEM" FontSize="14" FontWeight="SemiBold" Foreground="#1B365D" />
                     </StackPanel>
-                    <TextBlock Grid.Column="1"
-                               Text="NO GUARDADO"
-                               Foreground="#F59E0B"
-                               FontWeight="Bold"
-                               VerticalAlignment="Center"
-                               Margin="12,0,0,0"
-                               Visibility="{Binding TieneCambios, Converter={StaticResource BoolToVis}}" />
                 </Grid>
 
-                <!-- Lista por filas (sin tabla) con scroll; diseño inspirado en ParcialesView -->
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="6">
+                <Grid Grid.Row="1" Margin="12,10,12,0">                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="80" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="60" />
+                        <ColumnDefinition Width="60" />
+                        <ColumnDefinition Width="60" />
+                        <ColumnDefinition Width="80" />
+                        <ColumnDefinition Width="130" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Matrícula" FontWeight="Bold" Foreground="#1B365D" FontSize="13" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="Nombre del Alumno" FontWeight="Bold" Foreground="#1B365D" FontSize="13" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="Parcial 1" FontWeight="Bold" Foreground="#1B365D" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="3" Text="Parcial 2" FontWeight="Bold" Foreground="#1B365D" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="4" Text="Parcial 3" FontWeight="Bold" Foreground="#1B365D" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="5" Text="Promedio" FontWeight="Bold" Foreground="#1B365D" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="6" Text="Semestral" FontWeight="Bold" Foreground="#1B365D" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Grid>
+
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="6">
                     <ItemsControl ItemsSource="{Binding Alumnos}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -136,26 +147,30 @@
 
                                         <TextBlock Grid.Column="2"
                                                    Text="{Binding Calificación[P1]}"
-                                                   Foreground="#334155"
+                                                   Foreground="{Binding Calificación[P1], Converter={StaticResource ColorCalifConverter}}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
-                                                   FontSize="12" />
+                                                   FontWeight="Bold"
+                                                   FontSize="13" />
                                         <TextBlock Grid.Column="3"
                                                    Text="{Binding Calificación[P2]}"
-                                                   Foreground="#334155"
+                                                   Foreground="{Binding Calificación[P2], Converter={StaticResource ColorCalifConverter}}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
-                                                   FontSize="12" />
+                                                   FontWeight="Bold"
+                                                   FontSize="13" />
                                         <TextBlock Grid.Column="4"
                                                    Text="{Binding Calificación[P3]}"
-                                                   Foreground="#334155"
+                                                   Foreground="{Binding Calificación[P3], Converter={StaticResource ColorCalifConverter}}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
-                                                   FontSize="12" />
+                                                   FontWeight="Bold"
+                                                   FontSize="13" />
 
                                         <TextBlock Grid.Column="5"
                                                    HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center">
+                                                   VerticalAlignment="Center"
+                                                   FontWeight="Bold" FontSize="13">
                                             <TextBlock.Text>
                                                 <MultiBinding Converter="{StaticResource PromediosConverter}">
                                                     <Binding Path="Calificación[P1]" />
@@ -163,22 +178,25 @@
                                                     <Binding Path="Calificación[P3]" />
                                                 </MultiBinding>
                                             </TextBlock.Text>
+                                            <TextBlock.Foreground>
+                                                <Binding Path="Text" RelativeSource="{RelativeSource Self}" Converter="{StaticResource ColorCalifConverter}" />
+                                            </TextBlock.Foreground>
                                         </TextBlock>
 
                                         <StackPanel Grid.Column="6"
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center">
-                                            <TextBlock Text="SEM" HorizontalAlignment="Center" Foreground="#334155" FontSize="12" />
                                             <Border Style="{StaticResource BlueGradeBlock}" Margin="0,6,0,0">
                                                 <TextBox Text="{Binding Calificación[SEM], Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         Foreground="{Binding Calificación[SEM], Converter={StaticResource ColorCalifConverter}}"
                                                          Style="{StaticResource RoundedTextBoxStyle}"
                                                          FontSize="22"
                                                          FontWeight="Black"
                                                          HorizontalContentAlignment="Center"
                                                          VerticalContentAlignment="Center"
-                                                         Foreground="#1E3A8A"
                                                          Width="100"
                                                          PreviewTextInput="SemTextBox_PreviewTextInput"
+                                                         KeyDown="SemTextBox_KeyDown"
                                                          MaxLength="2" />
                                             </Border>
                                         </StackPanel>

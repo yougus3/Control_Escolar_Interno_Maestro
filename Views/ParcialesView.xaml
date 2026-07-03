@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.openxmlformats.org/expression/blend/2008"
+             xmlns:converters="clr-namespace:Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Converters"
              mc:Ignorable="d"
              Loaded="UserControl_Loaded"
              d:DesignHeight="680"
@@ -10,6 +11,7 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <converters:CalificacionColorConverter x:Key="ColorCalifConverter" />
 
         <SolidColorBrush x:Key="AppBlue" Color="#1B365D" />
         <SolidColorBrush x:Key="AppBlueDark" Color="#172F52" />
@@ -102,7 +104,7 @@
             <Setter Property="Padding" Value="8,2" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="FontSize" Value="11" />
-             <Setter Property="Template">
+            <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
                         <Border x:Name="Bd"
@@ -116,7 +118,7 @@
                                           VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
-                             <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="BorderBrush" Value="#93C5FD" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
@@ -125,7 +127,7 @@
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Bd" Property="Background" Value="#F3F4F6" />
-                                 <Setter TargetName="Bd" Property="BorderBrush" Value="#CBD5E1" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#CBD5E1" />
                                 <Setter Property="Foreground" Value="#94A3B8" />
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -151,25 +153,25 @@
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
-                                         <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
                                     </Grid.RowDefinitions>
 
                                     <Border Background="{StaticResource AppBlue}"
                                             CornerRadius="11"
                                             Padding="10,6"
-                                             Margin="10,-14,10,0"
+                                            Margin="10,-14,10,0"
                                             HorizontalAlignment="Left"
                                             TextElement.Foreground="White"
                                             TextElement.FontWeight="Bold"
                                             TextElement.FontSize="13">
                                         <ContentPresenter ContentSource="Header"
-                                                         RecognizesAccessKey="True" />
+                                                          RecognizesAccessKey="True" />
                                     </Border>
 
                                     <ContentPresenter Grid.Row="1"
-                                                     Margin="12,12,12,12" />
+                                                      Margin="12,12,12,12" />
                                 </Grid>
-                             </Border>
+                            </Border>
                         </Grid>
                     </ControlTemplate>
                 </Setter.Value>
@@ -243,7 +245,7 @@
                                            Foreground="#D6E4FF"
                                            FontSize="12"
                                            FontWeight="SemiBold" />
-                                 <TextBlock Text="{Binding NombreMateria}"
+                                <TextBlock Text="{Binding NombreMateria}"
                                            Foreground="White"
                                            FontSize="12"
                                            FontWeight="SemiBold" />
@@ -270,14 +272,6 @@
                                 </StackPanel>
                             </StackPanel>
                         </StackPanel>
-
-                        <TextBlock Grid.Column="1"
-                                   Text="NO GUARDADO"
-                                   Foreground="#F59E0B"
-                                   FontWeight="Bold"
-                                   VerticalAlignment="Top"
-                                   Margin="12,0,0,0"
-                                   Visibility="{Binding TieneCambios, Converter={StaticResource BoolToVis}}" />
                     </Grid>
                 </Border>
 
@@ -291,12 +285,12 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                              <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
+                           <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
                         <GroupBox Header="Propiedades de Actividades"
                                   Style="{StaticResource CardGroupBoxStyle}">
-                            <GroupBox.Resources>
+                             <GroupBox.Resources>
                                 <DataTemplate x:Key="ActividadTemplate">
                                     <Border x:Name="ActividadBorder">
                                         <StackPanel>
@@ -487,7 +481,7 @@
                                     </WrapPanel>
                                 </StackPanel>
                             </Border>
-                        </GroupBox>
+                         </GroupBox>
 
                         <Border Grid.Row="2"
                                 Background="#EAF0F8"
@@ -516,12 +510,12 @@
                                            FontSize="11"
                                            Foreground="#64748B"
                                            VerticalAlignment="Center" />
-                             </StackPanel>
+                              </StackPanel>
                         </Border>
                     </Grid>
 
                     <Grid Grid.Column="1" Margin="12,0,0,0">
-                         <Grid.RowDefinitions>
+                        <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -530,75 +524,93 @@
                         <GroupBox Header="Alumnos"
                                   Margin="0,0,0,5"
                                   Style="{StaticResource CardGroupBoxStyle}">
-                            <ListBox ItemsSource="{Binding Alumnos}"
-                                     SelectedItem="{Binding AlumnoSeleccionado, Mode=TwoWay}"
-                                     SelectionChanged="Alumnos_SelectionChanged"
-                                     BorderThickness="0"
-                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
-                                <ListBox.ItemContainerStyle>
-                                    <Style TargetType="ListBoxItem">
-                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                        <Setter Property="Padding" Value="4,2" />
-                                        <Setter Property="Margin" Value="0,0,0,4" />
-                                    </Style>
-                                </ListBox.ItemContainerStyle>
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="#FAFBFD"
-                                                BorderBrush="#E2E8F0"
-                                                BorderThickness="1"
-                                                CornerRadius="8"
-                                                Padding="6"
-                                                Margin="0,1">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="80" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="40" />
-                                                </Grid.ColumnDefinitions>
+                            
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                
+                                <Grid Grid.Row="0" Margin="10,0,10,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="40" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Matrícula" FontWeight="Bold" Foreground="#1B365D" FontSize="12" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="Nombre" FontWeight="Bold" Foreground="#1B365D" FontSize="12" VerticalAlignment="Center"/>
+                                </Grid>
 
-                                                <TextBlock Text="{Binding Matricula}"
-                                                           FontWeight="SemiBold"
-                                                           Foreground="#1E293B"
-                                                           FontSize="14"
-                                                           VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="1"
-                                                           Text="{Binding Nombre}"
-                                                           Foreground="#334155"
-                                                           FontSize="14"
-                                                           VerticalAlignment="Center" />
-                                                <Button Grid.Column="2"
-                                                        Style="{StaticResource IconButtonStyle}"
-                                                        ToolTip="Ver detalles del alumno"
-                                                        HorizontalAlignment="Right"
-                                                        VerticalAlignment="Center"
-                                                        Click="PapelButton_Click"
-                                                        Tag="{Binding}">
+                                <ListBox Grid.Row="1" ItemsSource="{Binding Alumnos}"
+                                         SelectedItem="{Binding AlumnoSeleccionado, Mode=TwoWay}"
+                                         SelectionChanged="Alumnos_SelectionChanged"
+                                         BorderThickness="0"
+                                         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                     <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                            <Setter Property="Padding" Value="4,2" />
+                                            <Setter Property="Margin" Value="0,0,0,4" />
+                                         </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                       <DataTemplate>
+                                            <Border Background="#FAFBFD"
+                                                    BorderBrush="#E2E8F0"
+                                                    BorderThickness="1"
+                                                    CornerRadius="8"
+                                                    Padding="6"
+                                                    Margin="0,1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="80" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="40" />
+                                                    </Grid.ColumnDefinitions>
 
-                                                    <Viewbox Width="15" Height="15">
-                                                        <Path Stroke="Black"
-                                                              Fill="Transparent"
-                                                              StrokeThickness="1.5"
-                                                              Data="M6,2 L14,2 L18,6 L18,22 L6,22 Z
-                                                                    M14,2 L14,6 L18,6
-                                                                    M9,10 L15,10
-                                                                    M9,13 L15,13
-                                                                    M9,16 L13,16"/>
-                                                    </Viewbox>
+                                                    <TextBlock Text="{Binding Matricula}"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="#1E293B"
+                                                               FontSize="14"
+                                                               VerticalAlignment="Center" />
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding Nombre}"
+                                                               Foreground="#334155"
+                                                               FontSize="14"
+                                                               VerticalAlignment="Center" />
+                                                    <Button Grid.Column="2"
+                                                            Style="{StaticResource IconButtonStyle}"
+                                                            ToolTip="Ver detalles del alumno"
+                                                            HorizontalAlignment="Right"
+                                                            VerticalAlignment="Center"
+                                                            Click="PapelButton_Click"
+                                                            Tag="{Binding}">
 
-                                                </Button>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
+                                                         <Viewbox Width="15" Height="15">
+                                                            <Path Stroke="Black"
+                                                                  Fill="Transparent"
+                                                                  StrokeThickness="1.5"
+                                                                  Data="M6,2 L14,2 L18,6 L18,22 L6,22 Z
+                                                                        M14,2 L14,6 L18,6
+                                                                        M9,10 L15,10
+                                                                        M9,13 L15,13
+                                                                        M9,16 L13,16"/>
+                                                        </Viewbox>
+
+                                                    </Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Grid>
                         </GroupBox>
 
                         <StackPanel Grid.Row="1"
                                     Orientation="Horizontal"
                                     HorizontalAlignment="Center"
                                     Margin="0,0,0,5">
-                            <Button Content="Inicio"
+                             <Button Content="Inicio"
                                     Command="{Binding InicioCommand}"
                                     Margin="0,0,4,0"
                                     MinWidth="72"
@@ -619,7 +631,7 @@
                                     Style="{StaticResource BlueButtonStyle}" />
                          </StackPanel>
 
-                        <GroupBox Grid.Row="2"
+                         <GroupBox Grid.Row="2"
                                   Header="Puntajes obtenidos:"
                                   Margin="0,5,0,0"
                                   Style="{StaticResource CardGroupBoxStyle}">
@@ -639,7 +651,7 @@
 
                                     <ItemsControl x:Name="PuntajesItemsControl" ItemsSource="{Binding Actividades}">
                                         <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
+                                           <DataTemplate>
                                                 <Grid Margin="0,4">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="140" />
@@ -655,7 +667,7 @@
                                                                FontSize="11"
                                                                TextTrimming="CharacterEllipsis" />
 
-                                                     <TextBox Grid.Column="1"
+                                                    <TextBox Grid.Column="1"
                                                              Text="{Binding PuntajeObtenido, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                              Height="22"
                                                              VerticalContentAlignment="Center"
@@ -667,8 +679,8 @@
                                                              DataObject.Pasting="Numeros_Pasting"
                                                              KeyDown="PuntajeObtenido_KeyDown"
                                                              TextChanged="Puntaje_TextChanged">
-                                                         <TextBox.Style>
-                                                            <Style TargetType="TextBox" BasedOn="{StaticResource RoundedTextBoxStyle}">
+                                                          <TextBox.Style>
+                                                             <Style TargetType="TextBox" BasedOn="{StaticResource RoundedTextBoxStyle}">
                                                                 <Setter Property="IsEnabled" Value="{Binding IsPuntajeEditable}" />
                                                                 <Style.Triggers>
                                                                     <DataTrigger Binding="{Binding DataContext.AlumnoConCapturaDirecta, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
@@ -676,7 +688,7 @@
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
                                                             </Style>
-                                                        </TextBox.Style>
+                                                         </TextBox.Style>
                                                     </TextBox>
 
                                                     <TextBlock Grid.Column="2"
@@ -693,9 +705,9 @@
                                                                FontWeight="Bold"
                                                                Foreground="#1B365D"
                                                                FontSize="12" />
-                                                </Grid>
+                                                 </Grid>
                                             </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
+                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
 
                                     <TextBlock Text="{Binding LeyendaCapturaDirecta}"
@@ -708,7 +720,7 @@
                                     <StackPanel Orientation="Horizontal"
                                                 Margin="0,12,0,5"
                                                 VerticalAlignment="Center">
-                                        <TextBlock Text="Inasistencias:"
+                                         <TextBlock Text="Inasistencias:"
                                                    VerticalAlignment="Center"
                                                    Margin="0,0,6,0"
                                                    FontWeight="SemiBold"
@@ -728,15 +740,15 @@
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding AsistenciaActiva}" Value="False">
                                                             <Setter Property="IsEnabled" Value="False" />
-                                                        </DataTrigger>
+                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding AlumnoConCapturaDirecta}" Value="True">
                                                             <Setter Property="IsEnabled" Value="False" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
-                                                </Style>
+                                                 </Style>
                                             </TextBox.Style>
                                         </TextBox>
-                                    </StackPanel>
+                                     </StackPanel>
                                 </StackPanel>
 
                                 <Border Grid.Column="1"
@@ -760,12 +772,12 @@
                                     <Border Style="{StaticResource BlueGradeBlock}"
                                             Margin="0,10,0,12">
                                         <TextBox Text="{Binding CalificacionParcialTexto, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 Foreground="{Binding CalificacionParcialTexto, Converter={StaticResource ColorCalifConverter}}"
                                                  Style="{StaticResource RoundedTextBoxStyle}"
                                                  FontSize="22"
                                                  FontWeight="Black"
                                                  HorizontalContentAlignment="Center"
                                                  VerticalContentAlignment="Center"
-                                                 Foreground="#1E3A8A"
                                                  Width="100"
                                                  IsEnabled="{Binding AlumnoConCapturaDirecta}"
                                                  TextChanged="CalificacionParcial_TextChanged" />

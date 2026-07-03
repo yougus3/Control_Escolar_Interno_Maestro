@@ -145,6 +145,27 @@ public partial class SemestralView : UserControl
         }
     }
 
+    private void SemTextBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            e.Handled = true;
+            
+            var request = new TraversalRequest(FocusNavigationDirection.Next);
+            request.Wrapped = false; 
+
+            if (sender is UIElement currentElement)
+            {
+                bool moved = currentElement.MoveFocus(request);
+                
+                if (!moved)
+                {
+                    MessageBox.Show("Se evaluaron todos los alumnos.", "Fin de captura", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+        }
+    }
+
     private static T? FindParent<T>(DependencyObject? child) where T : DependencyObject
     {
         DependencyObject? parent = child;

@@ -28,6 +28,9 @@ public partial class MainViewModel : ObservableObject
     private ConfiguracionParciales _configuracionActual = new();
 
     private string? _archivoCompletoActual;
+    
+    // Bloqueo para evitar que el sistema detecte sus propios cambios al cargar
+    private bool _isUpdatingProgrammatically = false;
 
     public string? ArchivoCompletoActual => _archivoCompletoActual;
 
@@ -35,16 +38,52 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty] private string _rutaUsb = string.Empty;
     [ObservableProperty] private bool _rutaUsbEditable = true;
-    [ObservableProperty] private string? _archivoSeleccionado;
-    [ObservableProperty] private string? _evaluacionSeleccionada;
     [ObservableProperty] private string _currentView = "List";
+    [ObservableProperty] private bool _tieneCambios;
+
+    // Propiedad manual para interceptar cambios de archivo con el Modal
+    private string? _archivoSeleccionado;
+    public string? ArchivoSeleccionado
+    {
+        get => _archivoSeleccionado;
+        set
+        {
+            if (_archivoSeleccionado != value)
+            {
+                if (!ManejarCambiosPendientes())
+                {
+                    OnPropertyChanged(nameof(ArchivoSeleccionado));
+                    return;
+                }
+                SetProperty(ref _archivoSeleccionado, value);
+                CargarArchivoSeleccionado(value);
+            }
+        }
+    }
+
+    // Propiedad manual para interceptar cambios de evaluación con el Modal
+    private string? _evaluacionSeleccionada;
+    public string? EvaluacionSeleccionada
+    {
+        get => _evaluacionSeleccionada;
+        set
+        {
+            if (_evaluacionSeleccionada != value)
+            {
+                if (!ManejarCambiosPendientes())
+                {
+                    OnPropertyChanged(nameof(EvaluacionSeleccionada));
+                    return;
+                }
+                SetProperty(ref _evaluacionSeleccionada, value);
+                CambiarEvaluacion(value);
+            }
+        }
+    }
 
     public ObservableCollection<string> EvaluacionesDisponibles { get; } = new();
     public ObservableCollection<string> ArchivosDisponibles { get; } = new();
     public ObservableCollection<Alumno> Alumnos { get; } = new();
-
-    [ObservableProperty]
-    private bool _tieneCambios;
 
     private readonly System.Collections.Generic.List<Alumno> _subscribedAlumnos = new();
 
@@ -79,6 +118,21 @@ public partial class MainViewModel : ObservableObject
         }
 
         EscanearUsb();
+    }
+
+    private bool ManejarCambiosPendientes()
+    {
+        if (TieneCambios)
+        {
+            var res = MessageBox.Show("Hay cambios sin guardar en esta vista. ¿Deseas guardar antes de cambiar?\n\nSí = Guardar y continuar\nNo = Descartar cambios\nCancelar = Quedarse aquí",
+                "Cambios sin guardar", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+
+            if (res == MessageBoxResult.Cancel) return false;
+            if (res == MessageBoxResult.Yes) Guardar();
+            
+            TieneCambios = false;
+        }
+        return true;
     }
 
     public void RecargarConfiguracionYArchivoActual()
@@ -125,9 +179,14 @@ public partial class MainViewModel : ObservableObject
         _mapaArchivos.Clear();
         _evaluacionIdPorNombre.Clear();
         _archivoCompletoActual = null;
+        TieneCambios = false;
 
-        ArchivoSeleccionado = null;
-        EvaluacionSeleccionada = null;
+        _archivoSeleccionado = null;
+        OnPropertyChanged(nameof(ArchivoSeleccionado));
+        
+        _evaluacionSeleccionada = null;
+        OnPropertyChanged(nameof(EvaluacionSeleccionada));
+        
         CurrentView = "List";
 
         var archivos = _scannerService.ObtenerArchivosCap(RutaUsb);
@@ -147,35 +206,38 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(EsExtraSeleccionado));
     }
 
-    partial void OnArchivoSeleccionadoChanged(string? value)
-    {
-        CargarArchivoSeleccionado(value);
-    }
-
     private void CargarArchivoSeleccionado(string? value)
     {
+        _isUpdatingProgrammatically = true;
+        
         Alumnos.Clear();
         EvaluacionesDisponibles.Clear();
         _evaluacionIdPorNombre.Clear();
-        EvaluacionSeleccionada = null;
+        
+        _evaluacionSeleccionada = null;
+        OnPropertyChanged(nameof(EvaluacionSeleccionada));
+        
         CurrentView = "List";
         _archivoCompletoActual = null;
 
         if (string.IsNullOrWhiteSpace(value))
         {
             OnPropertyChanged(nameof(EsExtraSeleccionado));
+            _isUpdatingProgrammatically = false;
             return;
         }
 
         if (!_mapaArchivos.TryGetValue(value, out string? rutaCompleta))
         {
             OnPropertyChanged(nameof(EsExtraSeleccionado));
+            _isUpdatingProgrammatically = false;
             return;
         }
 
         if (!File.Exists(rutaCompleta))
         {
             OnPropertyChanged(nameof(EsExtraSeleccionado));
+            _isUpdatingProgrammatically = false;
             return;
         }
 
@@ -198,8 +260,6 @@ public partial class MainViewModel : ObservableObject
             }
         }
 
-        // Si no quedó ninguna evaluación visible por la configuración, forzamos P1 como opción
-        // de arranque para CAPs nuevos (bloqueo en P1 por requerimiento funcional).
         if (EvaluacionesDisponibles.Count == 0)
         {
             EvaluacionesDisponibles.Add("P1");
@@ -210,15 +270,15 @@ public partial class MainViewModel : ObservableObject
             Alumnos.Add(alumno);
         }
 
-        // Suscribir cambios por alumno para detectar ediciones (por ejemplo SEM)
         SuscribirAlumnos();
-
         EvaluacionSeleccionada = EvaluacionesDisponibles.FirstOrDefault();
-
         OnPropertyChanged(nameof(EsExtraSeleccionado));
+        
+        TieneCambios = false;
+        _isUpdatingProgrammatically = false;
     }
 
-    partial void OnEvaluacionSeleccionadaChanged(string? value)
+    private void CambiarEvaluacion(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -226,7 +286,8 @@ public partial class MainViewModel : ObservableObject
             OnPropertyChanged(nameof(EsExtraSeleccionado));
             return;
         }
-
+        
+        _isUpdatingProgrammatically = true;
         string valorMayusculas = value.ToUpperInvariant();
 
         if (valorMayusculas == "SEM")
@@ -249,6 +310,8 @@ public partial class MainViewModel : ObservableObject
         }
 
         OnPropertyChanged(nameof(EsExtraSeleccionado));
+        TieneCambios = false;
+        _isUpdatingProgrammatically = false;
     }
 
     [RelayCommand]
@@ -295,7 +358,9 @@ public partial class MainViewModel : ObservableObject
             EvaluacionSeleccionada,
             idEval);
 
+        _isUpdatingProgrammatically = true;
         SincronizarCalificacionSemestral();
+        _isUpdatingProgrammatically = false;
 
         if (!string.Equals(EvaluacionSeleccionada, "SEM", StringComparison.OrdinalIgnoreCase) &&
             _evaluacionIdPorNombre.TryGetValue("SEM", out var idSem))
@@ -307,7 +372,6 @@ public partial class MainViewModel : ObservableObject
                 idSem);
         }
 
-        // Después de guardar limpiamos la bandera de cambios
         TieneCambios = false;
         ParcialesVm.TieneCambios = false;
 
@@ -434,14 +498,12 @@ public partial class MainViewModel : ObservableObject
 
     private void SuscribirAlumnos()
     {
-        // Quitar manejadores previos
         foreach (var a in _subscribedAlumnos)
         {
             try { a.Calificación.PropertyChanged -= Alumno_CalificacionChanged; } catch { }
         }
         _subscribedAlumnos.Clear();
 
-        // Suscribir a los actuales
         foreach (var alumno in Alumnos)
         {
             if (alumno?.Calificación != null)
@@ -454,9 +516,10 @@ public partial class MainViewModel : ObservableObject
 
     private void Alumno_CalificacionChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (_isUpdatingProgrammatically) return; 
+        
         if (e?.PropertyName != null && e.PropertyName.StartsWith("Item["))
         {
-            // Marca la vista como con cambios pendientes
             TieneCambios = true;
         }
     }
