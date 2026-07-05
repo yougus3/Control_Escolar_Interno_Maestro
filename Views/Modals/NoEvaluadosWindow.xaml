@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Alumnos pendientes por evaluar" 
         Height="400" 
-        Width="550" 
+        Width="700" 
         WindowStartupLocation="CenterOwner" 
         ResizeMode="NoResize" 
         Background="#F1F5F9">
@@ -58,9 +58,11 @@
                     </Style>
                 </DataGrid.Resources>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Matrícula" Binding="{Binding Matricula}" Width="100"/>
+                    <DataGridTextColumn Header="Materia" Binding="{Binding Materia}" Width="150"/>
+                    <DataGridTextColumn Header="Grupo" Binding="{Binding Grupo}" Width="80"/>
+                    <DataGridTextColumn Header="Matrícula" Binding="{Binding Matricula}" Width="90"/>
                     <DataGridTextColumn Header="Nombre" Binding="{Binding Nombre}" Width="*"/>
-                    <DataGridTextColumn Header="Motivo" Binding="{Binding Razon}" Width="180">
+                    <DataGridTextColumn Header="Motivo" Binding="{Binding Razon}" Width="190">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="#B91C1C"/>

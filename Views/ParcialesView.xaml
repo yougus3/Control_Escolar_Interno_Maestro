@@ -262,7 +262,7 @@
                                                FontSize="12"
                                                FontWeight="SemiBold" />
                                 </StackPanel>
-                                
+
                                 <StackPanel Orientation="Horizontal" Margin="15,0,0,0">
                                     <TextBlock Text="  Alumnos evaluados: " Foreground="#D6E4FF" FontSize="12" FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding TextoEvaluados}" Foreground="White" FontSize="12" FontWeight="SemiBold" />
@@ -531,7 +531,7 @@
                                            FontSize="11"
                                            Foreground="#64748B"
                                            VerticalAlignment="Center" />
-                               </StackPanel>
+                                </StackPanel>
                         </Border>
                     </Grid>
 
@@ -799,7 +799,6 @@
                                 </StackPanel>
                             </Grid>
                         </GroupBox>
-
                     </Grid>
                 </Grid>
             </Grid>

@@ -29,7 +29,6 @@ public partial class MainViewModel : ObservableObject
 
     private string? _archivoCompletoActual;
     
-    // Bloqueo para evitar que el sistema detecte sus propios cambios al cargar
     private bool _isUpdatingProgrammatically = false;
 
     public string? ArchivoCompletoActual => _archivoCompletoActual;
@@ -192,8 +191,14 @@ public partial class MainViewModel : ObservableObject
         foreach (var archivo in archivos)
         {
             string nombreVisual = _parserService.ObtenerNombreVisualArchivo(archivo);
-            _mapaArchivos[nombreVisual] = archivo;
-            ArchivosDisponibles.Add(nombreVisual);
+            var resTemp = _parserService.ProcesarArchivoCompleto(archivo);
+            
+            // Extraer grupo del primer alumno o poner S/G
+            string grupo = resTemp.Alumnos.FirstOrDefault()?.Grupo ?? "S/G";
+            string nombreCombo = $"{nombreVisual} - Grupo: {grupo}";
+            
+            _mapaArchivos[nombreCombo] = archivo;
+            ArchivosDisponibles.Add(nombreCombo);
         }
 
         if (ArchivosDisponibles.Any())
@@ -250,17 +255,29 @@ public partial class MainViewModel : ObservableObject
             _evaluacionIdPorNombre[kvp.Key] = kvp.Value;
         }
 
-        foreach (var eval in resultado.EvaluacionesDisponibles)
+        // LÓGICA EXTRA EXCLUSIVA
+        bool esExtra = resultado.EvaluacionesDisponibles.Any(e => e.Equals("EXTRA", StringComparison.OrdinalIgnoreCase));
+        
+        if (esExtra)
         {
-            if (EvaluacionEstaHabilitada(eval))
-            {
-                EvaluacionesDisponibles.Add(eval);
-            }
+            EvaluacionesDisponibles.Add("EXTRA");
+            EvaluacionSeleccionada = "EXTRA";
         }
-
-        if (EvaluacionesDisponibles.Count == 0)
+        else
         {
-            EvaluacionesDisponibles.Add("P1");
+            foreach (var eval in resultado.EvaluacionesDisponibles)
+            {
+                if (EvaluacionEstaHabilitada(eval))
+                {
+                    EvaluacionesDisponibles.Add(eval);
+                }
+            }
+
+            if (EvaluacionesDisponibles.Count == 0)
+            {
+                EvaluacionesDisponibles.Add("P1");
+            }
+            EvaluacionSeleccionada = EvaluacionesDisponibles.LastOrDefault();
         }
 
         foreach (var alumno in resultado.Alumnos)
@@ -269,12 +286,13 @@ public partial class MainViewModel : ObservableObject
         }
 
         SuscribirAlumnos();
-        EvaluacionSeleccionada = EvaluacionesDisponibles.LastOrDefault();
-        
         OnPropertyChanged(nameof(EsExtraSeleccionado));
         
         TieneCambios = false;
         _isUpdatingProgrammatically = false;
+        
+        // Disparar vista forzada si es extra
+        if (esExtra) CambiarEvaluacion("EXTRA");
     }
 
     private void CambiarEvaluacion(string? value)
@@ -288,6 +306,12 @@ public partial class MainViewModel : ObservableObject
         
         _isUpdatingProgrammatically = true;
         string valorMayusculas = value.ToUpperInvariant();
+        
+        // Barrera de seguridad para EXTRA
+        if (valorMayusculas != "EXTRA" && EvaluacionesDisponibles.Count == 1 && EvaluacionesDisponibles.Contains("EXTRA"))
+        {
+            valorMayusculas = "EXTRA";
+        }
 
         if (valorMayusculas == "SEM")
         {
@@ -362,6 +386,7 @@ public partial class MainViewModel : ObservableObject
         _isUpdatingProgrammatically = false;
 
         if (!string.Equals(EvaluacionSeleccionada, "SEM", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(EvaluacionSeleccionada, "EXTRA", StringComparison.OrdinalIgnoreCase) &&
             _evaluacionIdPorNombre.TryGetValue("SEM", out var idSem))
         {
             _writerService.GuardarEvaluacion(
@@ -393,18 +418,25 @@ public partial class MainViewModel : ObservableObject
                 var nombre = Path.GetFileNameWithoutExtension(ArchivoCompletoActual);
                 if (!string.IsNullOrWhiteSpace(nombre)) claveMateria = nombre.Trim().Replace(' ', '_');
             }
-            catch { }
+            catch
+            {
+            }
         }
 
         if (string.IsNullOrWhiteSpace(claveMateria) && !string.IsNullOrWhiteSpace(ArchivoSeleccionado))
         {
             string texto = ArchivoSeleccionado.Trim();
-            int indexEspacio = texto.IndexOf(' ');
-            if (indexEspacio <= 0) claveMateria = texto.Replace(' ', '_');
+            int indexEspacio = texto.IndexOf(" - Grupo:");
+            if (indexEspacio > 0)
+            {
+                texto = texto.Substring(0, indexEspacio).Trim();
+            }
+            int indexSegundoEspacio = texto.IndexOf(' ');
+            if (indexSegundoEspacio <= 0) claveMateria = texto.Replace(' ', '_');
             else
             {
-                string clave = texto[..indexEspacio].Trim();
-                string nombre = texto[(indexEspacio + 1)..].Trim();
+                string clave = texto[..indexSegundoEspacio].Trim();
+                string nombre = texto[(indexSegundoEspacio + 1)..].Trim();
                 claveMateria = string.IsNullOrWhiteSpace(nombre) ? clave : $"{clave}_{nombre}";
             }
         }
@@ -418,9 +450,12 @@ public partial class MainViewModel : ObservableObject
 
         if (m1 == null || m2 == null || m3 == null) return;
 
-        bool p1Activa = m1.Calificaciones.TryGetValue("$CONFIG$", out var c1) && c1.TryGetValue("AsistenciaActiva", out var aa1) && aa1 > 0;
-        bool p2Activa = m2.Calificaciones.TryGetValue("$CONFIG$", out var c2) && c2.TryGetValue("AsistenciaActiva", out var aa2) && aa2 > 0;
-        bool p3Activa = m3.Calificaciones.TryGetValue("$CONFIG$", out var c3) && c3.TryGetValue("AsistenciaActiva", out var aa3) && aa3 > 0;
+        bool p1Activa = m1.Calificaciones.TryGetValue("$CONFIG$", out var c1) &&
+                        c1.TryGetValue("AsistenciaActiva", out var aa1) && aa1 > 0;
+        bool p2Activa = m2.Calificaciones.TryGetValue("$CONFIG$", out var c2) &&
+                        c2.TryGetValue("AsistenciaActiva", out var aa2) && aa2 > 0;
+        bool p3Activa = m3.Calificaciones.TryGetValue("$CONFIG$", out var c3) &&
+                        c3.TryGetValue("AsistenciaActiva", out var aa3) && aa3 > 0;
 
         int clasesP1 = p1Activa && c1 != null && c1.TryGetValue("ClasesTotales", out var ct1) && ct1 > 0 ? (int)ct1 : 0;
         int clasesP2 = p2Activa && c2 != null && c2.TryGetValue("ClasesTotales", out var ct2) && ct2 > 0 ? (int)ct2 : 0;
