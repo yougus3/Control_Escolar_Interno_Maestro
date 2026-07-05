@@ -801,6 +801,8 @@ public partial class ActividadParcialEditor : ObservableObject
     {
         _bloqueadoPorCapturaDirecta = bloqueado;
         OnPropertyChanged(nameof(IsPuntajeEditable));
+        // CORRECCIÓN: Faltaba notificar a la vista de que este estado cambió
+        OnPropertyChanged(nameof(IsPuntajeEditableFinal));
     }
 
     public bool IsPuntajeEditable => !_bloqueadoPorCapturaDirecta && Activa;
@@ -855,7 +857,7 @@ public partial class ActividadParcialEditor : ObservableObject
     {
         if (value)
         {
-            if (string.IsNullOrWhiteSpace(Porcentaje)) Porcentaje = "0";
+            // CORRECCIÓN: Se quitó el "0" por defecto al activar la actividad, ahora queda vacío
             OnPropertyChanged(nameof(Nombre));
             OnPropertyChanged(nameof(Porcentaje));
         }
@@ -890,6 +892,8 @@ public partial class ActividadParcialEditor : ObservableObject
         {
             EstaCompleta = completo;
             OnPropertyChanged(nameof(IsPuntajeEditable));
+            // CORRECCIÓN: Faltaba notificar cuando el estado completo cambia para desbloquear la UI
+            OnPropertyChanged(nameof(IsPuntajeEditableFinal));
         }
     }
 }

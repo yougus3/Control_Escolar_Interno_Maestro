@@ -240,7 +240,7 @@
                                        FontSize="16"
                                        FontWeight="Bold" />
                              <StackPanel Orientation="Horizontal"
-                                        Margin="0,2,0,0">
+                                         Margin="0,2,0,0">
                                 <TextBlock Text="Asignatura: "
                                            Foreground="#D6E4FF"
                                            FontSize="12"
@@ -291,7 +291,7 @@
                         <GroupBox Header="Propiedades de Actividades"
                                   Style="{StaticResource CardGroupBoxStyle}">
                              <GroupBox.Resources>
-                                <DataTemplate x:Key="ActividadTemplate">
+                                 <DataTemplate x:Key="ActividadTemplate">
                                     <Border x:Name="ActividadBorder">
                                         <StackPanel>
                                             <CheckBox Content="Actividad activa"
@@ -333,7 +333,7 @@
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                       </Style>
-                                                </TextBlock.Style>
+                                                 </TextBlock.Style>
                                               </TextBlock>
 
                                             <Grid Margin="0,3,0,0">
@@ -397,7 +397,6 @@
                                         <Border.Style>
                                             <Style TargetType="Border" BasedOn="{StaticResource ActividadBorderStyle}">
                                                 <Style.Triggers>
-                                                    <!-- Si está activa y completa -> verde -->
                                                     <MultiDataTrigger>
                                                         <MultiDataTrigger.Conditions>
                                                             <Condition Binding="{Binding Activa}" Value="True" />
@@ -407,7 +406,6 @@
                                                         <Setter Property="Background" Value="#ECFDF5" />
                                                     </MultiDataTrigger>
 
-                                                    <!-- Si está activa pero NO completa -> rojo -->
                                                     <MultiDataTrigger>
                                                         <MultiDataTrigger.Conditions>
                                                             <Condition Binding="{Binding Activa}" Value="True" />
@@ -417,23 +415,22 @@
                                                         <Setter Property="Background" Value="#FFFBFA" />
                                                     </MultiDataTrigger>
 
-                                                    <!-- Si está desactivada -> naranja -->
                                                     <DataTrigger Binding="{Binding Activa}" Value="False">
                                                         <Setter Property="BorderBrush" Value="#FB923C" />
                                                         <Setter Property="Background" Value="#FFFBF0" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
-                                            </Style>
+                                             </Style>
                                         </Border.Style>
                                     </Border>
                                 </DataTemplate>
                             </GroupBox.Resources>
 
                             <Grid>
-                                 <Grid.RowDefinitions>
+                                <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
-                                 </Grid.RowDefinitions>
+                                </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
@@ -444,7 +441,7 @@
                                                 Content="{Binding Actividades[0]}"
                                                 ContentTemplate="{StaticResource ActividadTemplate}"
                                                 Margin="2" />
-                                 <ContentControl Grid.Row="0"
+                                <ContentControl Grid.Row="0"
                                                 Grid.Column="1"
                                                 Content="{Binding Actividades[1]}"
                                                 ContentTemplate="{StaticResource ActividadTemplate}"
@@ -512,7 +509,7 @@
                                 <TextBlock Text="{Binding SumaPorcentajesTexto}"
                                            VerticalAlignment="Center"
                                            Margin="0,0,10,0">
-                                    <TextBlock.Style>
+                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock"
                                                BasedOn="{StaticResource SumaPorcText}">
                                             <Style.Triggers>
@@ -527,7 +524,7 @@
                                            FontSize="11"
                                            Foreground="#64748B"
                                            VerticalAlignment="Center" />
-                              </StackPanel>
+                               </StackPanel>
                         </Border>
                     </Grid>
 
@@ -552,7 +549,7 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="40" />
+                                         <ColumnDefinition Width="40" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="Matrícula" FontWeight="Bold" Foreground="#1B365D" FontSize="12" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="1" Text="Nombre" FontWeight="Bold" Foreground="#1B365D" FontSize="12" VerticalAlignment="Center"/>
@@ -563,11 +560,11 @@
                                          SelectionChanged="Alumnos_SelectionChanged"
                                          BorderThickness="0"
                                          ScrollViewer.VerticalScrollBarVisibility="Auto">
-                                     <ListBox.ItemContainerStyle>
+                                    <ListBox.ItemContainerStyle>
                                         <Style TargetType="ListBoxItem">
                                             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                            <Setter Property="Padding" Value="4,2" />
-                                            <Setter Property="Margin" Value="0,0,0,4" />
+                                            <Setter Property="Padding" Value="8,6" />
+                                            <Setter Property="Margin" Value="0,0,0,6" />
                                          </Style>
                                     </ListBox.ItemContainerStyle>
                                     <ListBox.ItemTemplate>
@@ -576,8 +573,8 @@
                                                     BorderBrush="#E2E8F0"
                                                     BorderThickness="1"
                                                     CornerRadius="8"
-                                                    Padding="6"
-                                                    Margin="0,1">
+                                                    Padding="12,14"
+                                                    Margin="0,3">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="80" />
@@ -604,8 +601,8 @@
                                                             Tag="{Binding}">
 
                                                          <Viewbox Width="15" Height="15">
-                                                            <Path Fill="#475569" Data="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2ZM13,17H11V11H13V17ZM13,9H11V7H13V9Z"/>
-                                                        </Viewbox>
+                                                             <Path Fill="#475569" Data="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2ZM13,17H11V11H13V17ZM13,9H11V7H13V9Z"/>
+                                                         </Viewbox>
 
                                                     </Button>
                                                 </Grid>
@@ -614,7 +611,7 @@
                                     </ListBox.ItemTemplate>
                                 </ListBox>
                             </Grid>
-                        </GroupBox>
+                         </GroupBox>
 
                         <StackPanel Grid.Row="1"
                                     Orientation="Horizontal"
@@ -630,7 +627,7 @@
                                     Margin="0,0,4,0"
                                     MinWidth="72"
                                     Style="{StaticResource BlueButtonStyle}" />
-                            <Button Content="Siguiente"
+                             <Button Content="Siguiente"
                                     Command="{Binding SiguienteCommand}"
                                     Margin="0,0,4,0"
                                     MinWidth="72"
@@ -646,7 +643,7 @@
                                   Margin="0,5,0,0"
                                   Style="{StaticResource CardGroupBoxStyle}">
                             <Grid Margin="6,10,6,6">
-                                 <Grid.ColumnDefinitions>
+                                <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="1" />
                                     <ColumnDefinition Width="130" />
@@ -690,14 +687,14 @@
                                                              KeyDown="PuntajeObtenido_KeyDown"
                                                              TextChanged="Puntaje_TextChanged">
                                                           <TextBox.Style>
-                                                             <Style TargetType="TextBox" BasedOn="{StaticResource RoundedTextBoxStyle}">
+                                                            <Style TargetType="TextBox" BasedOn="{StaticResource RoundedTextBoxStyle}">
                                                                 <Setter Property="IsEnabled" Value="{Binding IsPuntajeEditableFinal}" />
                                                                 <Style.Triggers>
                                                                     <DataTrigger Binding="{Binding DataContext.AlumnoConCapturaDirecta, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
                                                                         <Setter Property="IsEnabled" Value="False" />
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
-                                                            </Style>
+                                                              </Style>
                                                          </TextBox.Style>
                                                     </TextBox>
 
@@ -726,47 +723,14 @@
                                                Margin="0,8,0,0"
                                                TextWrapping="Wrap"
                                                Visibility="{Binding AlumnoConCapturaDirecta, Converter={StaticResource BoolToVis}}" />
-
-                                    <StackPanel Orientation="Horizontal"
-                                                Margin="0,12,0,5"
-                                                VerticalAlignment="Center">
-                                         <TextBlock Text="Inasistencias:"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,6,0"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="#1E293B"
-                                                   FontSize="11" />
-                                        <TextBox Width="50"
-                                                 Height="24"
-                                                 Text="{Binding Inasistencias, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                 HorizontalContentAlignment="Center"
-                                                 VerticalContentAlignment="Center"
-                                                 MaxLength="3"
-                                                 PreviewTextInput="NumerosEnteros_PreviewTextInput"
-                                                 DataObject.Pasting="Numeros_Pasting"
-                                                 TextChanged="Puntaje_TextChanged">
-                                            <TextBox.Style>
-                                                <Style TargetType="TextBox" BasedOn="{StaticResource RoundedTextBoxStyle}">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding AsistenciaActiva}" Value="False">
-                                                            <Setter Property="IsEnabled" Value="False" />
-                                                         </DataTrigger>
-                                                        <DataTrigger Binding="{Binding AlumnoConCapturaDirecta}" Value="True">
-                                                            <Setter Property="IsEnabled" Value="False" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                 </Style>
-                                            </TextBox.Style>
-                                        </TextBox>
-                                     </StackPanel>
-                                </StackPanel>
+                                 </StackPanel>
 
                                 <Border Grid.Column="1"
                                         Width="1"
                                         Background="#D7DEE8"
                                         Margin="10,0" />
 
-                                <StackPanel Grid.Column="2"
+                                 <StackPanel Grid.Column="2"
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center">
                                     <TextBlock Text="Calificación"
@@ -793,11 +757,40 @@
                                                  TextChanged="CalificacionParcial_TextChanged" />
                                     </Border>
 
-                                    <CheckBox Content="Calificación directa"
-                                              IsChecked="{Binding AlumnoConCapturaDirecta, Mode=TwoWay}"
-                                              Margin="0,4,0,0"
-                                              ToolTip="Si está activado, este alumno tiene calificación directa y no se permite editar sus puntajes locales." />
-                                </StackPanel>
+                                    <StackPanel Orientation="Horizontal"
+                                                Margin="0,12,0,5"
+                                                HorizontalAlignment="Center">
+                                        <TextBlock Text="Inasistencias:"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,6,0"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#1E293B"
+                                                   FontSize="11" />
+                                        <TextBox Width="50"
+                                                 Height="24"
+                                                 Text="{Binding Inasistencias, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 HorizontalContentAlignment="Center"
+                                                 VerticalContentAlignment="Center"
+                                                 MaxLength="3"
+                                                 PreviewTextInput="NumerosEnteros_PreviewTextInput"
+                                                 DataObject.Pasting="Numeros_Pasting"
+                                                 TextChanged="Puntaje_TextChanged">
+                                            <TextBox.Style>
+                                                <Style TargetType="TextBox" BasedOn="{StaticResource RoundedTextBoxStyle}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding AsistenciaActiva}" Value="False">
+                                                            <Setter Property="IsEnabled" Value="False" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding AlumnoConCapturaDirecta}" Value="True">
+                                                            <Setter Property="IsEnabled" Value="False" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                 </Style>
+                                            </TextBox.Style>
+                                        </TextBox>
+                                     </StackPanel>
+
+                                    </StackPanel>
                             </Grid>
                         </GroupBox>
 

@@ -282,6 +282,11 @@ public partial class ParcialesView : UserControl
                     {
                         if (sumaOtros + mineVal > 100.0)
                         {
+                            // Muestra el modal de advertencia diseñado
+                            var warningModal = new WarningWindow("La suma de los porcentajes no puede superar el 100%. Por favor, ajusta los valores de las actividades.");
+                            warningModal.Owner = Window.GetWindow(this);
+                            warningModal.ShowDialog();
+
                             // supera 100%: borrar este campo
                             tb.Text = string.Empty;
                             // mantener foco

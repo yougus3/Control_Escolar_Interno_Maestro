@@ -50,7 +50,7 @@
                                                       VerticalAlignment="Center" />
                                     </Border>
                                     <ControlTemplate.Triggers>
-                                         <Trigger Property="IsMouseOver" Value="True">
+                                        <Trigger Property="IsMouseOver" Value="True">
                                              <Setter TargetName="Bd" Property="BorderBrush" Value="#93C5FD" />
                                         </Trigger>
                                         <Trigger Property="IsKeyboardFocused" Value="True">
@@ -95,14 +95,15 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid Grid.Row="1" Margin="12,10,12,0">                    <Grid.ColumnDefinitions>
+                <Grid Grid.Row="1" Margin="12,10,12,0">
+                    <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="80" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="60" />
-                        <ColumnDefinition Width="60" />
-                        <ColumnDefinition Width="60" />
+                        <ColumnDefinition Width="70" />
+                        <ColumnDefinition Width="70" />
+                        <ColumnDefinition Width="70" />
                         <ColumnDefinition Width="80" />
-                        <ColumnDefinition Width="130" />
+                        <ColumnDefinition Width="170" /> 
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="Matrícula" FontWeight="Bold" Foreground="#1B365D" FontSize="13" VerticalAlignment="Center"/>
                     <TextBlock Grid.Column="1" Text="Nombre del Alumno" FontWeight="Bold" Foreground="#1B365D" FontSize="13" VerticalAlignment="Center"/>
@@ -127,11 +128,11 @@
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="80" />
                                             <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="60" />
-                                            <ColumnDefinition Width="60" />
-                                            <ColumnDefinition Width="60" />
+                                            <ColumnDefinition Width="70" />
+                                            <ColumnDefinition Width="70" />
+                                            <ColumnDefinition Width="70" />
                                             <ColumnDefinition Width="80" />
-                                            <ColumnDefinition Width="130" />
+                                            <ColumnDefinition Width="170" />
                                         </Grid.ColumnDefinitions>
 
                                         <TextBlock Text="{Binding Matricula}"
@@ -151,26 +152,26 @@
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    FontWeight="Bold"
-                                                   FontSize="13" />
+                                                   FontSize="16" /> 
                                         <TextBlock Grid.Column="3"
                                                    Text="{Binding Calificación[P2]}"
                                                    Foreground="{Binding Calificación[P2], Converter={StaticResource ColorCalifConverter}}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    FontWeight="Bold"
-                                                   FontSize="13" />
+                                                   FontSize="16" /> 
                                         <TextBlock Grid.Column="4"
                                                    Text="{Binding Calificación[P3]}"
                                                    Foreground="{Binding Calificación[P3], Converter={StaticResource ColorCalifConverter}}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    FontWeight="Bold"
-                                                   FontSize="13" />
+                                                   FontSize="16" /> 
 
                                         <TextBlock Grid.Column="5"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
-                                                   FontWeight="Bold" FontSize="13">
+                                                   FontWeight="Bold" FontSize="18">
                                             <TextBlock.Text>
                                                 <MultiBinding Converter="{StaticResource PromediosConverter}">
                                                     <Binding Path="Calificación[P1]" />
@@ -189,13 +190,13 @@
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
 
-                                            <Button Grid.Column="0" Width="34" Height="34" Margin="0,0,8,0" Click="InfoAlumnoButton_Click" ToolTip="Ver información del alumno">
+                                            <Button Grid.Column="0" Width="34" Height="34" Margin="0,0,12,0" Click="InfoAlumnoButton_Click" ToolTip="Ver información del alumno">
                                                 <Viewbox Width="16" Height="16">
                                                     <Path Fill="#475569" Data="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2ZM13,17H11V11H13V17ZM13,9H11V7H13V9Z"/>
                                                 </Viewbox>
                                             </Button>
 
-                                            <Border Grid.Column="1" Style="{StaticResource BlueGradeBlock}" Margin="0,0,0,0">
+                                            <Border Grid.Column="1" Style="{StaticResource BlueGradeBlock}" Margin="0">
                                                 <TextBox Text="{Binding Calificación[SEM], Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                          Foreground="{Binding Calificación[SEM], Converter={StaticResource ColorCalifConverter}}"
                                                          Style="{StaticResource RoundedTextBoxStyle}"

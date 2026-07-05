@@ -271,7 +271,10 @@ public partial class MainViewModel : ObservableObject
         }
 
         SuscribirAlumnos();
-        EvaluacionSeleccionada = EvaluacionesDisponibles.FirstOrDefault();
+        
+        // CORRECCIÓN: Ir automáticamente a la última evaluación habilitada (ej: P2 si están P1 y P2 habilitadas)
+        EvaluacionSeleccionada = EvaluacionesDisponibles.LastOrDefault();
+        
         OnPropertyChanged(nameof(EsExtraSeleccionado));
         
         TieneCambios = false;
