@@ -37,7 +37,8 @@ public class ExtraFinalConverter : IMultiValueConverter
         }
 
         double promedioParciales = (nums[0] + nums[1] + nums[2]) / 3.0;
-        double promTrunc = Math.Truncate(promedioParciales * 10.0) / 10.0;
+        // truncar a dos decimales para el promedio de parciales (ej. 8.0666 -> 8.06)
+        double promTrunc = Math.Truncate(promedioParciales * 100.0) / 100.0;
 
         double raw = (promTrunc + semNum) / 2.0;
 

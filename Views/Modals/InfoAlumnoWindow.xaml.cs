@@ -29,6 +29,20 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
             set { _fotoCargada = value; OnPropertyChanged(); }
         }
 
+        private bool _fotoCargando = false;
+        public bool FotoCargando
+        {
+            get => _fotoCargando;
+            set { _fotoCargando = value; OnPropertyChanged(); }
+        }
+
+        private bool _fotoFallida = false;
+        public bool FotoFallida
+        {
+            get => _fotoFallida;
+            set { _fotoFallida = value; OnPropertyChanged(); }
+        }
+
         // P1
         public string P1Calif { get; set; } = "N/A";
         public string P1Asistencia { get; set; } = "N/A";
@@ -67,8 +81,10 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
 
             DataContext = this;
 
-            // Disparar carga de foto de forma asíncrona (sin bloquear la UI)
-            _ = CargarFotoAsync(Matricula);
+        // Disparar carga de foto de forma asíncrona (sin bloquear la UI)
+        FotoCargando = true;
+        FotoFallida = false;
+        _ = CargarFotoConTimeoutAsync(Matricula);
         }
 
         private async Task CargarFotoAsync(string matricula)
@@ -102,12 +118,45 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
                 // Asignamos a la UI
                 FotoAlumnoImage.Source = bitmap;
                 FotoCargada = true;
+                FotoCargando = false;
             }
             catch
             {
                 // Si la imagen no existe o el servidor falla, no crashea, simplemente se queda vacío
                 FotoCargada = false;
+                FotoCargando = false;
                 System.Diagnostics.Debug.WriteLine($"Fallo al cargar la foto para la matrícula {matricula}.");
+            }
+        }
+
+        private async Task CargarFotoConTimeoutAsync(string matricula)
+        {
+            var cargarTask = CargarFotoAsync(matricula);
+            var timeoutTask = Task.Delay(6000);
+
+            var finished = await Task.WhenAny(cargarTask, timeoutTask);
+
+            if (finished == timeoutTask)
+            {
+                // Si no se completo la carga en 6s y aun no hay foto
+                if (!FotoCargada)
+                {
+                    FotoFallida = true;
+                    FotoCargando = false;
+                }
+            }
+            else
+            {
+                // carga completó; asegurar estados
+                if (FotoCargada)
+                {
+                    FotoFallida = false;
+                    FotoCargando = false;
+                }
+                else
+                {
+                    // si terminó con error, ya lo manejó CargarFotoAsync
+                }
             }
         }
 
@@ -158,12 +207,12 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
 
             if (count == 3)
             {
-                // Paso 1: Promedio de los 3 parciales (solo primer decimal, SIN redondear)
+                // Paso 1: Promedio de los 3 parciales (truncado a dos decimales)
                 double promedioParciales = suma / 3.0;
-                double promedioParcialesTruncado = Math.Truncate(promedioParciales * 10) / 10;
-                
-                // Asignar el promedio de parciales para mostrar en la tabla
-                PromedioParciales = promedioParcialesTruncado.ToString("0.0");
+                double promedioParcialesTruncado = Math.Truncate(promedioParciales * 100) / 100.0;
+
+                // Asignar el promedio de parciales para mostrar en la tabla (dos decimales)
+                PromedioParciales = promedioParcialesTruncado.ToString("0.00");
                 
                 // Paso 2: Obtener SEM
                 double sem = 0;

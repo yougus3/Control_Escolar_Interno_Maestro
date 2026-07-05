@@ -119,10 +119,55 @@ public partial class ParcialesView : UserControl
 
     private void CalificacionParcial_TextChanged(object sender, TextChangedEventArgs e)
     {
+        if (sender is TextBox tb)
+        {
+            // Normalizar para que tenga máximo 1 decimal y esté en rango 0-10
+            string normalized = NormalizeToSingleDecimalRange(tb.Text);
+            if (tb.Text != normalized)
+            {
+                int sel = tb.SelectionStart;
+                tb.Text = normalized;
+                tb.SelectionStart = Math.Min(sel, tb.Text.Length);
+            }
+        }
+
         if (DataContext is ParcialesViewModel vm)
         {
             vm.MarkUserEdited();
         }
+    }
+
+    private static string NormalizeToSingleDecimalRange(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return string.Empty;
+        string s = input.Trim().Replace(',', '.');
+        // remove invalid chars
+        var sb = new System.Text.StringBuilder();
+        foreach (char c in s)
+        {
+            if (char.IsDigit(c) || c == '.') sb.Append(c);
+        }
+        s = sb.ToString();
+        // keep only first dot
+        int firstDot = s.IndexOf('.');
+        if (firstDot >= 0)
+        {
+            // remove further dots
+            s = s.Substring(0, firstDot + 1) + s.Substring(firstDot + 1).Replace(".", "");
+            // limit decimals to 1
+            int decimals = s.Length - firstDot - 1;
+            if (decimals > 1) s = s.Substring(0, firstDot + 2);
+        }
+
+        if (double.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val))
+        {
+            if (val < 0) val = 0;
+            if (val > 10) val = 10;
+            // format with at most one decimal, but avoid trailing .0 unless needed
+            return val % 1 == 0 ? ((int)val).ToString(System.Globalization.CultureInfo.InvariantCulture) : val.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        return s;
     }
 
     // Helper to find child control of specific type
@@ -152,6 +197,19 @@ public partial class ParcialesView : UserControl
     {
         if (sender is TextBox textBox)
         {
+            // Permitir que el usuario escriba ',' y tratarlo como punto decimal
+            if (e.Text == ",")
+            {
+                // Insertar punto en la posición actual
+                int selStart = textBox.SelectionStart;
+                string newText = textBox.Text.Remove(textBox.SelectionStart, textBox.SelectionLength)
+                    .Insert(selStart, ".");
+                textBox.Text = newText;
+                textBox.SelectionStart = selStart + 1;
+                e.Handled = true;
+                return;
+            }
+
             string textoPropuesto = textBox.Text.Remove(textBox.SelectionStart, textBox.SelectionLength)
                 .Insert(textBox.SelectionStart, e.Text);
             Regex regex = new Regex(@"^[0-9]*\.?[0-9]*$");
@@ -166,6 +224,8 @@ public partial class ParcialesView : UserControl
             string textoAPegar = (string)e.DataObject.GetData(typeof(string));
             if (sender is TextBox textBox)
             {
+                // normalizar comas a punto
+                textoAPegar = textoAPegar.Replace(',', '.');
                 string textoPropuesto = textBox.Text.Remove(textBox.SelectionStart, textBox.SelectionLength)
                     .Insert(textBox.SelectionStart, textoAPegar);
                 Regex regex = new Regex(@"^[0-9]*\.?[0-9]*$");
@@ -197,9 +257,45 @@ public partial class ParcialesView : UserControl
 
     private void ActividadProp_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (DataContext is ParcialesViewModel vm)
+        if (sender is TextBox tb)
         {
-            vm.MarkUserEdited();
+            // Si es caja de porcentaje (nombre en plantilla PorcBox), validar suma en tiempo real
+            if (tb.Name == "PorcBox" && DataContext is ParcialesViewModel vm)
+            {
+                var actividad = tb.DataContext as ActividadParcialEditor;
+                if (actividad != null)
+                {
+                    // calcular suma de otras actividades activas
+                    double sumaOtros = 0.0;
+                    foreach (var a in vm.Actividades)
+                    {
+                        if (ReferenceEquals(a, actividad)) continue;
+                        if (!a.Activa) continue;
+                        var text = (a.Porcentaje ?? string.Empty).Trim().Replace(',', '.');
+                        if (double.TryParse(text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val))
+                            sumaOtros += val;
+                    }
+
+                    // valor actual propuesto
+                    string mine = (tb.Text ?? string.Empty).Trim().Replace(',', '.');
+                    if (double.TryParse(mine, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double mineVal))
+                    {
+                        if (sumaOtros + mineVal > 100.0)
+                        {
+                            // supera 100%: borrar este campo
+                            tb.Text = string.Empty;
+                            // mantener foco
+                            tb.Focus();
+                            return;
+                        }
+                    }
+                }
+            }
+
+            if (DataContext is ParcialesViewModel vm2)
+            {
+                vm2.MarkUserEdited();
+            }
         }
     }
 

@@ -397,11 +397,7 @@
                                           FontSize="14"
                                           FontWeight="SemiBold"
                                           Margin="0,0,0,8" />
-                                <CheckBox Content="EXTRA"
-                                          IsChecked="{Binding ExtraHabilitado, Mode=TwoWay}"
-                                          FontSize="14"
-                                          FontWeight="SemiBold"
-                                          Margin="0,0,0,8" />
+                                <!-- EXTRA gestionado por CAP; opción removida de la configuración -->
                             </StackPanel>
 
                             <!-- Controles modo GLOBAL -->

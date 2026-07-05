@@ -16,6 +16,70 @@ public partial class SemestralView : UserControl
         InitializeComponent();
     }
 
+    private void InfoAlumnoButton_Click(object sender, RoutedEventArgs e)
+    {
+        var btn = sender as Button;
+        var alumno = btn?.DataContext as Alumno;
+        var vm = DataContext as MainViewModel;
+        if (alumno == null || vm == null) return;
+
+        var datosParciales = new Dictionary<string, (string calif, string estado, int faltas, int totalClases)>();
+        var evaluaciones = new[] { "P1", "P2", "P3", "SEM" };
+        string archivoActual = vm.ArchivoCompletoActual;
+
+        foreach (var eval in evaluaciones)
+        {
+            string calif = alumno.Calificación[eval];
+            string estado = "Sin evaluar";
+            int faltas = 0;
+            int totalClases = 0;
+
+            string claveMateria = string.Empty;
+            if (!string.IsNullOrWhiteSpace(archivoActual))
+            {
+                try { claveMateria = System.IO.Path.GetFileNameWithoutExtension(archivoActual).Trim().Replace(' ', '_'); } catch { }
+            }
+            string claveMateriaEval = $"{claveMateria}_{eval}";
+            var materia = new ParcialJsonService().ObtenerMateria(claveMateriaEval);
+
+            if (materia != null)
+            {
+                if (materia.Calificaciones.TryGetValue("$CONFIG$", out var config))
+                {
+                    totalClases = config.TryGetValue("ClasesTotales", out var ct) ? (int)ct : 0;
+                }
+
+                if (materia.Calificaciones.TryGetValue(alumno.Matricula, out var capturas))
+                {
+                    faltas = capturas.TryGetValue("__Inasistencias__", out var f) ? (int)f : 0;
+                }
+
+                if (double.TryParse(calif, out double califNum))
+                {
+                    if (totalClases > 0)
+                    {
+                        int asistencias = totalClases - faltas;
+                        double porcentajeAsistencia = (double)asistencias / totalClases * 100;
+                        if (porcentajeAsistencia < 80)
+                            estado = "Reprobado por faltas";
+                        else
+                            estado = califNum >= 7.0 ? "Aprobado" : "Reprobado";
+                    }
+                    else
+                    {
+                        estado = califNum >= 7.0 ? "Aprobado" : "Reprobado";
+                    }
+                }
+            }
+
+            datosParciales[eval] = (calif, estado, faltas, totalClases);
+        }
+
+        var infoWindow = new Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals.InfoAlumnoWindow(alumno, datosParciales);
+        infoWindow.Owner = Window.GetWindow(this);
+        infoWindow.ShowDialog();
+    }
+
     private void DataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
     {
         // Si deseas confirmar cambios inmediatamente
@@ -134,14 +198,31 @@ public partial class SemestralView : UserControl
         }
     }
 
-    private static readonly Regex _numerosRegex = new("^[0-9]$", RegexOptions.Compiled);
-
     private void SemTextBox_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
     {
-        // Allow only digits and control
-        if (!_numerosRegex.IsMatch(e.Text))
+        // Allow only digits and a single dot, and enforce range 0-10 with max 1 decimal visually
+        if (!(sender is TextBox tb)) { e.Handled = true; return; }
+
+        char c = e.Text.Length > 0 ? e.Text[0] : '\0';
+        if (!char.IsDigit(c) && c != '.') { e.Handled = true; return; }
+
+        string textoPropuesto = tb.Text.Remove(tb.SelectionStart, tb.SelectionLength).Insert(tb.SelectionStart, e.Text);
+        // allow empty or single dot only during typing
+        if (textoPropuesto.Count(ch => ch == '.') > 1) { e.Handled = true; return; }
+
+        string s = textoPropuesto.Replace(',', '.');
+
+        // If there is a dot, limit decimals to 1
+        int idx = s.IndexOf('.');
+        if (idx >= 0)
         {
-            e.Handled = true;
+            int decimals = s.Length - idx - 1;
+            if (decimals > 1) { e.Handled = true; return; }
+        }
+
+        if (double.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val))
+        {
+            if (val < 0 || val > 10) { e.Handled = true; return; }
         }
     }
 

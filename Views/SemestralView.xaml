@@ -183,10 +183,19 @@
                                             </TextBlock.Foreground>
                                         </TextBlock>
 
-                                        <StackPanel Grid.Column="6"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center">
-                                            <Border Style="{StaticResource BlueGradeBlock}" Margin="0,6,0,0">
+                                        <Grid Grid.Column="6" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Button Grid.Column="0" Width="34" Height="34" Margin="0,0,8,0" Click="InfoAlumnoButton_Click" ToolTip="Ver información del alumno">
+                                                <Viewbox Width="16" Height="16">
+                                                    <Path Fill="#475569" Data="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2ZM13,17H11V11H13V17ZM13,9H11V7H13V9Z"/>
+                                                </Viewbox>
+                                            </Button>
+
+                                            <Border Grid.Column="1" Style="{StaticResource BlueGradeBlock}" Margin="0,0,0,0">
                                                 <TextBox Text="{Binding Calificación[SEM], Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                          Foreground="{Binding Calificación[SEM], Converter={StaticResource ColorCalifConverter}}"
                                                          Style="{StaticResource RoundedTextBoxStyle}"
@@ -197,9 +206,9 @@
                                                          Width="100"
                                                          PreviewTextInput="SemTextBox_PreviewTextInput"
                                                          KeyDown="SemTextBox_KeyDown"
-                                                         MaxLength="2" />
+                                                         MaxLength="3" />
                                             </Border>
-                                        </StackPanel>
+                                        </Grid>
                                     </Grid>
                                 </Border>
                             </DataTemplate>

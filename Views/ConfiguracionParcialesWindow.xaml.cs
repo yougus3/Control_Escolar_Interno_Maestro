@@ -554,6 +554,38 @@ private void GuardarConfiguracionGlobal()
             Parcial3Habilitado = _configuracion.Parcial3Habilitado;
             SemestralHabilitado = _configuracion.SemestralHabilitado;
             ExtraHabilitado = _configuracion.ExtraHabilitado;
+
+            // Seleccionar la última evaluación guardada para esta materia (P1,P2,P3,SEM)
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(MateriaSeleccionadaConfiguracion))
+                {
+                    string claveMateria = ObtenerClaveMateriaSeleccionada();
+                    var pj = new ParcialJsonService();
+                    string? ultimaEval = null;
+                    var orden = new[] { "P1", "P2", "P3", "SEM" };
+                    // Buscar desde SEM hacia P1 la primera que exista con datos
+                    for (int i = orden.Length - 1; i >= 0; i--)
+                    {
+                        var m = pj.ObtenerMateria($"{claveMateria}_{orden[i]}");
+                        if (m != null && (m.Calificaciones != null && m.Calificaciones.Count > 0 || (m.Actividades != null && m.Actividades.Count > 0) || m.PorcentajeAcumulado > 0))
+                        {
+                            ultimaEval = orden[i];
+                            break;
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(ultimaEval))
+                    {
+                        // Si la materia configurada coincide con la materia actualmente activa en la app, actualizamos la evaluación seleccionada
+                        if (string.Equals(_mainVm.ArchivoSeleccionado, MateriaSeleccionadaConfiguracion, StringComparison.OrdinalIgnoreCase))
+                        {
+                            _mainVm.EvaluacionSeleccionada = ultimaEval;
+                        }
+                    }
+                }
+            }
+            catch { }
         }
         finally
         {
@@ -673,11 +705,23 @@ private void GuardarConfiguracionGlobal()
                 _evaluacionIdPorNombreDirecta[kvp.Key] = kvp.Value;
             }
 
+            // Si el CAP contiene únicamente evaluación EXTRA, indicarlo y no permitir cambiar parciales
+            bool soloExtra = resultado.EvaluacionesDisponibles != null && resultado.EvaluacionesDisponibles.Count == 1 &&
+                             string.Equals(resultado.EvaluacionesDisponibles.First(), "EXTRA", StringComparison.OrdinalIgnoreCase);
+
             foreach (var eval in resultado.EvaluacionesDisponibles)
             {
-                if (EvaluacionEstaHabilitada(eval))
+                if (soloExtra)
                 {
+                    // Añadimos EXTRA para visualizar, aunque no será configurable
                     EvaluacionesDisponiblesDirecta.Add(eval);
+                }
+                else
+                {
+                    if (EvaluacionEstaHabilitada(eval))
+                    {
+                        EvaluacionesDisponiblesDirecta.Add(eval);
+                    }
                 }
             }
 
@@ -689,6 +733,10 @@ private void GuardarConfiguracionGlobal()
             if (EvaluacionesDisponiblesDirecta.Any())
             {
                 EvaluacionSeleccionadaDirecta = EvaluacionesDisponiblesDirecta.First();
+                if (soloExtra)
+                {
+                    EstadoDirecto = "Este CAP contiene sólo EVALUACIÓN EXTRA. No puede cambiar parciales aquí.";
+                }
             }
             else
             {

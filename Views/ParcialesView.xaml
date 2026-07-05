@@ -320,7 +320,7 @@
 
                                             <TextBlock Grid.Column="0"
                                                        Grid.ColumnSpan="5"
-                                                       Text="No es obligatorio"
+                                                       Text="Actividad desactivada"
                                                        FontSize="10"
                                                        Foreground="#64748B"
                                                        Margin="0,4,0,0">
@@ -397,13 +397,30 @@
                                         <Border.Style>
                                             <Style TargetType="Border" BasedOn="{StaticResource ActividadBorderStyle}">
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Activa}" Value="True">
+                                                    <!-- Si está activa y completa -> verde -->
+                                                    <MultiDataTrigger>
+                                                        <MultiDataTrigger.Conditions>
+                                                            <Condition Binding="{Binding Activa}" Value="True" />
+                                                            <Condition Binding="{Binding EstaCompleta}" Value="True" />
+                                                        </MultiDataTrigger.Conditions>
                                                         <Setter Property="BorderBrush" Value="#16A34A" />
                                                         <Setter Property="Background" Value="#ECFDF5" />
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Activa}" Value="False">
+                                                    </MultiDataTrigger>
+
+                                                    <!-- Si está activa pero NO completa -> rojo -->
+                                                    <MultiDataTrigger>
+                                                        <MultiDataTrigger.Conditions>
+                                                            <Condition Binding="{Binding Activa}" Value="True" />
+                                                            <Condition Binding="{Binding EstaCompleta}" Value="False" />
+                                                        </MultiDataTrigger.Conditions>
                                                         <Setter Property="BorderBrush" Value="#DC2626" />
                                                         <Setter Property="Background" Value="#FFFBFA" />
+                                                    </MultiDataTrigger>
+
+                                                    <!-- Si está desactivada -> naranja -->
+                                                    <DataTrigger Binding="{Binding Activa}" Value="False">
+                                                        <Setter Property="BorderBrush" Value="#FB923C" />
+                                                        <Setter Property="Background" Value="#FFFBF0" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -587,14 +604,7 @@
                                                             Tag="{Binding}">
 
                                                          <Viewbox Width="15" Height="15">
-                                                            <Path Stroke="Black"
-                                                                  Fill="Transparent"
-                                                                  StrokeThickness="1.5"
-                                                                  Data="M6,2 L14,2 L18,6 L18,22 L6,22 Z
-                                                                        M14,2 L14,6 L18,6
-                                                                        M9,10 L15,10
-                                                                        M9,13 L15,13
-                                                                        M9,16 L13,16"/>
+                                                            <Path Fill="#475569" Data="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2ZM13,17H11V11H13V17ZM13,9H11V7H13V9Z"/>
                                                         </Viewbox>
 
                                                     </Button>
@@ -681,7 +691,7 @@
                                                              TextChanged="Puntaje_TextChanged">
                                                           <TextBox.Style>
                                                              <Style TargetType="TextBox" BasedOn="{StaticResource RoundedTextBoxStyle}">
-                                                                <Setter Property="IsEnabled" Value="{Binding IsPuntajeEditable}" />
+                                                                <Setter Property="IsEnabled" Value="{Binding IsPuntajeEditableFinal}" />
                                                                 <Style.Triggers>
                                                                     <DataTrigger Binding="{Binding DataContext.AlumnoConCapturaDirecta, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
                                                                         <Setter Property="IsEnabled" Value="False" />

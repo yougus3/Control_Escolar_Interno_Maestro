@@ -23,9 +23,9 @@ public class PromediosConverter : IMultiValueConverter
         }
 
         double promedio = (nums[0] + nums[1] + nums[2]) / 3.0;
-        // truncar al primer decimal (ej. 9.4333 -> 9.4)
-        double truncado = Math.Truncate(promedio * 10.0) / 10.0;
-        return truncado.ToString("0.0", CultureInfo.CurrentCulture);
+        // truncar a dos decimales (ej. 8.0666 -> 8.06)
+        double truncado = Math.Truncate(promedio * 100.0) / 100.0;
+        return truncado.ToString("0.00", CultureInfo.CurrentCulture);
     }
 
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

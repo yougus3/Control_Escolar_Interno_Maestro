@@ -784,6 +784,8 @@ public partial class ActividadParcialEditor : ObservableObject
     private readonly Action _notificarCambio;
     private bool _bloqueadoPorCapturaDirecta = false;
 
+    [ObservableProperty] private bool _estaCompleta;
+
     [ObservableProperty] private bool _activa;
     [ObservableProperty] private string _nombre = string.Empty;
     [ObservableProperty] private string _porcentaje = string.Empty;
@@ -802,6 +804,9 @@ public partial class ActividadParcialEditor : ObservableObject
     }
 
     public bool IsPuntajeEditable => !_bloqueadoPorCapturaDirecta && Activa;
+
+    // Recalcular si la actividad está lista para editar puntajes: debe estar activa y completa
+    public bool IsPuntajeEditableFinal => !_bloqueadoPorCapturaDirecta && Activa && EstaCompleta;
 
     public void CargarDesdeModelo(ActividadParcial modelo)
     {
@@ -866,6 +871,7 @@ public partial class ActividadParcialEditor : ObservableObject
     private void NotificarActualizacion()
     {
         ActualizarVistaInmediata();
+        ActualizarEstadoCompleto();
         _notificarCambio?.Invoke();
     }
 
@@ -873,5 +879,17 @@ public partial class ActividadParcialEditor : ObservableObject
     {
         OnPropertyChanged(nameof(FraccionTexto));
         OnPropertyChanged(nameof(ContribucionTexto));
+    }
+
+    private void ActualizarEstadoCompleto()
+    {
+        bool completo = !string.IsNullOrWhiteSpace(Nombre)
+                        && !string.IsNullOrWhiteSpace(Porcentaje)
+                        && !string.IsNullOrWhiteSpace(PuntajeMaximo);
+        if (EstaCompleta != completo)
+        {
+            EstaCompleta = completo;
+            OnPropertyChanged(nameof(IsPuntajeEditable));
+        }
     }
 }
