@@ -41,7 +41,6 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _currentView = "List";
     [ObservableProperty] private bool _tieneCambios;
 
-    // Propiedad manual para interceptar cambios de archivo con el Modal
     private string? _archivoSeleccionado;
     public string? ArchivoSeleccionado
     {
@@ -61,7 +60,6 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    // Propiedad manual para interceptar cambios de evaluación con el Modal
     private string? _evaluacionSeleccionada;
     public string? EvaluacionSeleccionada
     {
@@ -271,8 +269,6 @@ public partial class MainViewModel : ObservableObject
         }
 
         SuscribirAlumnos();
-        
-        // CORRECCIÓN: Ir automáticamente a la última evaluación habilitada (ej: P2 si están P1 y P2 habilitadas)
         EvaluacionSeleccionada = EvaluacionesDisponibles.LastOrDefault();
         
         OnPropertyChanged(nameof(EsExtraSeleccionado));
@@ -397,9 +393,7 @@ public partial class MainViewModel : ObservableObject
                 var nombre = Path.GetFileNameWithoutExtension(ArchivoCompletoActual);
                 if (!string.IsNullOrWhiteSpace(nombre)) claveMateria = nombre.Trim().Replace(' ', '_');
             }
-            catch
-            {
-            }
+            catch { }
         }
 
         if (string.IsNullOrWhiteSpace(claveMateria) && !string.IsNullOrWhiteSpace(ArchivoSeleccionado))
@@ -424,21 +418,13 @@ public partial class MainViewModel : ObservableObject
 
         if (m1 == null || m2 == null || m3 == null) return;
 
-        bool p1Activa = m1.Calificaciones.TryGetValue("$CONFIG$", out var c1) &&
-                        c1.TryGetValue("AsistenciaActiva", out var aa1) && aa1 > 0;
-        bool p2Activa = m2.Calificaciones.TryGetValue("$CONFIG$", out var c2) &&
-                        c2.TryGetValue("AsistenciaActiva", out var aa2) && aa2 > 0;
-        bool p3Activa = m3.Calificaciones.TryGetValue("$CONFIG$", out var c3) &&
-                        c3.TryGetValue("AsistenciaActiva", out var aa3) && aa3 > 0;
+        bool p1Activa = m1.Calificaciones.TryGetValue("$CONFIG$", out var c1) && c1.TryGetValue("AsistenciaActiva", out var aa1) && aa1 > 0;
+        bool p2Activa = m2.Calificaciones.TryGetValue("$CONFIG$", out var c2) && c2.TryGetValue("AsistenciaActiva", out var aa2) && aa2 > 0;
+        bool p3Activa = m3.Calificaciones.TryGetValue("$CONFIG$", out var c3) && c3.TryGetValue("AsistenciaActiva", out var aa3) && aa3 > 0;
 
-        int totalClases = 0;
-        if (p1Activa && p2Activa && p3Activa)
-        {
-            int clasesP1 = c1.TryGetValue("ClasesTotales", out var ct1) ? (int)ct1 : 0;
-            int clasesP2 = c2.TryGetValue("ClasesTotales", out var ct2) ? (int)ct2 : 0;
-            int clasesP3 = c3.TryGetValue("ClasesTotales", out var ct3) ? (int)ct3 : 0;
-            totalClases = clasesP1 + clasesP2 + clasesP3;
-        }
+        int clasesP1 = p1Activa && c1 != null && c1.TryGetValue("ClasesTotales", out var ct1) && ct1 > 0 ? (int)ct1 : 0;
+        int clasesP2 = p2Activa && c2 != null && c2.TryGetValue("ClasesTotales", out var ct2) && ct2 > 0 ? (int)ct2 : 0;
+        int clasesP3 = p3Activa && c3 != null && c3.TryGetValue("ClasesTotales", out var ct3) && ct3 > 0 ? (int)ct3 : 0;
 
         foreach (var alumno in Alumnos)
         {
@@ -458,22 +444,17 @@ public partial class MainViewModel : ObservableObject
 
             double promedio = (p1Num + p2Num + p3Num) / 3.0;
             int promedioRedondeado = RedondearPromedio(promedio);
+
+            int faltasP1 = p1Activa && m1.Calificaciones.TryGetValue(alumno.Matricula, out var cap1) && cap1.TryGetValue("__Inasistencias__", out var f1) && f1 >= 0 ? (int)f1 : 0;
+            int faltasP2 = p2Activa && m2.Calificaciones.TryGetValue(alumno.Matricula, out var cap2) && cap2.TryGetValue("__Inasistencias__", out var f2) && f2 >= 0 ? (int)f2 : 0;
+            int faltasP3 = p3Activa && m3.Calificaciones.TryGetValue(alumno.Matricula, out var cap3) && cap3.TryGetValue("__Inasistencias__", out var f3) && f3 >= 0 ? (int)f3 : 0;
+
+            int totalClases = clasesP1 + clasesP2 + clasesP3;
+            int totalFaltas = faltasP1 + faltasP2 + faltasP3;
+
             bool cumpleAsistencia = true;
-            if (p1Activa && p2Activa && p3Activa && totalClases > 0)
+            if (totalClases > 0)
             {
-                int faltasP1 = m1.Calificaciones.TryGetValue(alumno.Matricula, out var cap1) &&
-                               cap1.TryGetValue("__Inasistencias__", out var f1)
-                    ? (int)f1
-                    : 0;
-                int faltasP2 = m2.Calificaciones.TryGetValue(alumno.Matricula, out var cap2) &&
-                               cap2.TryGetValue("__Inasistencias__", out var f2)
-                    ? (int)f2
-                    : 0;
-                int faltasP3 = m3.Calificaciones.TryGetValue(alumno.Matricula, out var cap3) &&
-                               cap3.TryGetValue("__Inasistencias__", out var f3)
-                    ? (int)f3
-                    : 0;
-                int totalFaltas = faltasP1 + faltasP2 + faltasP3;
                 int asistencias = totalClases - totalFaltas;
                 double porcentajeAsistencia = ((double)asistencias / totalClases) * 100.0;
                 cumpleAsistencia = porcentajeAsistencia >= 80.0;
@@ -481,8 +462,7 @@ public partial class MainViewModel : ObservableObject
 
             if (cumpleAsistencia)
             {
-                alumno.Calificación["SEM"] =
-                    promedioRedondeado.ToString();
+                alumno.Calificación["SEM"] = promedioRedondeado.ToString();
             }
             else
             {

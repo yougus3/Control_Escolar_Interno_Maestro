@@ -202,14 +202,6 @@
             <Setter Property="HorizontalAlignment" Value="Center" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
-
-        <Style x:Key="BlueGradeText" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="22" />
-            <Setter Property="FontWeight" Value="Black" />
-            <Setter Property="Foreground" Value="#1E3A8A" />
-            <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
     </UserControl.Resources>
 
     <Grid Background="#F1F5F9">
@@ -270,6 +262,21 @@
                                                FontSize="12"
                                                FontWeight="SemiBold" />
                                 </StackPanel>
+                                
+                                <StackPanel Orientation="Horizontal" Margin="15,0,0,0">
+                                    <TextBlock Text="  Alumnos evaluados: " Foreground="#D6E4FF" FontSize="12" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding TextoEvaluados}" Foreground="White" FontSize="12" FontWeight="SemiBold" />
+                                    <Button Margin="8,0,0,0"
+                                            Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                            Visibility="{Binding FaltanPorEvaluar, Converter={StaticResource BoolToVis}}"
+                                            Click="WarningNoEvaluados_Click"
+                                            ToolTip="Ver lista de alumnos pendientes">
+                                        <Viewbox Width="17" Height="17">
+                                            <Path Fill="#FACC15" Data="M12,2L1,21H23M12,6L19.53,19H4.47M11,10V14H13V10M11,16V18H13V16" />
+                                        </Viewbox>
+                                    </Button>
+                                </StackPanel>
+
                             </StackPanel>
                         </StackPanel>
                     </Grid>
@@ -789,8 +796,7 @@
                                             </TextBox.Style>
                                         </TextBox>
                                      </StackPanel>
-
-                                    </StackPanel>
+                                </StackPanel>
                             </Grid>
                         </GroupBox>
 

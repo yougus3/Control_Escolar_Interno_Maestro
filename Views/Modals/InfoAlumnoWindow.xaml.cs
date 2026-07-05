@@ -47,23 +47,29 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
         public string P1Calif { get; set; } = "N/A";
         public string P1Asistencia { get; set; } = "N/A";
         public string P1Estado { get; set; } = "Sin evaluar";
+        public string P1LeyendaFaltas { get; set; } = string.Empty;
 
         // P2
         public string P2Calif { get; set; } = "N/A";
         public string P2Asistencia { get; set; } = "N/A";
         public string P2Estado { get; set; } = "Sin evaluar";
+        public string P2LeyendaFaltas { get; set; } = string.Empty;
 
         // P3
         public string P3Calif { get; set; } = "N/A";
         public string P3Asistencia { get; set; } = "N/A";
         public string P3Estado { get; set; } = "Sin evaluar";
+        public string P3LeyendaFaltas { get; set; } = string.Empty;
 
         // PROM (Promedio de 3 Parciales)
         public string PromedioParciales { get; set; } = "N/A";
+        public string PromedioAsistenciaParciales { get; set; } = "--";
 
         // SEM
         public string SEMCalif { get; set; } = "N/A";
+        public string SEMAsistencia { get; set; } = "N/A";
         public string SEMEstado { get; set; } = "Sin evaluar";
+        public string SEMLeyendaFaltas { get; set; } = string.Empty;
 
         // Promedio Final
         public string PromedioFinal { get; set; } = "N/A";
@@ -76,15 +82,15 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
             Nombre = alumno.Nombre;
             Grupo = alumno.Grupo;
 
-            // Cargar datos de parciales
+            // Cargar datos de parciales con la nueva lógica de porcentajes
             CargarDatosParciales(datosParciales);
 
             DataContext = this;
 
-        // Disparar carga de foto de forma asíncrona (sin bloquear la UI)
-        FotoCargando = true;
-        FotoFallida = false;
-        _ = CargarFotoConTimeoutAsync(Matricula);
+            // Disparar carga de foto de forma asíncrona (sin bloquear la UI)
+            FotoCargando = true;
+            FotoFallida = false;
+            _ = CargarFotoConTimeoutAsync(Matricula);
         }
 
         private async Task CargarFotoAsync(string matricula)
@@ -122,7 +128,6 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
             }
             catch
             {
-                // Si la imagen no existe o el servidor falla, no crashea, simplemente se queda vacío
                 FotoCargada = false;
                 FotoCargando = false;
                 System.Diagnostics.Debug.WriteLine($"Fallo al cargar la foto para la matrícula {matricula}.");
@@ -138,7 +143,6 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
 
             if (finished == timeoutTask)
             {
-                // Si no se completo la carga en 6s y aun no hay foto
                 if (!FotoCargada)
                 {
                     FotoFallida = true;
@@ -147,54 +151,123 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
             }
             else
             {
-                // carga completó; asegurar estados
                 if (FotoCargada)
                 {
                     FotoFallida = false;
                     FotoCargando = false;
-                }
-                else
-                {
-                    // si terminó con error, ya lo manejó CargarFotoAsync
                 }
             }
         }
 
         private void CargarDatosParciales(Dictionary<string, (string calif, string estado, int faltas, int totalClases)> datos)
         {
+            int sumTotalClases = 0;
+            int sumFaltas = 0;
+            bool tieneClasesActivas = false;
+
             // P1
             if (datos.TryGetValue("P1", out var p1))
             {
                 P1Calif = string.IsNullOrWhiteSpace(p1.calif) ? "N/A" : p1.calif;
-                P1Asistencia = $"{p1.faltas} / {p1.totalClases} faltas";
-                P1Estado = p1.estado;
+                P1Asistencia = FormatearAsistencia(p1.faltas, p1.totalClases);
+                P1Estado = MapearEstadoTriggers(p1.estado);
+                P1LeyendaFaltas = FormatearLeyendaFaltas(p1.estado, p1.faltas, p1.totalClases, "- NP");
+
+                if (p1.totalClases > 0 && p1.faltas >= 0)
+                {
+                    sumTotalClases += p1.totalClases;
+                    sumFaltas += p1.faltas;
+                    tieneClasesActivas = true;
+                }
             }
 
             // P2
             if (datos.TryGetValue("P2", out var p2))
             {
                 P2Calif = string.IsNullOrWhiteSpace(p2.calif) ? "N/A" : p2.calif;
-                P2Asistencia = $"{p2.faltas} / {p2.totalClases} faltas";
-                P2Estado = p2.estado;
+                P2Asistencia = FormatearAsistencia(p2.faltas, p2.totalClases);
+                P2Estado = MapearEstadoTriggers(p2.estado);
+                P2LeyendaFaltas = FormatearLeyendaFaltas(p2.estado, p2.faltas, p2.totalClases, "- NP");
+
+                if (p2.totalClases > 0 && p2.faltas >= 0)
+                {
+                    sumTotalClases += p2.totalClases;
+                    sumFaltas += p2.faltas;
+                    tieneClasesActivas = true;
+                }
             }
 
             // P3
             if (datos.TryGetValue("P3", out var p3))
             {
                 P3Calif = string.IsNullOrWhiteSpace(p3.calif) ? "N/A" : p3.calif;
-                P3Asistencia = $"{p3.faltas} / {p3.totalClases} faltas";
-                P3Estado = p3.estado;
+                P3Asistencia = FormatearAsistencia(p3.faltas, p3.totalClases);
+                P3Estado = MapearEstadoTriggers(p3.estado);
+                P3LeyendaFaltas = FormatearLeyendaFaltas(p3.estado, p3.faltas, p3.totalClases, "- NP");
+
+                if (p3.totalClases > 0 && p3.faltas >= 0)
+                {
+                    sumTotalClases += p3.totalClases;
+                    sumFaltas += p3.faltas;
+                    tieneClasesActivas = true;
+                }
+            }
+
+            // Acumulado Asistencia Parciales
+            if (tieneClasesActivas && sumTotalClases > 0)
+            {
+                int asistenciasAcumuladas = sumTotalClases - sumFaltas;
+                double porcentajeAcumulado = ((double)asistenciasAcumuladas / sumTotalClases) * 100.0;
+                PromedioAsistenciaParciales = $"{asistenciasAcumuladas}/{sumTotalClases} ({porcentajeAcumulado:0.#}%)";
+            }
+            else
+            {
+                PromedioAsistenciaParciales = "--";
             }
 
             // SEM
             if (datos.TryGetValue("SEM", out var sem))
             {
                 SEMCalif = string.IsNullOrWhiteSpace(sem.calif) ? "N/A" : sem.calif;
-                SEMEstado = sem.estado;
+                SEMAsistencia = FormatearAsistencia(sem.faltas, sem.totalClases);
+                SEMEstado = MapearEstadoTriggers(sem.estado);
+                SEMLeyendaFaltas = FormatearLeyendaFaltas(sem.estado, sem.faltas, sem.totalClases, "- NP (NO SE PRESENTÓ)");
             }
 
             CalcularPromedioFinal();
         }
+
+        // --- Helpers de lógicas visuales para la tabla ---
+
+        private string MapearEstadoTriggers(string estado)
+        {
+            if (estado == "NP") return "Reprobado por faltas";
+            if (string.IsNullOrWhiteSpace(estado)) return "Sin evaluar";
+            return estado;
+        }
+
+        private string FormatearAsistencia(int faltas, int totalClases)
+        {
+            if (totalClases <= 0 || faltas < 0) return "--";
+            int asistencias = totalClases - faltas;
+            return $"{asistencias}/{totalClases}";
+        }
+
+        private string FormatearLeyendaFaltas(string estado, int faltas, int totalClases, string prefijo)
+        {
+            if (estado == "NP" || estado == "Reprobado por faltas")
+            {
+                if (totalClases > 0 && faltas >= 0)
+                {
+                    double porcentaje = ((double)(totalClases - faltas) / totalClases) * 100.0;
+                    return $"{prefijo} ({porcentaje:0.#}%)";
+                }
+                return prefijo;
+            }
+            return string.Empty;
+        }
+
+        // --- Lógica exacta de matemáticas y redondeo ---
 
         private void CalcularPromedioFinal()
         {
@@ -207,28 +280,22 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
 
             if (count == 3)
             {
-                // Paso 1: Promedio de los 3 parciales (truncado a dos decimales)
                 double promedioParciales = suma / 3.0;
                 double promedioParcialesTruncado = Math.Truncate(promedioParciales * 100) / 100.0;
 
-                // Asignar el promedio de parciales para mostrar en la tabla (dos decimales)
                 PromedioParciales = promedioParcialesTruncado.ToString("0.00");
                 
-                // Paso 2: Obtener SEM
                 double sem = 0;
                 bool tieneSem = double.TryParse(SEMCalif, out sem) && sem >= 0;
                 
                 if (tieneSem)
                 {
-                    // Paso 3: Promedio Final = (PromedioParcialesTruncado + SEM) / 2
                     double promedioFinal = (promedioParcialesTruncado + sem) / 2.0;
-                    // Redondear al entero más cercano (.5 hacia arriba)
                     int promedioFinalRedondeado = (int)Math.Round(promedioFinal, 0, MidpointRounding.AwayFromZero);
                     PromedioFinal = promedioFinalRedondeado.ToString();
                 }
                 else
                 {
-                    // Redondear al entero más cercano (.5 hacia arriba)
                     int promedioParcialesRedondeado = (int)Math.Round(promedioParcialesTruncado, 0, MidpointRounding.AwayFromZero);
                     PromedioFinal = promedioParcialesRedondeado.ToString();
                 }

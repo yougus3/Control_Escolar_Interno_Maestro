@@ -3,8 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Información del Alumno" 
         Height="715" 
-        Width="768
-        "
+        Width="768"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
@@ -97,7 +96,6 @@
                                                    VerticalAlignment="Center"
                                                    Visibility="{Binding FotoCargada, Converter={StaticResource BoolToVis}}"/>
 
-                                            <!-- Overlay mientras carga la foto -->
                                             <Grid Background="#CCFFFFFF" Visibility="{Binding FotoCargando, Converter={StaticResource BoolToVis}}">
                                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                                     <ProgressBar IsIndeterminate="True" Width="60" Height="8" />
@@ -105,11 +103,10 @@
                                                 </StackPanel>
                                             </Grid>
 
-                                            <!-- Indicador de fallo tras timeout -->
                                             <Grid Visibility="{Binding FotoFallida, Converter={StaticResource BoolToVis}}" Background="#00FFFFFF">
                                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                                     <TextBlock Text="X" FontSize="36" FontWeight="Bold" Foreground="#DC2626" HorizontalAlignment="Center" />
-                                                    <TextBlock Text="No se pudo cargar la foto" FontSize="12" Foreground="#DC2626" HorizontalAlignment="Center" Margin="6,8,6,0" />
+                                                    <TextBlock Text="Sin foto" FontSize="12" Foreground="#DC2626" HorizontalAlignment="Center" Margin="6,8,6,0" />
                                                 </StackPanel>
                                             </Grid>
                                         </Grid>
@@ -156,13 +153,13 @@
                                 <Border Grid.Row="0" Grid.ColumnSpan="4" Background="#F8FAFC" CornerRadius="8,8,0,0" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1"/>
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Parcial" FontWeight="Bold" Foreground="#64748B" Padding="12"/>
                                 <TextBlock Grid.Row="0" Grid.Column="1" Text="Calificación" FontWeight="Bold" Foreground="#64748B" Padding="12"/>
-                                <TextBlock Grid.Row="0" Grid.Column="2" Text="Asistencia" FontWeight="Bold" Foreground="#64748B" Padding="12"/>
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="Asistencias" FontWeight="Bold" Foreground="#64748B" Padding="12"/>
                                 <TextBlock Grid.Row="0" Grid.Column="3" Text="Estado" FontWeight="Bold" Foreground="#64748B" Padding="12"/>
 
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="P1" FontWeight="Bold" Foreground="#334155" Padding="12" VerticalAlignment="Center"/>
                                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="12,0" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding P1Calif}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    <TextBlock Text=" - NP" FontSize="14" FontWeight="Bold" Foreground="#D97706" Margin="6,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding P1LeyendaFaltas}" FontSize="14" FontWeight="Bold" Foreground="#D97706" Margin="6,0,0,0" VerticalAlignment="Center">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -185,7 +182,7 @@
                                 <TextBlock Grid.Row="2" Grid.Column="0" Text="P2" FontWeight="Bold" Foreground="#334155" Padding="12" VerticalAlignment="Center"/>
                                 <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="12,0" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding P2Calif}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    <TextBlock Text=" - NP" FontSize="14" FontWeight="Bold" Foreground="#D97706" Margin="6,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding P2LeyendaFaltas}" FontSize="14" FontWeight="Bold" Foreground="#D97706" Margin="6,0,0,0" VerticalAlignment="Center">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -208,7 +205,7 @@
                                 <TextBlock Grid.Row="3" Grid.Column="0" Text="P3" FontWeight="Bold" Foreground="#334155" Padding="12" VerticalAlignment="Center"/>
                                 <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="12,0" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding P3Calif}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    <TextBlock Text=" - NP" FontSize="14" FontWeight="Bold" Foreground="#D97706" Margin="6,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding P3LeyendaFaltas}" FontSize="14" FontWeight="Bold" Foreground="#D97706" Margin="6,0,0,0" VerticalAlignment="Center">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -228,10 +225,9 @@
                                     </Border>
                                 </Border>
 
-                                <!-- Fila PROM (Promedio de 3 Parciales) -->
                                 <TextBlock Grid.Row="4" Grid.Column="0" Text="PROM" FontWeight="Bold" Foreground="#1B365D" Padding="12" VerticalAlignment="Center" Background="#EFF6FF"/>
                                 <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding PromedioParciales}" FontSize="15" FontWeight="Bold" Foreground="#1B365D" Padding="12" VerticalAlignment="Center" Background="#EFF6FF"/>
-                                <TextBlock Grid.Row="4" Grid.Column="2" Text="--" Foreground="#94A3B8" Padding="12" VerticalAlignment="Center" Background="#EFF6FF"/>
+                                <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding PromedioAsistenciaParciales}" FontWeight="SemiBold" Foreground="#1B365D" Padding="12" VerticalAlignment="Center" Background="#EFF6FF"/>
                                 <Border Grid.Row="4" Grid.Column="3" Margin="12,6" Background="#EFF6FF">
                                     <Border Style="{StaticResource BadgeBorder}" Background="#DBEAFE">
                                         <TextBlock Text="Promedio Parciales" Foreground="#1E40AF" FontSize="11" FontWeight="SemiBold"/>
@@ -244,7 +240,7 @@
                                 <TextBlock Grid.Row="6" Grid.Column="0" Text="SEM" FontWeight="Black" Foreground="#0F172A" Padding="12" VerticalAlignment="Center"/>
                                 <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Margin="12,0" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding SEMCalif}" FontSize="16" FontWeight="Black" Foreground="#0F172A" VerticalAlignment="Center"/>
-                                    <TextBlock Text=" - NP (NO SE PRESENTÓ)" FontSize="14" FontWeight="Bold" Foreground="#D97706" Margin="6,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding SEMLeyendaFaltas}" FontSize="14" FontWeight="Bold" Foreground="#D97706" Margin="6,0,0,0" VerticalAlignment="Center">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -257,7 +253,7 @@
                                         </TextBlock.Style>
                                     </TextBlock>
                                 </StackPanel>
-                                <TextBlock Grid.Row="6" Grid.Column="2" Text="--" Foreground="#94A3B8" Padding="12" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Row="6" Grid.Column="2" Text="{Binding SEMAsistencia}" Foreground="#475569" Padding="12" VerticalAlignment="Center"/>
                                 <Border Grid.Row="6" Grid.Column="3" Margin="12,6">
                                     <Border Style="{StaticResource BadgeBorder}" Tag="{Binding SEMEstado}">
                                         <TextBlock Text="{Binding SEMEstado}" Style="{StaticResource BadgeText}"/>
@@ -277,7 +273,7 @@
                                 <TextBlock Text="{Binding PromedioFinal}" FontWeight="Black" Foreground="#2563EB" FontSize="24" VerticalAlignment="Center"/>
                                 <TextBlock Text=" / 10" FontWeight="Medium" Foreground="#93C5FD" FontSize="14" VerticalAlignment="Bottom" Margin="2,0,0,3"/>
                                 
-                                <TextBlock Text=" - NP (NO SE PRESENTÓ)" FontWeight="Bold" Foreground="#DC2626" FontSize="16" VerticalAlignment="Center" Margin="10,0,0,0">
+                                <TextBlock Text="{Binding SEMLeyendaFaltas}" FontWeight="Bold" Foreground="#DC2626" FontSize="16" VerticalAlignment="Center" Margin="10,0,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Visibility" Value="Collapsed"/>

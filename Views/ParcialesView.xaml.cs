@@ -23,18 +23,14 @@ public partial class ParcialesView : UserControl
     {
         if (e.Key != Key.Enter) return;
 
-        // When user presses Enter on a puntaje textbox, advance to next activity or next student.
         var vm = DataContext as ParcialesViewModel;
         if (vm == null) return;
 
-        // Find the TextBox and its data context (Actividad)
         var tb = sender as TextBox;
         if (tb == null) return;
 
-        // mark as having changes
-        vm.PrepararGuardado(); // ensure calculations and mark saved? We'll instead mark dirty below
+        vm.PrepararGuardado(); 
 
-        // Find index of current activity
         var actividad = tb.DataContext as ActividadParcialEditor;
         int actividadIndex = -1;
         if (actividad != null)
@@ -42,7 +38,6 @@ public partial class ParcialesView : UserControl
             actividadIndex = vm.Actividades.IndexOf(actividad);
         }
 
-        // If there is a next active activity for this student, move focus to it
         int nextIndex = -1;
         for (int i = actividadIndex + 1; i < vm.Actividades.Count; i++)
         {
@@ -54,7 +49,6 @@ public partial class ParcialesView : UserControl
 
         if (nextIndex >= 0)
         {
-            // Move focus to the corresponding TextBox in the items control
             var container = PuntajesItemsControl.ItemContainerGenerator.ContainerFromIndex(nextIndex) as FrameworkElement;
             if (container != null)
             {
@@ -69,7 +63,6 @@ public partial class ParcialesView : UserControl
             return;
         }
 
-        // Otherwise, all active activities filled for this student — move to next student
         var vmMain = vm;
         var alumnos = vmMain.Alumnos;
         if (vmMain.AlumnoSeleccionado != null && alumnos.Any())
@@ -78,7 +71,6 @@ public partial class ParcialesView : UserControl
             if (idx < alumnos.Count - 1)
             {
                 vmMain.AlumnoSeleccionado = alumnos[idx + 1];
-                // set focus to first active activity textbox of new student
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
                     for (int i = 0; i < vmMain.Actividades.Count; i++)
@@ -100,8 +92,6 @@ public partial class ParcialesView : UserControl
             }
             else
             {
-                // Last student evaluated
-                var info = new MessageBoxResult();
                 MessageBox.Show("Se evaluaron todos los alumnos.", "Fin de captura", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
@@ -121,7 +111,6 @@ public partial class ParcialesView : UserControl
     {
         if (sender is TextBox tb)
         {
-            // Normalizar para que tenga máximo 1 decimal y esté en rango 0-10
             string normalized = NormalizeToSingleDecimalRange(tb.Text);
             if (tb.Text != normalized)
             {
@@ -141,20 +130,16 @@ public partial class ParcialesView : UserControl
     {
         if (string.IsNullOrWhiteSpace(input)) return string.Empty;
         string s = input.Trim().Replace(',', '.');
-        // remove invalid chars
         var sb = new System.Text.StringBuilder();
         foreach (char c in s)
         {
             if (char.IsDigit(c) || c == '.') sb.Append(c);
         }
         s = sb.ToString();
-        // keep only first dot
         int firstDot = s.IndexOf('.');
         if (firstDot >= 0)
         {
-            // remove further dots
             s = s.Substring(0, firstDot + 1) + s.Substring(firstDot + 1).Replace(".", "");
-            // limit decimals to 1
             int decimals = s.Length - firstDot - 1;
             if (decimals > 1) s = s.Substring(0, firstDot + 2);
         }
@@ -163,14 +148,12 @@ public partial class ParcialesView : UserControl
         {
             if (val < 0) val = 0;
             if (val > 10) val = 10;
-            // format with at most one decimal, but avoid trailing .0 unless needed
             return val % 1 == 0 ? ((int)val).ToString(System.Globalization.CultureInfo.InvariantCulture) : val.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
         }
 
         return s;
     }
 
-    // Helper to find child control of specific type
     private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
     {
         if (parent == null) return null;
@@ -197,10 +180,8 @@ public partial class ParcialesView : UserControl
     {
         if (sender is TextBox textBox)
         {
-            // Permitir que el usuario escriba ',' y tratarlo como punto decimal
             if (e.Text == ",")
             {
-                // Insertar punto en la posición actual
                 int selStart = textBox.SelectionStart;
                 string newText = textBox.Text.Remove(textBox.SelectionStart, textBox.SelectionLength)
                     .Insert(selStart, ".");
@@ -224,7 +205,6 @@ public partial class ParcialesView : UserControl
             string textoAPegar = (string)e.DataObject.GetData(typeof(string));
             if (sender is TextBox textBox)
             {
-                // normalizar comas a punto
                 textoAPegar = textoAPegar.Replace(',', '.');
                 string textoPropuesto = textBox.Text.Remove(textBox.SelectionStart, textBox.SelectionLength)
                     .Insert(textBox.SelectionStart, textoAPegar);
@@ -259,13 +239,11 @@ public partial class ParcialesView : UserControl
     {
         if (sender is TextBox tb)
         {
-            // Si es caja de porcentaje (nombre en plantilla PorcBox), validar suma en tiempo real
             if (tb.Name == "PorcBox" && DataContext is ParcialesViewModel vm)
             {
                 var actividad = tb.DataContext as ActividadParcialEditor;
                 if (actividad != null)
                 {
-                    // calcular suma de otras actividades activas
                     double sumaOtros = 0.0;
                     foreach (var a in vm.Actividades)
                     {
@@ -276,20 +254,16 @@ public partial class ParcialesView : UserControl
                             sumaOtros += val;
                     }
 
-                    // valor actual propuesto
                     string mine = (tb.Text ?? string.Empty).Trim().Replace(',', '.');
                     if (double.TryParse(mine, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double mineVal))
                     {
                         if (sumaOtros + mineVal > 100.0)
                         {
-                            // Muestra el modal de advertencia diseñado
                             var warningModal = new WarningWindow("La suma de los porcentajes no puede superar el 100%. Por favor, ajusta los valores de las actividades.");
                             warningModal.Owner = Window.GetWindow(this);
                             warningModal.ShowDialog();
 
-                            // supera 100%: borrar este campo
                             tb.Text = string.Empty;
-                            // mantener foco
                             tb.Focus();
                             return;
                         }
@@ -311,6 +285,16 @@ public partial class ParcialesView : UserControl
             vm.MarkUserEdited();
         }
     }
+    
+    private void WarningNoEvaluados_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is ParcialesViewModel vm && vm.FaltanPorEvaluar)
+        {
+            var modal = new NoEvaluadosWindow(vm.ListaNoEvaluados);
+            modal.Owner = Window.GetWindow(this);
+            modal.ShowDialog();
+        }
+    }
 
     private void PapelButton_Click(object sender, RoutedEventArgs e)
     {
@@ -323,38 +307,69 @@ public partial class ParcialesView : UserControl
             var datosParciales = new Dictionary<string, (string calif, string estado, int faltas, int totalClases)>();
             var evaluaciones = new[] { "P1", "P2", "P3", "SEM" };
             string archivoActual = viewModel.MainVm.ArchivoCompletoActual;
+            string claveMateria = ObtenerClaveMateriaDesdeNombreArchivo(archivoActual);
+
+            int totalClasesAcumuladas = 0;
+            int faltasAcumuladas = 0;
 
             foreach (var eval in evaluaciones)
             {
                 string calif = alumno.Calificación[eval];
                 string estado = "Sin evaluar";
-                int faltas = 0;
-                int totalClases = 0;
+                int faltas = -1;
+                int totalClases = -1;
 
-                string claveMateria = ObtenerClaveMateriaDesdeNombreArchivo(archivoActual);
-                string claveMateriaEval = $"{claveMateria}_{eval}";
-                var materia = new ParcialJsonService().ObtenerMateria(claveMateriaEval);
-
-                if (materia != null)
+                if (eval != "SEM")
                 {
-                    if (materia.Calificaciones.TryGetValue("$CONFIG$", out var config))
-                    {
-                        totalClases = config.TryGetValue("ClasesTotales", out var ct) ? (int)ct : 0;
-                    }
+                    string claveMateriaEval = $"{claveMateria}_{eval}";
+                    var materia = new ParcialJsonService().ObtenerMateria(claveMateriaEval);
 
-                    if (materia.Calificaciones.TryGetValue(alumno.Matricula, out var capturas))
+                    if (materia != null)
                     {
-                        faltas = capturas.TryGetValue("__Inasistencias__", out var f) ? (int)f : 0;
-                    }
+                        bool asistenciaActiva = false;
+                        if (materia.Calificaciones.TryGetValue("$CONFIG$", out var config))
+                        {
+                            asistenciaActiva = config.TryGetValue("AsistenciaActiva", out var aa) && aa > 0;
+                            if (asistenciaActiva && config.TryGetValue("ClasesTotales", out var ct) && ct > 0)
+                                totalClases = (int)ct;
+                        }
 
+                        if (asistenciaActiva && materia.Calificaciones.TryGetValue(alumno.Matricula, out var capturas))
+                        {
+                            if (capturas.TryGetValue("__Inasistencias__", out var f) && f >= 0)
+                                faltas = (int)f;
+                        }
+
+                        if (double.TryParse(calif, out double califNum))
+                        {
+                            if (asistenciaActiva && totalClases > 0)
+                            {
+                                totalClasesAcumuladas += totalClases;
+                                if (faltas >= 0) faltasAcumuladas += faltas;
+
+                                int asistencias = totalClases - (faltas >= 0 ? faltas : 0);
+                                double porcentajeAsistencia = (double)asistencias / totalClases * 100;
+                                if (porcentajeAsistencia < 80)
+                                    estado = "NP";
+                                else
+                                    estado = califNum >= 7.0 ? "Aprobado" : "Reprobado";
+                            }
+                            else
+                            {
+                                estado = califNum >= 7.0 ? "Aprobado" : "Reprobado";
+                            }
+                        }
+                    }
+                }
+                else
+                {
                     if (double.TryParse(calif, out double califNum))
                     {
-                        if (totalClases > 0)
+                        if (totalClasesAcumuladas > 0)
                         {
-                            int asistencias = totalClases - faltas;
-                            double porcentajeAsistencia = (double)asistencias / totalClases * 100;
+                            double porcentajeAsistencia = (double)(totalClasesAcumuladas - faltasAcumuladas) / totalClasesAcumuladas * 100;
                             if (porcentajeAsistencia < 80)
-                                estado = "Reprobado por faltas";
+                                estado = "NP";
                             else
                                 estado = califNum >= 7.0 ? "Aprobado" : "Reprobado";
                         }
@@ -362,6 +377,9 @@ public partial class ParcialesView : UserControl
                         {
                             estado = califNum >= 7.0 ? "Aprobado" : "Reprobado";
                         }
+                        
+                        totalClases = totalClasesAcumuladas;
+                        faltas = faltasAcumuladas;
                     }
                 }
 
