@@ -97,7 +97,6 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    // Ahora es ObservableCollection<EvaluacionItem>
     public ObservableCollection<EvaluacionItem> EvaluacionesDisponibles { get; } = new();
     
     public ObservableCollection<string> ArchivosDisponibles { get; } = new();
@@ -127,13 +126,16 @@ public partial class MainViewModel : ObservableObject
 
             if (drives.Any() && string.IsNullOrWhiteSpace(_rutaUsb))
             {
-                _rutaUsb = drives.First().Name;
-                _rutaUsbEditable = false;
+                RutaUsb = drives.First().Name;
+                RutaUsbEditable = false;
             }
         }
         catch { }
 
-        EscanearUsb();
+        if (!string.IsNullOrWhiteSpace(RutaUsb))
+        {
+            ProcesarDirectorioSeleccionado();
+        }
     }
 
     public void ActualizarConteoEvaluadosExtra()
@@ -226,7 +228,23 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public void EscanearUsb()
+        public void BuscarCarpeta()
+        {
+            // Usamos el diálogo nativo moderno de WPF disponible desde .NET 8+
+            var dialog = new Microsoft.Win32.OpenFolderDialog
+            {
+                Title = "Selecciona la unidad o carpeta con los archivos CAP",
+                Multiselect = false
+            };
+    
+            if (dialog.ShowDialog() == true)
+            {
+                RutaUsb = dialog.FolderName; // Ojo, aquí la propiedad se llama FolderName
+                ProcesarDirectorioSeleccionado();
+            }
+        }
+
+    private void ProcesarDirectorioSeleccionado()
     {
         ArchivosDisponibles.Clear();
         Alumnos.Clear();
@@ -277,7 +295,6 @@ public partial class MainViewModel : ObservableObject
 
     private void CargarArchivoSeleccionado(string? value)
     {
-        // Activamos el flag de actualización programática para toda la carga
         _isUpdatingProgrammatically = true;
 
         Alumnos.Clear();
@@ -324,7 +341,6 @@ public partial class MainViewModel : ObservableObject
         if (esExtra)
         {
             EvaluacionesDisponibles.Add(new EvaluacionItem { Id = "EXTRA", Nombre = "EXTRAORDINARIO/INTER" });
-            // La asignación de EvaluacionSeleccionada se hará después de llenar alumnos
         }
         else
         {
@@ -346,7 +362,6 @@ public partial class MainViewModel : ObservableObject
 
         SuscribirAlumnos();
 
-        // Ahora establecemos la evaluación predeterminada (esto activará el setter, pero el flag está activo)
         if (esExtra)
         {
             EvaluacionSeleccionada = "EXTRA";
@@ -358,15 +373,11 @@ public partial class MainViewModel : ObservableObject
 
         OnPropertyChanged(nameof(EsExtraSeleccionado));
         
-        // Forzamos TieneCambios a false antes de que la UI termine de renderizar
         TieneCambios = false;
 
-        // IMPORTANTE: Desactivamos el flag de actualización después de que la UI haya terminado su primer renderizado
-        // Usamos Dispatcher para que se ejecute después de que todos los bindings y eventos de carga se hayan completado
         Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
         {
             _isUpdatingProgrammatically = false;
-            // Si ya estamos en Extra, actualizamos el conteo (esto no modifica calificaciones)
             if (esExtra)
             {
                 ActualizarConteoEvaluadosExtra();
@@ -385,7 +396,6 @@ public partial class MainViewModel : ObservableObject
         
         string valorMayusculas = value.ToUpperInvariant();
         
-        // Bloqueo de seguridad: Si estamos en modo exclusivo EXTRA, no dejamos cambiar.
         if (valorMayusculas != "EXTRA" && EvaluacionesDisponibles.Count == 1 && EvaluacionesDisponibles.Any(e => e.Id == "EXTRA"))
         {
             valorMayusculas = "EXTRA";
@@ -462,7 +472,6 @@ public partial class MainViewModel : ObservableObject
         SincronizarCalificacionSemestral();
         _isUpdatingProgrammatically = false;
 
-        // Guarda el Semestral en cascada si no es un archivo exclusivo de extra
         if (!string.Equals(EvaluacionSeleccionada, "SEM", StringComparison.OrdinalIgnoreCase) &&
             !string.Equals(EvaluacionSeleccionada, "EXTRA", StringComparison.OrdinalIgnoreCase) &&
             _evaluacionIdPorNombre.TryGetValue("SEM", out var idSem))

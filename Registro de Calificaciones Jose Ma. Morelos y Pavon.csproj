@@ -4,13 +4,14 @@
         <OutputType>WinExe</OutputType>
         <TargetFramework>net10.0-windows</TargetFramework>
         <RootNamespace>Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon</RootNamespace>
-		<SatelliteResourceLanguages>none</SatelliteResourceLanguages>
-		<Nullable>enable</Nullable>
+        <SatelliteResourceLanguages>none</SatelliteResourceLanguages>
+        <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>true</UseWPF>
         <PlatformTarget>x86</PlatformTarget>
         <ApplicationIcon>logo.ico</ApplicationIcon>
         <Platforms>AnyCPU;x86</Platforms>
+        <NeutralLanguage>es-MX</NeutralLanguage>
     </PropertyGroup>
 
     <ItemGroup>

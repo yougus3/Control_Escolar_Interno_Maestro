@@ -327,7 +327,7 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0"
-                           Text="USB:"
+                           Text="Carpeta:"
                            VerticalAlignment="Center"
                            FontWeight="SemiBold"
                            Foreground="#475569"
@@ -341,8 +341,8 @@
                          IsReadOnly="{Binding RutaUsbEditable, Converter={StaticResource InverseBoolConverter}}" />
 
                 <Button Grid.Column="2"
-                        Content="Escanear"
-                        Command="{Binding EscanearUsbCommand}"
+                        Content="Buscar"
+                        Command="{Binding BuscarCarpetaCommand}"
                         Style="{StaticResource BlueButtonStyle}"
                         Height="32"
                         Width="80"
