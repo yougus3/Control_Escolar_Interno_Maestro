@@ -170,7 +170,7 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
             {
                 P1Calif = string.IsNullOrWhiteSpace(p1.calif) ? "N/A" : p1.calif;
                 P1Asistencia = FormatearAsistencia(p1.faltas, p1.totalClases);
-                P1Estado = MapearEstadoTriggers(p1.estado);
+                P1Estado = MapearEstadoTriggers(p1.estado, p1.calif);
                 P1LeyendaFaltas = FormatearLeyendaFaltas(p1.estado, p1.faltas, p1.totalClases, "- NP");
 
                 if (p1.totalClases > 0 && p1.faltas >= 0)
@@ -186,7 +186,7 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
             {
                 P2Calif = string.IsNullOrWhiteSpace(p2.calif) ? "N/A" : p2.calif;
                 P2Asistencia = FormatearAsistencia(p2.faltas, p2.totalClases);
-                P2Estado = MapearEstadoTriggers(p2.estado);
+                P2Estado = MapearEstadoTriggers(p2.estado, p2.calif);
                 P2LeyendaFaltas = FormatearLeyendaFaltas(p2.estado, p2.faltas, p2.totalClases, "- NP");
 
                 if (p2.totalClases > 0 && p2.faltas >= 0)
@@ -202,7 +202,7 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
             {
                 P3Calif = string.IsNullOrWhiteSpace(p3.calif) ? "N/A" : p3.calif;
                 P3Asistencia = FormatearAsistencia(p3.faltas, p3.totalClases);
-                P3Estado = MapearEstadoTriggers(p3.estado);
+                P3Estado = MapearEstadoTriggers(p3.estado, p3.calif);
                 P3LeyendaFaltas = FormatearLeyendaFaltas(p3.estado, p3.faltas, p3.totalClases, "- NP");
 
                 if (p3.totalClases > 0 && p3.faltas >= 0)
@@ -230,7 +230,7 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
             {
                 SEMCalif = string.IsNullOrWhiteSpace(sem.calif) ? "N/A" : sem.calif;
                 SEMAsistencia = FormatearAsistencia(sem.faltas, sem.totalClases);
-                SEMEstado = MapearEstadoTriggers(sem.estado);
+                SEMEstado = MapearEstadoTriggers(sem.estado, sem.calif);
                 SEMLeyendaFaltas = FormatearLeyendaFaltas(sem.estado, sem.faltas, sem.totalClases, "- NP (NO SE PRESENTÓ)");
             }
 
@@ -239,9 +239,17 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
 
         // --- Helpers de lógicas visuales para la tabla ---
 
-        private string MapearEstadoTriggers(string estado)
+        private string MapearEstadoTriggers(string estado, string calif)
         {
-            if (estado == "NP") return "Reprobado por faltas";
+            if (estado == "NP" || estado == "Reprobado por faltas") return "Reprobado por faltas";
+            
+            // Lógica de calificación: 6 a 10 es Aprobado, 0 a 5.9 es Reprobado
+            if (double.TryParse(calif, out double califNum))
+            {
+                if (califNum >= 6.0) return "Aprobado";
+                return "Reprobado";
+            }
+
             if (string.IsNullOrWhiteSpace(estado)) return "Sin evaluar";
             return estado;
         }

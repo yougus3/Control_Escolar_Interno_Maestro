@@ -225,14 +225,6 @@
             </Setter>
         </Style>
 
-        <Style TargetType="CheckBox">
-            <Setter Property="Margin" Value="0,2,0,2" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Foreground" Value="#1E293B" />
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-        </Style>
-
         <Style TargetType="GroupBox">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
@@ -336,87 +328,32 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel>
-                            <TextBlock
-                                Text="Selecciona una materia y activa o desactiva sus evaluaciones visibles en el sistema"
-                                Foreground="#475569"
-                                FontSize="13"
-                                Margin="0,0,0,12" />
+                            <TextBlock Text="Selecciona la evaluación a capturar:"
+                                       Foreground="#475569"
+                                       FontSize="13"
+                                       Margin="0,0,0,12" />
 
-                            <!-- Selector de materia: se oculta en modo Global -->
-                            <StackPanel Orientation="Horizontal"
-                                        Margin="0,0,0,14"
-                                        Visibility="{Binding PorMateriaVisible, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Text="Materia:"
-                                           VerticalAlignment="Center"
-                                           Foreground="#475569"
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,8,0" />
-                                <ComboBox Width="400"
-                                          Height="32"
-                                          ItemsSource="{Binding MateriasDisponibles}"
-                                          SelectedItem="{Binding MateriaSeleccionadaConfiguracion, Mode=TwoWay}"
-                                          VerticalContentAlignment="Center"
-                                          Style="{StaticResource RoundedComboStyle}" />
-                            </StackPanel>
-
-                            <!-- RadioButtons para modo Global/Por materia -->
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                                <RadioButton Content="Global"
-                                             GroupName="ModoConfig"
-                                             IsChecked="{Binding ModoGlobalConfiguracion, Mode=TwoWay}"
-                                             Margin="0,0,15,0"
-                                             VerticalAlignment="Center"
-                                             FontWeight="SemiBold" />
-                                <RadioButton Content="Por materia"
-                                             GroupName="ModoConfig"
-                                             IsChecked="{Binding ModoPorMateriaConfiguracion, Mode=TwoWay}"
-                                             VerticalAlignment="Center"
-                                             FontWeight="SemiBold" />
-                            </StackPanel>
-
-                            <!-- Controles modo POR MATERIA -->
-                            <StackPanel
-                                Visibility="{Binding PorMateriaVisible, Converter={StaticResource BoolToVisibility}}">
-                                <CheckBox Content="P1"
-                                          IsChecked="{Binding Parcial1Habilitado, Mode=TwoWay}"
-                                          FontSize="14"
-                                          FontWeight="SemiBold"
-                                          Margin="0,0,0,8" />
-                                <CheckBox Content="P2"
-                                          IsChecked="{Binding Parcial2Habilitado, Mode=TwoWay}"
-                                          FontSize="14"
-                                          FontWeight="SemiBold"
-                                          Margin="0,0,0,8" />
-                                <CheckBox Content="P3"
-                                          IsChecked="{Binding Parcial3Habilitado, Mode=TwoWay}"
-                                          FontSize="14"
-                                          FontWeight="SemiBold"
-                                          Margin="0,0,0,8" />
-                                <CheckBox Content="SEM"
-                                          IsChecked="{Binding SemestralHabilitado, Mode=TwoWay}"
-                                          FontSize="14"
-                                          FontWeight="SemiBold"
-                                          Margin="0,0,0,8" />
-                                <!-- EXTRA gestionado por CAP; opción removida de la configuración -->
-                            </StackPanel>
-
-                            <!-- Controles modo GLOBAL -->
-                            <StackPanel
-                                Visibility="{Binding GlobalVisible, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Text="Evaluación a mostrar en todas las materias:"
-                                           Foreground="#475569"
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,0,8" />
+                            <StackPanel Margin="0,0,0,14">
                                 <ComboBox Width="200"
                                           Height="32"
+                                          HorizontalAlignment="Left"
                                           ItemsSource="{Binding EvaluacionesGlobalesDisponibles}"
                                           SelectedItem="{Binding EvaluacionGlobalSeleccionada, Mode=TwoWay}"
+                                          IsEnabled="{Binding IsGlobalComboEnabled}"
                                           VerticalContentAlignment="Center"
                                           Style="{StaticResource RoundedComboStyle}" />
-                                <TextBlock Text="⚠️ Esta configuración aplica a TODAS las materias"
+
+                                <TextBlock Text="⚠️ Esta configuración aplica a todas las materias simultáneamente."
                                            Foreground="#EF4444"
                                            FontSize="11"
                                            Margin="0,8,0,0" />
+
+                                <TextBlock Text="Este archivo CAP es de evaluación EXTRA. No se pueden configurar parciales aquí."
+                                           Foreground="#DC2626"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Margin="0,8,0,0"
+                                           Visibility="{Binding MensajeExtraVisible, Converter={StaticResource BoolToVisibility}}" />
                             </StackPanel>
                         </StackPanel>
 
@@ -428,13 +365,9 @@
                                 Padding="12"
                                 Margin="0,16,0,16">
                             <StackPanel>
-                                <TextBlock Text="Los cambios se guardan según el modo seleccionado"
+                                <TextBlock Text="Los cambios se guardan y aplican globalmente de forma automática."
                                            Foreground="#64748B"
                                            FontSize="12" />
-                                <TextBlock Text="{Binding InfoGuardado}"
-                                           Foreground="#64748B"
-                                           FontSize="12"
-                                           Margin="0,4,0,0" />
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -448,8 +381,7 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <StackPanel Orientation="Horizontal"
-                                    Margin="0,0,0,12">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                             <TextBlock Text="Materia:"
                                        VerticalAlignment="Center"
                                        Foreground="#475569"
@@ -514,8 +446,7 @@
                                 </ListBox>
                             </GroupBox>
 
-                            <GroupBox Grid.Column="1"
-                                      Header="Edición">
+                            <GroupBox Grid.Column="1" Header="Edición">
                                 <Grid Margin="10">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
@@ -552,8 +483,7 @@
                                                FontSize="12"
                                                Margin="0,0,0,14" />
 
-                                    <StackPanel Grid.Row="4"
-                                                Margin="0,0,0,10">
+                                    <StackPanel Grid.Row="4" Margin="0,0,0,10">
                                         <TextBlock Text="Calificación actual"
                                                    Foreground="#475569"
                                                    FontSize="12"
