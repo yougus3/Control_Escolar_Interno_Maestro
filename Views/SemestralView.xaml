@@ -91,7 +91,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock Text="Evaluación: SEM" FontSize="14" FontWeight="SemiBold" Foreground="#1B365D" />
+                        <TextBlock Text="Evaluación: SEMESTRAL" FontSize="14" FontWeight="SemiBold" Foreground="#1B365D" />
                     </StackPanel>
                 </Grid>
 

@@ -359,7 +359,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="130" />
+                    <ColumnDefinition Width="200" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
@@ -398,7 +398,7 @@
                               ItemsSource="{Binding ArchivosDisponibles}"
                               SelectedItem="{Binding ArchivoSeleccionado}"
                               Height="32"
-                              Width="500"
+                              Width="520"
                               VerticalContentAlignment="Center" />
                               
                     <Button Command="{Binding GuardarCommand}"
@@ -432,7 +432,9 @@
                 <ComboBox Grid.Column="6"
                           Style="{StaticResource RoundedComboStyle}"
                           ItemsSource="{Binding EvaluacionesDisponibles}"
-                          SelectedItem="{Binding EvaluacionSeleccionada}"
+                          SelectedValue="{Binding EvaluacionSeleccionada}"
+                          SelectedValuePath="Id"
+                          DisplayMemberPath="Nombre"
                           Height="32"
                           VerticalContentAlignment="Center" />
             </Grid>

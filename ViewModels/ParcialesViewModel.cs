@@ -99,7 +99,7 @@ public partial class ParcialesViewModel : ObservableObject
 
         string materiaMostrada = NombreMateria;
         int sepIdx = materiaMostrada.IndexOf(" - Grupo:");
-        if(sepIdx > 0) materiaMostrada = materiaMostrada.Substring(0, sepIdx).Trim();
+        if (sepIdx > 0) materiaMostrada = materiaMostrada.Substring(0, sepIdx).Trim();
 
         foreach (var alumno in Alumnos)
         {
@@ -346,6 +346,20 @@ public partial class ParcialesViewModel : ObservableObject
         }
     }
 
+    private string ObtenerNombreEvaluacionVisual(string? eval)
+    {
+        if (string.IsNullOrWhiteSpace(eval)) return string.Empty;
+        return eval.Trim().ToUpperInvariant() switch
+        {
+            "P1" => "PARCIAL 1",
+            "P2" => "PARCIAL 2",
+            "P3" => "PARCIAL 3",
+            "SEM" => "SEMESTRAL",
+            "EXTRA" => "EXTRAORDINARIO/INTER",
+            _ => eval
+        };
+    }
+
     public async void CargarContextoActual()
     {
         _cargasActivas++;
@@ -355,11 +369,11 @@ public partial class ParcialesViewModel : ObservableObject
         try
         {
             NombreMateria = _mainVm.ArchivoSeleccionado ?? string.Empty;
-            NombreEvaluacion = _mainVm.EvaluacionSeleccionada ?? string.Empty;
-            _evaluacionActual = NombreEvaluacion;
+            NombreEvaluacion = ObtenerNombreEvaluacionVisual(_mainVm.EvaluacionSeleccionada);
+            _evaluacionActual = _mainVm.EvaluacionSeleccionada ?? string.Empty;
 
-            MostrarGrupo = !string.Equals(NombreEvaluacion, "EXTRA", StringComparison.OrdinalIgnoreCase) &&
-                           !string.Equals(NombreEvaluacion, "SEM", StringComparison.OrdinalIgnoreCase);
+            MostrarGrupo = !string.Equals(_evaluacionActual, "EXTRA", StringComparison.OrdinalIgnoreCase) &&
+                           !string.Equals(_evaluacionActual, "SEM", StringComparison.OrdinalIgnoreCase);
 
             _claveMateria = !string.IsNullOrWhiteSpace(_mainVm.ArchivoCompletoActual)
                 ? ObtenerClaveMateriaDesdeNombreArchivo(_mainVm.ArchivoCompletoActual)

@@ -12,6 +12,12 @@ using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.ViewModels;
 
+public class EvaluacionItem
+{
+    public string Id { get; set; } = string.Empty;
+    public string Nombre { get; set; } = string.Empty;
+}
+
 public partial class MainViewModel : ObservableObject
 {
     private readonly CapParserService _parserService;
@@ -39,6 +45,13 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _rutaUsbEditable = true;
     [ObservableProperty] private string _currentView = "List";
     [ObservableProperty] private bool _tieneCambios;
+
+    // Propiedades exclusivas para ExtraView NavBar
+    [ObservableProperty] private string _nombreMateriaExtra = string.Empty;
+    [ObservableProperty] private string _nombreProfesorExtra = string.Empty;
+    [ObservableProperty] private string _textoEvaluadosExtra = string.Empty;
+    [ObservableProperty] private bool _faltanPorEvaluarExtra = false;
+    public List<AlumnoFaltante> ListaNoEvaluadosExtra { get; private set; } = new();
 
     private string? _archivoSeleccionado;
     public string? ArchivoSeleccionado
@@ -78,7 +91,9 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    public ObservableCollection<string> EvaluacionesDisponibles { get; } = new();
+    // AHORA USA EL OBJETO CON ID Y NOMBRE VISUAL
+    public ObservableCollection<EvaluacionItem> EvaluacionesDisponibles { get; } = new();
+    
     public ObservableCollection<string> ArchivosDisponibles { get; } = new();
     public ObservableCollection<Alumno> Alumnos { get; } = new();
 
@@ -110,11 +125,40 @@ public partial class MainViewModel : ObservableObject
                 _rutaUsbEditable = false;
             }
         }
-        catch
-        {
-        }
+        catch { }
 
         EscanearUsb();
+    }
+
+    public void ActualizarConteoEvaluadosExtra()
+    {
+        if (CurrentView != "Extra") return;
+        
+        int total = Alumnos.Count;
+        int evaluados = 0;
+        var lista = new List<AlumnoFaltante>();
+
+        foreach (var alumno in Alumnos)
+        {
+            if (!string.IsNullOrWhiteSpace(alumno.Calificación["EXTRA"]))
+            {
+                evaluados++;
+            }
+            else
+            {
+                lista.Add(new AlumnoFaltante {
+                    Materia = NombreMateriaExtra,
+                    Grupo = alumno.Grupo,
+                    Matricula = alumno.Matricula,
+                    Nombre = alumno.Nombre,
+                    Razon = "Falta calificación de extraordinario"
+                });
+            }
+        }
+
+        TextoEvaluadosExtra = $"{evaluados} de {total}";
+        FaltanPorEvaluarExtra = evaluados < total;
+        ListaNoEvaluadosExtra = lista;
     }
 
     private bool ManejarCambiosPendientes()
@@ -142,19 +186,14 @@ public partial class MainViewModel : ObservableObject
 
     private static string ObtenerClaveMateriaDesdeRuta(string? rutaCompleta)
     {
-        if (string.IsNullOrWhiteSpace(rutaCompleta))
-            return string.Empty;
-
+        if (string.IsNullOrWhiteSpace(rutaCompleta)) return string.Empty;
         string nombre = Path.GetFileNameWithoutExtension(rutaCompleta);
-        return string.IsNullOrWhiteSpace(nombre)
-            ? string.Empty
-            : nombre.Trim().Replace(' ', '_');
+        return string.IsNullOrWhiteSpace(nombre) ? string.Empty : nombre.Trim().Replace(' ', '_');
     }
 
     private bool EvaluacionEstaHabilitada(string evaluacion)
     {
-        if (string.IsNullOrWhiteSpace(evaluacion))
-            return false;
+        if (string.IsNullOrWhiteSpace(evaluacion)) return false;
 
         return evaluacion.Trim().ToUpperInvariant() switch
         {
@@ -164,6 +203,19 @@ public partial class MainViewModel : ObservableObject
             "SEM" => _configuracionActual.SemestralHabilitado,
             "EXTRA" => _configuracionActual.ExtraHabilitado,
             _ => true
+        };
+    }
+
+    private string ObtenerNombreEvaluacionVisual(string eval)
+    {
+        return eval.ToUpperInvariant() switch
+        {
+            "P1" => "PARCIAL 1",
+            "P2" => "PARCIAL 2",
+            "P3" => "PARCIAL 3",
+            "SEM" => "SEMESTRAL",
+            "EXTRA" => "EXTRAORDINARIO/INTER",
+            _ => eval
         };
     }
 
@@ -190,13 +242,21 @@ public partial class MainViewModel : ObservableObject
 
         foreach (var archivo in archivos)
         {
-            string nombreVisual = _parserService.ObtenerNombreVisualArchivo(archivo);
-            var resTemp = _parserService.ProcesarArchivoCompleto(archivo);
-            
-            // Extraer grupo del primer alumno o poner S/G
-            string grupo = resTemp.Alumnos.FirstOrDefault()?.Grupo ?? "S/G";
-            string nombreCombo = $"{nombreVisual} - Grupo: {grupo}";
-            
+            var info = _parserService.ObtenerInfoParaCombo(archivo);
+            string nombreCombo;
+
+            if (info.IsExtra)
+            {
+                string profesorMostrar = string.IsNullOrWhiteSpace(info.NombreProfesor) ? "SIN REGISTRO" : info.NombreProfesor;
+                nombreCombo = $"{info.NombreBase} - Grupo: {profesorMostrar}";
+            }
+            else
+            {
+                var resTemp = _parserService.ProcesarArchivoCompleto(archivo);
+                string grupoNormal = resTemp.Alumnos.FirstOrDefault()?.Grupo ?? "S/G";
+                nombreCombo = $"{info.NombreBase} - Grupo: {grupoNormal}";
+            }
+
             _mapaArchivos[nombreCombo] = archivo;
             ArchivosDisponibles.Add(nombreCombo);
         }
@@ -223,14 +283,7 @@ public partial class MainViewModel : ObservableObject
         CurrentView = "List";
         _archivoCompletoActual = null;
 
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            OnPropertyChanged(nameof(EsExtraSeleccionado));
-            _isUpdatingProgrammatically = false;
-            return;
-        }
-
-        if (!_mapaArchivos.TryGetValue(value, out string? rutaCompleta))
+        if (string.IsNullOrWhiteSpace(value) || !_mapaArchivos.TryGetValue(value, out string? rutaCompleta))
         {
             OnPropertyChanged(nameof(EsExtraSeleccionado));
             _isUpdatingProgrammatically = false;
@@ -248,6 +301,10 @@ public partial class MainViewModel : ObservableObject
         string claveMateria = ObtenerClaveMateriaDesdeRuta(rutaCompleta);
         _configuracionActual = _configuracionService.ObtenerConfiguracion(claveMateria);
 
+        var infoCombo = _parserService.ObtenerInfoParaCombo(rutaCompleta);
+        NombreMateriaExtra = infoCombo.NombreBase;
+        NombreProfesorExtra = string.IsNullOrWhiteSpace(infoCombo.NombreProfesor) ? "SIN REGISTRO" : infoCombo.NombreProfesor;
+
         var resultado = _parserService.ProcesarArchivoCompleto(rutaCompleta);
 
         foreach (var kvp in resultado.EvaluacionIdPorNombre)
@@ -255,12 +312,11 @@ public partial class MainViewModel : ObservableObject
             _evaluacionIdPorNombre[kvp.Key] = kvp.Value;
         }
 
-        // LÓGICA EXTRA EXCLUSIVA
         bool esExtra = resultado.EvaluacionesDisponibles.Any(e => e.Equals("EXTRA", StringComparison.OrdinalIgnoreCase));
         
         if (esExtra)
         {
-            EvaluacionesDisponibles.Add("EXTRA");
+            EvaluacionesDisponibles.Add(new EvaluacionItem { Id = "EXTRA", Nombre = "EXTRAORDINARIO/INTER" });
             EvaluacionSeleccionada = "EXTRA";
         }
         else
@@ -269,15 +325,12 @@ public partial class MainViewModel : ObservableObject
             {
                 if (EvaluacionEstaHabilitada(eval))
                 {
-                    EvaluacionesDisponibles.Add(eval);
+                    EvaluacionesDisponibles.Add(new EvaluacionItem { Id = eval, Nombre = ObtenerNombreEvaluacionVisual(eval) });
                 }
             }
 
-            if (EvaluacionesDisponibles.Count == 0)
-            {
-                EvaluacionesDisponibles.Add("P1");
-            }
-            EvaluacionSeleccionada = EvaluacionesDisponibles.LastOrDefault();
+            if (EvaluacionesDisponibles.Count == 0) EvaluacionesDisponibles.Add(new EvaluacionItem { Id = "P1", Nombre = "PARCIAL 1" });
+            EvaluacionSeleccionada = EvaluacionesDisponibles.LastOrDefault()?.Id;
         }
 
         foreach (var alumno in resultado.Alumnos)
@@ -291,8 +344,11 @@ public partial class MainViewModel : ObservableObject
         TieneCambios = false;
         _isUpdatingProgrammatically = false;
         
-        // Disparar vista forzada si es extra
-        if (esExtra) CambiarEvaluacion("EXTRA");
+        if (esExtra) 
+        {
+            CambiarEvaluacion("EXTRA");
+            ActualizarConteoEvaluadosExtra();
+        }
     }
 
     private void CambiarEvaluacion(string? value)
@@ -307,8 +363,8 @@ public partial class MainViewModel : ObservableObject
         _isUpdatingProgrammatically = true;
         string valorMayusculas = value.ToUpperInvariant();
         
-        // Barrera de seguridad para EXTRA
-        if (valorMayusculas != "EXTRA" && EvaluacionesDisponibles.Count == 1 && EvaluacionesDisponibles.Contains("EXTRA"))
+        // Barrera de seguridad Exclusiva EXTRA usando validación del objeto EvaluacionItem
+        if (valorMayusculas != "EXTRA" && EvaluacionesDisponibles.Count == 1 && EvaluacionesDisponibles.Any(e => e.Id == "EXTRA"))
         {
             valorMayusculas = "EXTRA";
         }
@@ -418,9 +474,7 @@ public partial class MainViewModel : ObservableObject
                 var nombre = Path.GetFileNameWithoutExtension(ArchivoCompletoActual);
                 if (!string.IsNullOrWhiteSpace(nombre)) claveMateria = nombre.Trim().Replace(' ', '_');
             }
-            catch
-            {
-            }
+            catch { }
         }
 
         if (string.IsNullOrWhiteSpace(claveMateria) && !string.IsNullOrWhiteSpace(ArchivoSeleccionado))
@@ -539,6 +593,10 @@ public partial class MainViewModel : ObservableObject
         if (e?.PropertyName != null && e.PropertyName.StartsWith("Item["))
         {
             TieneCambios = true;
+            if (EsExtraSeleccionado)
+            {
+                ActualizarConteoEvaluadosExtra();
+            }
         }
     }
 }

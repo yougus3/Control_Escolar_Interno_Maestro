@@ -53,77 +53,62 @@ public class CapParserService
 
         string clave = string.Empty;
         string asignatura = string.Empty;
+        string nombreProfesor = string.Empty;
+        bool isExtra = false;
 
         foreach (var linea in lineas)
         {
             string l = linea.Trim();
 
             if (l.StartsWith("CLAVEASIGNATURA=", StringComparison.OrdinalIgnoreCase))
-            {
                 clave = l.Split('=', 2)[1].Trim();
-            }
             else if (l.StartsWith("ASIGNATURA_STR=", StringComparison.OrdinalIgnoreCase))
-            {
                 asignatura = l.Split('=', 2)[1].Trim();
-            }
-
-            if (!string.IsNullOrWhiteSpace(clave) &&
-                !string.IsNullOrWhiteSpace(asignatura))
-            {
-                break;
-            }
+            else if (l.StartsWith("NombreProfesor=", StringComparison.OrdinalIgnoreCase))
+                nombreProfesor = l.Split('=', 2)[1].Trim();
+            else if (l.EndsWith("=EXTRA", StringComparison.OrdinalIgnoreCase) || l.EndsWith("=extra", StringComparison.OrdinalIgnoreCase))
+                isExtra = true;
         }
-
-        if (string.IsNullOrWhiteSpace(clave) && string.IsNullOrWhiteSpace(asignatura))
-            return Path.GetFileNameWithoutExtension(filePath);
-
-        if (string.IsNullOrWhiteSpace(clave))
-            return asignatura;
-
-        if (string.IsNullOrWhiteSpace(asignatura))
-            return clave;
 
         string resultado = string.IsNullOrWhiteSpace(clave) ? asignatura : string.IsNullOrWhiteSpace(asignatura) ? clave : $"{clave} {asignatura}";
 
+        // REGLA: Si es EXTRA, mostramos obligatoriamente el Profesor en el apartado de Grupo.
+        if (isExtra)
+        {
+            if (string.IsNullOrWhiteSpace(nombreProfesor)) nombreProfesor = "SIN REGISTRO";
+            return $"{resultado} - Grupo: {nombreProfesor}";
+        }
+
+        // REGLA: Si no es EXTRA, procesar normal anexando el grupo.json
+        if (string.IsNullOrWhiteSpace(clave) && string.IsNullOrWhiteSpace(asignatura))
+            return Path.GetFileNameWithoutExtension(filePath);
+
         try
         {
-            bool containsExtra = false;
-            foreach (var line in File.ReadAllLines(filePath, encodingCap))
+            var mapa = CargarMapaGrupos();
+            bool inAlumno = false;
+            foreach (var linea in lineas)
             {
-                if (line.IndexOf("EXTRA", StringComparison.OrdinalIgnoreCase) >= 0)
+                var l = linea.Trim();
+                if (l.StartsWith("[Alumno_", StringComparison.OrdinalIgnoreCase) && l.EndsWith("]"))
                 {
-                    containsExtra = true;
-                    break;
+                    inAlumno = true;
+                    continue;
                 }
-            }
 
-            if (!containsExtra)
-            {
-                var mapa = CargarMapaGrupos();
-                bool inAlumno = false;
-                foreach (var linea in File.ReadAllLines(filePath, encodingCap))
+                if (!inAlumno) continue;
+
+                if (l.StartsWith("Matricula", StringComparison.OrdinalIgnoreCase) && l.Contains('='))
                 {
-                    var l = linea.Trim();
-                    if (l.StartsWith("[Alumno_", StringComparison.OrdinalIgnoreCase) && l.EndsWith("]"))
+                    var partes = l.Split('=', 2);
+                    if (partes.Length == 2)
                     {
-                        inAlumno = true;
-                        continue;
-                    }
-
-                    if (!inAlumno) continue;
-
-                    if (l.StartsWith("Matricula", StringComparison.OrdinalIgnoreCase) && l.Contains('='))
-                    {
-                        var partes = l.Split('=', 2);
-                        if (partes.Length == 2)
+                        var matricula = partes[1].Trim();
+                        if (mapa.TryGetValue(matricula, out var grupo) && !string.IsNullOrWhiteSpace(grupo))
                         {
-                            var matricula = partes[1].Trim();
-                            if (mapa.TryGetValue(matricula, out var grupo) && !string.IsNullOrWhiteSpace(grupo))
-                            {
-                                resultado = $"{resultado} ({grupo})";
-                            }
-                            break;
+                            resultado = $"{resultado} ({grupo})";
                         }
+                        break;
                     }
                 }
             }
@@ -131,6 +116,43 @@ public class CapParserService
         catch { }
 
         return resultado;
+    }
+
+    public (string NombreBase, bool IsExtra, string GrupoCap, string NombreProfesor) ObtenerInfoParaCombo(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return (Path.GetFileNameWithoutExtension(filePath), false, "S/G", "");
+
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        var encodingCap = Encoding.GetEncoding("iso-8859-1");
+        var lineas = File.ReadAllLines(filePath, encodingCap);
+
+        string clave = string.Empty;
+        string asignatura = string.Empty;
+        string grupoCap = "S/G";
+        string nombreProfesor = string.Empty;
+        bool isExtra = false;
+
+        foreach (var linea in lineas)
+        {
+            string l = linea.Trim();
+
+            if (l.StartsWith("CLAVEASIGNATURA=", StringComparison.OrdinalIgnoreCase))
+                clave = l.Split('=', 2)[1].Trim();
+            else if (l.StartsWith("ASIGNATURA_STR=", StringComparison.OrdinalIgnoreCase))
+                asignatura = l.Split('=', 2)[1].Trim();
+            else if (l.StartsWith("Grupo=", StringComparison.OrdinalIgnoreCase))
+                grupoCap = l.Split('=', 2)[1].Trim();
+            else if (l.StartsWith("NombreProfesor=", StringComparison.OrdinalIgnoreCase))
+                nombreProfesor = l.Split('=', 2)[1].Trim();
+            else if (l.EndsWith("=EXTRA", StringComparison.OrdinalIgnoreCase) || l.EndsWith("=extra", StringComparison.OrdinalIgnoreCase))
+                isExtra = true;
+        }
+
+        string nombreBase = string.IsNullOrWhiteSpace(clave) ? asignatura : string.IsNullOrWhiteSpace(asignatura) ? clave : $"{clave} {asignatura}";
+        if (string.IsNullOrWhiteSpace(nombreBase)) nombreBase = Path.GetFileNameWithoutExtension(filePath);
+
+        return (nombreBase, isExtra, grupoCap, nombreProfesor);
     }
 
     public CapParseResult ProcesarArchivoCompleto(string filePath)
@@ -152,9 +174,7 @@ public class CapParserService
         foreach (var linea in lineas)
         {
             string l = linea.Trim();
-
-            if (string.IsNullOrWhiteSpace(l))
-                continue;
+            if (string.IsNullOrWhiteSpace(l)) continue;
 
             if (l.StartsWith("[", StringComparison.OrdinalIgnoreCase) && l.EndsWith("]"))
             {
@@ -162,8 +182,7 @@ public class CapParserService
                 continue;
             }
 
-            if (!enSeccionEvaluaciones)
-                continue;
+            if (!enSeccionEvaluaciones) continue;
 
             if (l.StartsWith("ID_EVAL", StringComparison.OrdinalIgnoreCase) &&
                 l.Contains('=') &&
@@ -192,12 +211,8 @@ public class CapParserService
             }
         }
 
-        // Construimos la lista de evaluaciones disponibles a partir de las ID leídas
-        // Si el archivo CAP declara evaluaciones las respetamos (P1,P2,P3,SEM,EXTRA, etc.).
-        // Solo cuando no hay ninguna evaluación declarada aplicamos la lista por defecto.
         if (mapaEvaluaciones.Count > 0)
         {
-            // Queremos respetar el orden lógico P1,P2,P3,SEM si existen, y luego cualquier otra (p.ej. EXTRA)
             var ordenPreferente = new[] { "P1", "P2", "P3", "SEM" };
             var yaAgregadas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -214,7 +229,7 @@ public class CapParserService
             {
                 if (string.IsNullOrWhiteSpace(nombre)) continue;
                 if (yaAgregadas.Contains(nombre)) continue;
-                // Excluir nombres reservados por seguridad
+                
                 if (string.Equals(nombre, "RESFINAL", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(nombre, "PROMSEM", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(nombre, "RESULSEM", StringComparison.OrdinalIgnoreCase))
@@ -238,8 +253,7 @@ public class CapParserService
         {
             string l = linea.Trim();
 
-            if (string.IsNullOrWhiteSpace(l))
-                continue;
+            if (string.IsNullOrWhiteSpace(l)) continue;
 
             if (l.StartsWith("[Alumno_", StringComparison.OrdinalIgnoreCase) && l.EndsWith("]"))
             {
@@ -248,12 +262,10 @@ public class CapParserService
                 continue;
             }
 
-            if (alumnoActual == null || !l.Contains('='))
-                continue;
+            if (alumnoActual == null || !l.Contains('=')) continue;
 
             var partes = l.Split('=', 2);
-            if (partes.Length < 2)
-                continue;
+            if (partes.Length < 2) continue;
 
             string key = partes[0].Trim();
             string val = partes[1].Trim();
@@ -261,6 +273,8 @@ public class CapParserService
             if (key.Equals("Matricula", StringComparison.OrdinalIgnoreCase))
             {
                 alumnoActual.Matricula = val;
+                
+                // Agrupamos en la UI usando el json obligatoriamente
                 alumnoActual.Grupo = mapaGrupos.TryGetValue(val, out string? g) ? g : "S/G";
             }
             else if (key.Equals("Nombre", StringComparison.OrdinalIgnoreCase))
