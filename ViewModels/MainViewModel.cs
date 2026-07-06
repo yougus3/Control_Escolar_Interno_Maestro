@@ -37,6 +37,9 @@ public partial class MainViewModel : ObservableObject
     private string? _archivoCompletoActual;
     
     private bool _isUpdatingProgrammatically = false;
+    
+    // PROPIEDAD AGREGADA PARA CONTROLAR EL AVISO EN EXTRAVIEW
+    public bool IsUpdatingProgrammatically => _isUpdatingProgrammatically;
 
     public string? ArchivoCompletoActual => _archivoCompletoActual;
 

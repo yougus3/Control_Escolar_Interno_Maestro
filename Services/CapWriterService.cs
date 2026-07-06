@@ -58,7 +58,8 @@ public class CapWriterService
             string valorStr = valorBase;
             string valorLiteral = "";
 
-            // Lógica exacta: si es NP se pone la S, de lo contrario se deja en blanco ("") y se borra la "S"
+            // Lógica exacta: si es NP se pone -555, NP, y la S,
+            // de lo contrario se deja en blanco ("") y se borra la "S".
             if (valorBaseUpper == "NP")
             {
                 valorNormal = "-555";

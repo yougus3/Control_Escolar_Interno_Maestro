@@ -334,7 +334,7 @@ public partial class ParcialesViewModel : ObservableObject
             "P2" => "PARCIAL 2",
             "P3" => "PARCIAL 3",
             "SEM" => "SEMESTRAL",
-            "EXTRA" => "EXTRAORDINARIO/INTER",
+            "EXTRA" => "EXTRAORDINARIO/INTERSEMESTRAL",
             _ => eval
         };
     }

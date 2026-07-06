@@ -16,6 +16,10 @@ public partial class Alumno : ObservableObject
     [ObservableProperty]
     private string _valorSeleccionado = "-";
 
+    // NUEVA PROPIEDAD AGREGADA PARA CONTROLAR EL DERECHO AL EXTRAORDINARIO
+    [ObservableProperty]
+    private bool _tieneDerechoExtra = true;
+
     private string _evaluacionActual = string.Empty;
 
     public Calificación Calificación { get; set; } = new Calificación();

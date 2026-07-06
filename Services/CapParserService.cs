@@ -247,6 +247,8 @@ public class CapParserService
             resultado.EvaluacionesDisponibles.Add("SEM");
         }
 
+        // CONTROL DE DERECHO: DETECTAMOS SI EL ARCHIVO CAP TIENE EVALUACIÓN EXTRAORDINARIA
+        bool archivoTieneExtra = mapaEvaluaciones.Values.Any(v => string.Equals(v, "EXTRA", StringComparison.OrdinalIgnoreCase));
         Alumno? alumnoActual = null;
 
         foreach (var linea in lineas)
@@ -258,6 +260,14 @@ public class CapParserService
             if (l.StartsWith("[Alumno_", StringComparison.OrdinalIgnoreCase) && l.EndsWith("]"))
             {
                 alumnoActual = new Alumno();
+                
+                // Si este CAP maneja extras, por defecto asumimos que el alumno NO tiene derecho
+                // hasta mapear que explícitamente cuenta con su renglón de evaluación.
+                if (archivoTieneExtra)
+                {
+                    alumnoActual.TieneDerechoExtra = false;
+                }
+                
                 resultado.Alumnos.Add(alumnoActual);
                 continue;
             }
@@ -290,6 +300,12 @@ public class CapParserService
                 {
                     alumnoActual.Calificación[columnaDestino] =
                         string.IsNullOrWhiteSpace(val) ? "" : val;
+
+                    // SI SE ENCONTRÓ LA LÍNEA DEL EXTRA DE ESTE ALUMNO EN EL ARCHIVO, TIENE DERECHO A CAPTURA
+                    if (string.Equals(columnaDestino, "EXTRA", StringComparison.OrdinalIgnoreCase))
+                    {
+                        alumnoActual.TieneDerechoExtra = true;
+                    }
                 }
             }
         }

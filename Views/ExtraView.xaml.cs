@@ -33,7 +33,10 @@ public partial class ExtraView : UserControl
         var tb = sender as TextBox;
         if (tb == null) return;
 
-        if (DataContext is MainViewModel mainVm)
+        var alumno = tb.DataContext as Alumno;
+        if (alumno != null && !alumno.TieneDerechoExtra) return;
+
+        if (DataContext is MainViewModel mainVm && !mainVm.IsUpdatingProgrammatically)
         {
             mainVm.TieneCambios = true;
         }
@@ -57,13 +60,16 @@ public partial class ExtraView : UserControl
 
     private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
     {
+        var mainVm = DataContext as MainViewModel;
+        if (mainVm != null && mainVm.IsUpdatingProgrammatically) return;
+
         if (sender is TextBox tb)
         {
+            var alumno = tb.DataContext as Alumno;
+            if (alumno != null && !alumno.TieneDerechoExtra) return;
+
             var change = e.Changes.FirstOrDefault();
             string textUpper = tb.Text.ToUpperInvariant();
-            
-            // Extraemos al alumno atado a este TextBox para inyectarle el dato a la fuerza
-            var alumno = tb.DataContext as Alumno;
 
             if (change != null)
             {
@@ -73,13 +79,12 @@ public partial class ExtraView : UserControl
                     tb.Text = "NP";
                     tb.SelectionStart = 2; 
                     
-                    // FORZAMOS LA ACTUALIZACIÓN INTERNA
                     if (alumno != null) alumno.Calificación["EXTRA"] = "NP"; 
                     
-                    if (DataContext is MainViewModel mvm) 
+                    if (mainVm != null) 
                     {
-                        mvm.TieneCambios = true;
-                        mvm.ActualizarConteoEvaluadosExtra();
+                        mainVm.TieneCambios = true;
+                        mainVm.ActualizarConteoEvaluadosExtra();
                     }
                     return;
                 }
@@ -89,13 +94,12 @@ public partial class ExtraView : UserControl
                 {
                     tb.Text = "";
                     
-                    // FORZAMOS LA ACTUALIZACIÓN INTERNA
                     if (alumno != null) alumno.Calificación["EXTRA"] = "";
                     
-                    if (DataContext is MainViewModel mvm) 
+                    if (mainVm != null) 
                     {
-                        mvm.TieneCambios = true;
-                        mvm.ActualizarConteoEvaluadosExtra();
+                        mainVm.TieneCambios = true;
+                        mainVm.ActualizarConteoEvaluadosExtra();
                     }
                     return;
                 }
@@ -124,10 +128,10 @@ public partial class ExtraView : UserControl
             }
         }
 
-        if (DataContext is MainViewModel mainVmFinal)
+        if (mainVm != null)
         {
-            mainVmFinal.TieneCambios = true;
-            mainVmFinal.ActualizarConteoEvaluadosExtra();
+            mainVm.TieneCambios = true;
+            mainVm.ActualizarConteoEvaluadosExtra();
         }
     }
 
