@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
@@ -65,7 +66,8 @@ public partial class MainViewModel : ObservableObject
         {
             if (_archivoSeleccionado != value)
             {
-                if (!ManejarCambiosPendientes())
+                // Si no estamos en actualización programática, preguntar por cambios pendientes
+                if (!_isUpdatingProgrammatically && !ManejarCambiosPendientes())
                 {
                     OnPropertyChanged(nameof(ArchivoSeleccionado));
                     return;
@@ -84,7 +86,7 @@ public partial class MainViewModel : ObservableObject
         {
             if (_evaluacionSeleccionada != value)
             {
-                if (!ManejarCambiosPendientes())
+                if (!_isUpdatingProgrammatically && !ManejarCambiosPendientes())
                 {
                     OnPropertyChanged(nameof(EvaluacionSeleccionada));
                     return;
@@ -275,8 +277,9 @@ public partial class MainViewModel : ObservableObject
 
     private void CargarArchivoSeleccionado(string? value)
     {
+        // Activamos el flag de actualización programática para toda la carga
         _isUpdatingProgrammatically = true;
-        
+
         Alumnos.Clear();
         EvaluacionesDisponibles.Clear();
         _evaluacionIdPorNombre.Clear();
@@ -321,7 +324,7 @@ public partial class MainViewModel : ObservableObject
         if (esExtra)
         {
             EvaluacionesDisponibles.Add(new EvaluacionItem { Id = "EXTRA", Nombre = "EXTRAORDINARIO/INTER" });
-            EvaluacionSeleccionada = "EXTRA";
+            // La asignación de EvaluacionSeleccionada se hará después de llenar alumnos
         }
         else
         {
@@ -334,7 +337,6 @@ public partial class MainViewModel : ObservableObject
             }
 
             if (EvaluacionesDisponibles.Count == 0) EvaluacionesDisponibles.Add(new EvaluacionItem { Id = "P1", Nombre = "PARCIAL 1" });
-            EvaluacionSeleccionada = EvaluacionesDisponibles.LastOrDefault()?.Id;
         }
 
         foreach (var alumno in resultado.Alumnos)
@@ -343,16 +345,33 @@ public partial class MainViewModel : ObservableObject
         }
 
         SuscribirAlumnos();
+
+        // Ahora establecemos la evaluación predeterminada (esto activará el setter, pero el flag está activo)
+        if (esExtra)
+        {
+            EvaluacionSeleccionada = "EXTRA";
+        }
+        else
+        {
+            EvaluacionSeleccionada = EvaluacionesDisponibles.LastOrDefault()?.Id;
+        }
+
         OnPropertyChanged(nameof(EsExtraSeleccionado));
         
+        // Forzamos TieneCambios a false antes de que la UI termine de renderizar
         TieneCambios = false;
-        _isUpdatingProgrammatically = false;
-        
-        if (esExtra) 
+
+        // IMPORTANTE: Desactivamos el flag de actualización después de que la UI haya terminado su primer renderizado
+        // Usamos Dispatcher para que se ejecute después de que todos los bindings y eventos de carga se hayan completado
+        Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
         {
-            CambiarEvaluacion("EXTRA");
-            ActualizarConteoEvaluadosExtra();
-        }
+            _isUpdatingProgrammatically = false;
+            // Si ya estamos en Extra, actualizamos el conteo (esto no modifica calificaciones)
+            if (esExtra)
+            {
+                ActualizarConteoEvaluadosExtra();
+            }
+        }));
     }
 
     private void CambiarEvaluacion(string? value)
@@ -364,7 +383,6 @@ public partial class MainViewModel : ObservableObject
             return;
         }
         
-        _isUpdatingProgrammatically = true;
         string valorMayusculas = value.ToUpperInvariant();
         
         // Bloqueo de seguridad: Si estamos en modo exclusivo EXTRA, no dejamos cambiar.
@@ -394,7 +412,6 @@ public partial class MainViewModel : ObservableObject
 
         OnPropertyChanged(nameof(EsExtraSeleccionado));
         TieneCambios = false;
-        _isUpdatingProgrammatically = false;
     }
 
     [RelayCommand]

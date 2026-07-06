@@ -19,7 +19,8 @@ public partial class ExtraView : UserControl
     {
         if (DataContext is MainViewModel mainVm)
         {
-            if (mainVm.EvaluacionSeleccionada?.ToUpperInvariant() != "EXTRA")
+            // Solo forzamos la selección si no estamos ya en EXTRA y no estamos en actualización programática
+            if (mainVm.EvaluacionSeleccionada?.ToUpperInvariant() != "EXTRA" && !mainVm.IsUpdatingProgrammatically)
             {
                 mainVm.EvaluacionSeleccionada = "EXTRA";
             }
