@@ -88,6 +88,7 @@
                                 <TextBlock Text="  Evaluación: " Foreground="#D6E4FF" FontSize="12" FontWeight="SemiBold" Margin="15,0,0,0" />
                                 <TextBlock Text="EXTRA" Foreground="White" FontSize="12" FontWeight="SemiBold" />
                                 
+                                <!-- Aquí se inyecta el NombreProfesor desde el ViewModel -->
                                 <TextBlock Text="  Grupo: " Foreground="#D6E4FF" FontSize="12" FontWeight="SemiBold" Margin="15,0,0,0" />
                                 <TextBlock Text="{Binding NombreProfesorExtra}" Foreground="White" FontSize="12" FontWeight="SemiBold" />
                                 
@@ -126,9 +127,7 @@
                             <GroupStyle>
                                 <GroupStyle.HeaderTemplate>
                                     <DataTemplate>
-                                        <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="10,4" Margin="0,15,0,5" HorizontalAlignment="Left">
-                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="16" Foreground="#1E3A8A" />
-                                        </Border>
+                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="16" Foreground="#1B365D" Margin="4,15,0,5" />
                                     </DataTemplate>
                                 </GroupStyle.HeaderTemplate>
                             </GroupStyle>
@@ -149,7 +148,7 @@
 
                                         <TextBox Grid.Column="2" 
                                                  Text="{Binding Calificación[EXTRA], Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Foreground="{Binding Calificación[EXTRA], Converter={StaticResource ColorCalifConverter}}"
+                                                 Foreground="{Binding Text, RelativeSource={RelativeSource Self}, Converter={StaticResource ColorCalifConverter}}"
                                                  Style="{StaticResource RoundedTextBoxStyle}"
                                                  FontSize="16" FontWeight="Bold" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="70"
                                                  KeyDown="TextBox_KeyDown" TextChanged="TextBox_TextChanged"/>

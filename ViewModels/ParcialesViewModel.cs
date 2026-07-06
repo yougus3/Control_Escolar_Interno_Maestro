@@ -175,7 +175,6 @@ public partial class ParcialesViewModel : ObservableObject
         try
         {
             AlumnoSeleccionado.Calificación[_evaluacionActual] = value ?? string.Empty;
-            
             PersistirCapturasTemporales(AlumnoSeleccionado.Matricula);
             MarkUserEdited(); 
             ActualizarConteoEvaluados();
@@ -189,10 +188,7 @@ public partial class ParcialesViewModel : ObservableObject
 
         LeyendaCapturaDirecta = value ? "Calificación directa habilitada para este alumno — Esta función es para casos especiales." : string.Empty;
 
-        foreach (var ed in Actividades)
-        {
-            ed.SetBloqueadoPorCapturaDirecta(value);
-        }
+        foreach (var ed in Actividades) ed.SetBloqueadoPorCapturaDirecta(value);
 
         if (AlumnoSeleccionado != null)
         {
@@ -200,17 +196,12 @@ public partial class ParcialesViewModel : ObservableObject
             MarkUserEdited();
         }
 
-        if (!value)
-        {
-            RecalcularTodo(guardarJson: false, esCargaInicial: false, marcarCambios: false);
-        }
+        if (!value) RecalcularTodo(guardarJson: false, esCargaInicial: false, marcarCambios: false);
     }
 
     public void MarkUserEdited()
     {
-        if (_cargasActivas > 0 || _cargando || _suspendUserEditMarking)
-            return;
-
+        if (_cargasActivas > 0 || _cargando || _suspendUserEditMarking) return;
         TieneCambios = true;
         _lastUserEditTime = DateTime.UtcNow;
     }
@@ -219,13 +210,8 @@ public partial class ParcialesViewModel : ObservableObject
     private void AgregarActividad()
     {
         if (Actividades.Count >= 4) return;
-
         var nueva = new ActividadParcialEditor(() => EditorChanged());
-        nueva.Activa = false;
-        nueva.Nombre = string.Empty;
-        nueva.Porcentaje = string.Empty;
-        nueva.PuntajeMaximo = string.Empty;
-
+        nueva.Activa = false; nueva.Nombre = string.Empty; nueva.Porcentaje = string.Empty; nueva.PuntajeMaximo = string.Empty;
         Actividades.Add(nueva);
         _materia.Actividades = Actividades.Select(a => a.ToModelo()).ToList();
         RecalcularTodo(guardarJson: false);
@@ -245,6 +231,14 @@ public partial class ParcialesViewModel : ObservableObject
 
     public void PrepararGuardado()
     {
+        // Forzamos "SC" en actividades vacías para que la advertencia no desaparezca por un 0 falso.
+        foreach (var ed in Actividades)
+        {
+            if (ed.Activa && string.IsNullOrWhiteSpace(ed.PuntajeObtenido))
+            {
+                ed.PuntajeObtenido = "SC";
+            }
+        }
         RecalcularTodo(guardarJson: true);
     }
 
@@ -269,7 +263,6 @@ public partial class ParcialesViewModel : ObservableObject
 
                 bool archivoCambio = !string.Equals(nuevoArchivo, _lastArchivoSeleccionado, StringComparison.OrdinalIgnoreCase);
                 bool evalCambio = !string.Equals(nuevaEval, _lastEvaluacionSeleccionada, StringComparison.OrdinalIgnoreCase);
-
                 bool userEditedAfterLoad = _lastUserEditTime.HasValue && _lastUserEditTime.Value > _lastLoadOrSaveTime;
 
                 if ((TieneCambios && userEditedAfterLoad) && (archivoCambio || evalCambio))
@@ -279,10 +272,8 @@ public partial class ParcialesViewModel : ObservableObject
 
                     if (res == System.Windows.MessageBoxResult.Cancel)
                     {
-                        if (archivoCambio && main != null)
-                            main.ArchivoSeleccionado = _lastArchivoSeleccionado;
-                        if (evalCambio && main != null)
-                            main.EvaluacionSeleccionada = _lastEvaluacionSeleccionada;
+                        if (archivoCambio && main != null) main.ArchivoSeleccionado = _lastArchivoSeleccionado;
+                        if (evalCambio && main != null) main.EvaluacionSeleccionada = _lastEvaluacionSeleccionada;
                         return;
                     }
 
@@ -302,24 +293,17 @@ public partial class ParcialesViewModel : ObservableObject
 
                 CargarContextoActual();
             }
-            catch
-            {
-                CargarContextoActual();
-            }
+            catch { CargarContextoActual(); }
         }
     }
 
     partial void OnAlumnoSeleccionadoChanged(Alumno? value)
     {
         if (_cargando || _cargasActivas > 0) return;
-
         if (!string.IsNullOrWhiteSpace(_ultimaMatriculaSeleccionada))
-        {
             PersistirCapturasTemporales(_ultimaMatriculaSeleccionada);
-        }
 
         _ultimaMatriculaSeleccionada = value?.Matricula;
-
         AplicarCambioAlumnoAsync();
     }
 
@@ -327,7 +311,6 @@ public partial class ParcialesViewModel : ObservableObject
     {
         _cargasActivas++;
         _suspendUserEditMarking = true;
-
         try
         {
             ActualizarDatosAlumnoSeleccionado();
@@ -338,11 +321,7 @@ public partial class ParcialesViewModel : ObservableObject
         {
             await System.Threading.Tasks.Task.Delay(250);
             _cargasActivas--;
-            if (_cargasActivas <= 0)
-            {
-                _cargasActivas = 0;
-                _suspendUserEditMarking = false;
-            }
+            if (_cargasActivas <= 0) { _cargasActivas = 0; _suspendUserEditMarking = false; }
         }
     }
 
@@ -381,8 +360,7 @@ public partial class ParcialesViewModel : ObservableObject
 
             if (string.IsNullOrWhiteSpace(_claveMateria) || string.IsNullOrWhiteSpace(_evaluacionActual))
             {
-                LimpiarVista();
-                return;
+                LimpiarVista(); return;
             }
 
             string claveMateriaEval = $"{_claveMateria}_{_evaluacionActual}";
@@ -407,8 +385,7 @@ public partial class ParcialesViewModel : ObservableObject
             
             RecalcularTodo(guardarJson: false, esCargaInicial: true, marcarCambios: false);
             
-            TieneCambios = false;
-            _lastUserEditTime = null;
+            TieneCambios = false; _lastUserEditTime = null;
             _lastArchivoSeleccionado = _mainVm.ArchivoSeleccionado;
             _lastEvaluacionSeleccionada = _mainVm.EvaluacionSeleccionada;
             _lastLoadOrSaveTime = DateTime.UtcNow;
@@ -417,12 +394,7 @@ public partial class ParcialesViewModel : ObservableObject
         {
             await System.Threading.Tasks.Task.Delay(400); 
             _cargasActivas--;
-            if (_cargasActivas <= 0)
-            {
-                _cargasActivas = 0;
-                _suspendUserEditMarking = false;
-                _cargando = false;
-            }
+            if (_cargasActivas <= 0) { _cargasActivas = 0; _suspendUserEditMarking = false; _cargando = false; }
         }
     }
 
@@ -430,23 +402,11 @@ public partial class ParcialesViewModel : ObservableObject
     {
         Actividades.Clear();
         for (int i = 0; i < 4; i++) Actividades.Add(CreateBlankEditor());
-        SumaPorcentajes = 0;
-        SumaPorcentajesTexto = "0%";
-        CalificacionParcialTexto = "";
-        EstadoValidacion = "Sin materia cargada";
-        EstadoGuardado = string.Empty;
-        NombreAlumno = string.Empty;
-        MatriculaAlumno = string.Empty;
-        GrupoAlumno = string.Empty;
-        MostrarGrupo = false;
-
-        AsistenciaActiva = false;
-        ClasesTotales = "";
-        Inasistencias = "";
-
-        TieneCambios = false;
-        _lastUserEditTime = null;
-        ActualizarConteoEvaluados();
+        SumaPorcentajes = 0; SumaPorcentajesTexto = "0%"; CalificacionParcialTexto = "";
+        EstadoValidacion = "Sin materia cargada"; EstadoGuardado = string.Empty;
+        NombreAlumno = string.Empty; MatriculaAlumno = string.Empty; GrupoAlumno = string.Empty;
+        MostrarGrupo = false; AsistenciaActiva = false; ClasesTotales = ""; Inasistencias = "";
+        TieneCambios = false; _lastUserEditTime = null; ActualizarConteoEvaluados();
     }
 
     private void RestaurarAlumnoSeleccionado()
@@ -454,27 +414,17 @@ public partial class ParcialesViewModel : ObservableObject
         if (!string.IsNullOrWhiteSpace(_ultimaMatriculaSeleccionada))
         {
             var alumno = Alumnos.FirstOrDefault(a => string.Equals(a.Matricula, _ultimaMatriculaSeleccionada, StringComparison.OrdinalIgnoreCase));
-            if (alumno != null)
-            {
-                AlumnoSeleccionado = alumno;
-                return;
-            }
+            if (alumno != null) { AlumnoSeleccionado = alumno; return; }
         }
-
-        if (AlumnoSeleccionado == null && Alumnos.Any())
-            AlumnoSeleccionado = Alumnos.First();
+        if (AlumnoSeleccionado == null && Alumnos.Any()) AlumnoSeleccionado = Alumnos.First();
     }
 
     private void ActualizarDatosAlumnoSeleccionado()
     {
         if (AlumnoSeleccionado == null)
         {
-            NombreAlumno = string.Empty;
-            MatriculaAlumno = string.Empty;
-            GrupoAlumno = string.Empty;
-            return;
+            NombreAlumno = string.Empty; MatriculaAlumno = string.Empty; GrupoAlumno = string.Empty; return;
         }
-
         NombreAlumno = AlumnoSeleccionado.Nombre;
         MatriculaAlumno = AlumnoSeleccionado.Matricula;
         GrupoAlumno = ObtenerGrupoDesdeJson(AlumnoSeleccionado.Matricula) ?? AlumnoSeleccionado.Grupo;
@@ -485,62 +435,45 @@ public partial class ParcialesViewModel : ObservableObject
         if (AlumnoSeleccionado == null)
         {
             foreach (var actividad in Actividades) actividad.PuntajeObtenido = "";
-            Inasistencias = "";
-            AlumnoConCapturaDirecta = false;
-            LeyendaCapturaDirecta = string.Empty;
-            CalificacionParcialTexto = "";
+            Inasistencias = ""; AlumnoConCapturaDirecta = false;
+            LeyendaCapturaDirecta = string.Empty; CalificacionParcialTexto = "";
             foreach (var ed in Actividades) ed.SetBloqueadoPorCapturaDirecta(false);
             return;
         }
 
         if (_materia.Calificaciones.TryGetValue(AlumnoSeleccionado.Matricula, out var capturas))
         {
-            bool alumnoCapturaDirecta = capturas.TryGetValue("__CAPTURA_DIRECTA__", out var cdVal) && cdVal > 0;
-            
-            AlumnoConCapturaDirecta = alumnoCapturaDirecta;
-            LeyendaCapturaDirecta = alumnoCapturaDirecta ? "Calificación directa habilitada para este alumno — para cambios diríjase al área de Servicios Escolares." : string.Empty;
+            bool cd = capturas.TryGetValue("__CAPTURA_DIRECTA__", out var cdVal) && cdVal > 0;
+            AlumnoConCapturaDirecta = cd;
+            LeyendaCapturaDirecta = cd ? "Calificación directa habilitada para este alumno — para cambios diríjase al área de Servicios Escolares." : string.Empty;
 
             foreach (var ed in Actividades)
             {
                 ed.SetBloqueadoPorCapturaDirecta(AlumnoConCapturaDirecta);
                 if (!string.IsNullOrWhiteSpace(ed.Nombre) && capturas.TryGetValue(ed.Nombre, out var valor))
                 {
-                    ed.PuntajeObtenido = valor.ToString("0.##", CultureInfo.InvariantCulture);
+                    if (valor == -1) ed.PuntajeObtenido = "SC"; // -1 es SC guardado en JSON
+                    else ed.PuntajeObtenido = valor.ToString("0.##", CultureInfo.InvariantCulture);
                 }
-                else
-                {
-                    ed.PuntajeObtenido = "";
-                }
+                else ed.PuntajeObtenido = "";
             }
             
             Inasistencias = capturas.TryGetValue("__Inasistencias__", out var ina) && ina >= 0 ? ina.ToString() : "";
 
-            if (alumnoCapturaDirecta)
+            if (AlumnoConCapturaDirecta)
             {
                 if (capturas.TryGetValue("__CALIF_DIRECTA__", out var califDirectaVal))
-                {
                     CalificacionParcialTexto = califDirectaVal.ToString("0.##", CultureInfo.InvariantCulture);
-                }
                 else
-                {
-                    try
-                    {
-                        CalificacionParcialTexto = AlumnoSeleccionado.Calificación[_evaluacionActual] ?? "";
-                    }
-                    catch
-                    {
-                        CalificacionParcialTexto = "";
-                    }
-                }
+                    try { CalificacionParcialTexto = AlumnoSeleccionado.Calificación[_evaluacionActual] ?? ""; }
+                    catch { CalificacionParcialTexto = ""; }
             }
             return;
         }
 
         foreach (var actividad in Actividades) actividad.PuntajeObtenido = "";
-        Inasistencias = "";
-        AlumnoConCapturaDirecta = false;
-        LeyendaCapturaDirecta = string.Empty;
-        CalificacionParcialTexto = "";
+        Inasistencias = ""; AlumnoConCapturaDirecta = false;
+        LeyendaCapturaDirecta = string.Empty; CalificacionParcialTexto = "";
         foreach (var ed in Actividades) ed.SetBloqueadoPorCapturaDirecta(false);
     }
 
@@ -559,20 +492,14 @@ public partial class ParcialesViewModel : ObservableObject
             editor.CargarDesdeModelo(modelo);
             Actividades.Add(editor);
         }
-        while (Actividades.Count < 4)
-        {
-            Actividades.Add(CreateBlankEditor());
-        }
+        while (Actividades.Count < 4) Actividades.Add(CreateBlankEditor());
     }
 
     private ActividadParcialEditor CreateBlankEditor()
     {
         var ed = new ActividadParcialEditor(() => EditorChanged());
-        ed.Activa = false;
-        ed.Nombre = string.Empty;
-        ed.Porcentaje = string.Empty;
-        ed.PuntajeMaximo = string.Empty;
-        ed.PuntajeObtenido = string.Empty;
+        ed.Activa = false; ed.Nombre = string.Empty; ed.Porcentaje = string.Empty;
+        ed.PuntajeMaximo = string.Empty; ed.PuntajeObtenido = string.Empty;
         return ed;
     }
 
@@ -586,9 +513,7 @@ public partial class ParcialesViewModel : ObservableObject
         if (AlumnoConCapturaDirecta)
         {
             if (double.TryParse(CalificacionParcialTexto, NumberStyles.Any, CultureInfo.InvariantCulture, out double dval))
-            {
                 capturas["__CALIF_DIRECTA__"] = dval;
-            }
         }
 
         foreach (var actividad in Actividades)
@@ -599,6 +524,10 @@ public partial class ParcialesViewModel : ObservableObject
                 {
                     capturas[actividad.Nombre.Trim()] = obt;
                 }
+                else if (actividad.PuntajeObtenido?.Trim().ToUpperInvariant() == "SC")
+                {
+                    capturas[actividad.Nombre.Trim()] = -1; // -1 significa SC
+                }
                 else
                 {
                     capturas[actividad.Nombre.Trim()] = 0;
@@ -606,10 +535,8 @@ public partial class ParcialesViewModel : ObservableObject
             }
         }
         
-        if (int.TryParse(Inasistencias, out int inaVal))
-            capturas["__Inasistencias__"] = inaVal;
-        else
-            capturas["__Inasistencias__"] = -1;
+        if (int.TryParse(Inasistencias, out int inaVal)) capturas["__Inasistencias__"] = inaVal;
+        else capturas["__Inasistencias__"] = -1;
 
         if (int.TryParse(ClasesTotales, out int ct))
             _materia.Calificaciones["$CONFIG$"] = new Dictionary<string, double> { { "AsistenciaActiva", AsistenciaActiva ? 1 : 0 }, { "ClasesTotales", ct } };
@@ -634,38 +561,24 @@ public partial class ParcialesViewModel : ObservableObject
             if (!actividad.Activa) continue;
 
             if (!double.TryParse(actividad.Porcentaje, NumberStyles.Any, CultureInfo.InvariantCulture, out double porc) || porc < 0 || porc > 100)
-            {
-                logicaCorrecta = false;
-                continue;
-            }
+            { logicaCorrecta = false; continue; }
 
             if (!double.TryParse(actividad.PuntajeMaximo, NumberStyles.Any, CultureInfo.InvariantCulture, out double max) || max <= 0)
-            {
-                logicaCorrecta = false;
-                continue;
-            }
+            { logicaCorrecta = false; continue; }
 
-            if (string.IsNullOrWhiteSpace(actividad.PuntajeObtenido))
-            {
-                logicaCorrecta = false;
-                continue;
-            }
+            // Si está vacío o es "SC", la lógica es incorrecta (calificación final vacía)
+            if (string.IsNullOrWhiteSpace(actividad.PuntajeObtenido) || actividad.PuntajeObtenido.Trim().ToUpperInvariant() == "SC")
+            { logicaCorrecta = false; continue; }
 
             if (!double.TryParse(actividad.PuntajeObtenido, NumberStyles.Any, CultureInfo.InvariantCulture, out double obt) || obt < 0 || obt > max)
-            {
-                logicaCorrecta = false;
-                continue;
-            }
+            { logicaCorrecta = false; continue; }
 
             entradas.Add((porc, max, obt));
             sumaPorcentajes += (decimal)porc;
         }
 
         double scaling = 1.0;
-        if (sumaPorcentajes > 0)
-        {
-            scaling = 100.0 / (double)sumaPorcentajes;
-        }
+        if (sumaPorcentajes > 0) scaling = 100.0 / (double)sumaPorcentajes;
 
         foreach (var (porc, max, obt) in entradas)
         {
@@ -686,11 +599,8 @@ public partial class ParcialesViewModel : ObservableObject
             if (!AlumnoConCapturaDirecta)
             {
                 CalificacionParcialTexto = calificacion.ToString("0.0", CultureInfo.InvariantCulture);
-
                 if (AlumnoSeleccionado != null && !string.IsNullOrWhiteSpace(_evaluacionActual))
-                {
                     AlumnoSeleccionado.Calificación[_evaluacionActual] = CalificacionParcialTexto;
-                }
             }
         }
         else
@@ -699,16 +609,11 @@ public partial class ParcialesViewModel : ObservableObject
             {
                 CalificacionParcialTexto = "";
                 if (AlumnoSeleccionado != null && !string.IsNullOrWhiteSpace(_evaluacionActual))
-                {
                     AlumnoSeleccionado.Calificación[_evaluacionActual] = "";
-                }
             }
         }
 
-        if (AlumnoSeleccionado != null)
-        {
-            PersistirCapturasTemporales(AlumnoSeleccionado.Matricula);
-        }
+        if (AlumnoSeleccionado != null) PersistirCapturasTemporales(AlumnoSeleccionado.Matricula);
 
         if (guardarJson) GuardarEnJsonLocal();
 
@@ -736,21 +641,15 @@ public partial class ParcialesViewModel : ObservableObject
         _materia.Calificaciones["$CONFIG$"] = config;
 
         if (AlumnoSeleccionado != null && !string.IsNullOrWhiteSpace(AlumnoSeleccionado.Matricula))
-        {
             PersistirCapturasTemporales(AlumnoSeleccionado.Matricula);
-        }
 
         double acumuladoPorcentajes = 0.0;
         foreach (var ed in Actividades)
         {
             if (!ed.Activa) continue;
-            var text = (ed.Porcentaje ?? string.Empty).Trim();
-            if (string.IsNullOrEmpty(text)) continue;
-            text = text.Replace(',', '.');
+            var text = (ed.Porcentaje ?? string.Empty).Trim().Replace(',', '.');
             if (double.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out double p))
-            {
                 acumuladoPorcentajes += p;
-            }
         }
 
         _materia.PorcentajeAcumulado = acumuladoPorcentajes;
@@ -789,10 +688,7 @@ public partial class ParcialesViewModel : ObservableObject
             if (string.IsNullOrWhiteSpace(nombre)) return string.Empty;
             return nombre.Trim().Replace(' ', '_');
         }
-        catch
-        {
-            return string.Empty;
-        }
+        catch { return string.Empty; }
     }
 
     private string ObtenerGrupoDesdeJson(string matricula)
@@ -807,10 +703,7 @@ public partial class ParcialesViewModel : ObservableObject
         {
             using var lite = new LiteDbService();
             var grupos = lite.GetGrupos();
-            foreach (var kv in grupos)
-            {
-                _mapaGrupos[kv.Key] = kv.Value;
-            }
+            foreach (var kv in grupos) _mapaGrupos[kv.Key] = kv.Value;
         }
         catch { }
     }
@@ -829,7 +722,6 @@ public partial class ActividadParcialEditor : ObservableObject
     private bool _bloqueadoPorCapturaDirecta = false;
 
     [ObservableProperty] private bool _estaCompleta;
-
     [ObservableProperty] private bool _activa;
     [ObservableProperty] private string _nombre = string.Empty;
     [ObservableProperty] private string _porcentaje = string.Empty;
@@ -859,7 +751,6 @@ public partial class ActividadParcialEditor : ObservableObject
         Porcentaje = modelo.Porcentaje == 0 ? "" : modelo.Porcentaje.ToString(CultureInfo.InvariantCulture);
         PuntajeMaximo = modelo.PuntajeMaximo == 0 ? "" : modelo.PuntajeMaximo.ToString(CultureInfo.InvariantCulture);
         PuntajeObtenido = "";
-
         ActualizarVistaInmediata();
     }
 
@@ -897,11 +788,7 @@ public partial class ActividadParcialEditor : ObservableObject
 
     partial void OnActivaChanged(bool value)
     {
-        if (value)
-        {
-            OnPropertyChanged(nameof(Nombre));
-            OnPropertyChanged(nameof(Porcentaje));
-        }
+        if (value) { OnPropertyChanged(nameof(Nombre)); OnPropertyChanged(nameof(Porcentaje)); }
         NotificarActualizacion();
     }
     partial void OnNombreChanged(string value) => _notificarCambio?.Invoke();
@@ -924,9 +811,7 @@ public partial class ActividadParcialEditor : ObservableObject
 
     private void ActualizarEstadoCompleto()
     {
-        bool completo = !string.IsNullOrWhiteSpace(Nombre)
-                        && !string.IsNullOrWhiteSpace(Porcentaje)
-                        && !string.IsNullOrWhiteSpace(PuntajeMaximo);
+        bool completo = !string.IsNullOrWhiteSpace(Nombre) && !string.IsNullOrWhiteSpace(Porcentaje) && !string.IsNullOrWhiteSpace(PuntajeMaximo);
         if (EstaCompleta != completo)
         {
             EstaCompleta = completo;

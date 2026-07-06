@@ -12,6 +12,7 @@ using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.ViewModels;
 
+// Objeto para bindear el id original "P1" pero que en pantalla diga "PARCIAL 1"
 public class EvaluacionItem
 {
     public string Id { get; set; } = string.Empty;
@@ -91,7 +92,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    // AHORA USA EL OBJETO CON ID Y NOMBRE VISUAL
+    // Ahora es ObservableCollection<EvaluacionItem>
     public ObservableCollection<EvaluacionItem> EvaluacionesDisponibles { get; } = new();
     
     public ObservableCollection<string> ArchivosDisponibles { get; } = new();
@@ -363,7 +364,7 @@ public partial class MainViewModel : ObservableObject
         _isUpdatingProgrammatically = true;
         string valorMayusculas = value.ToUpperInvariant();
         
-        // Barrera de seguridad Exclusiva EXTRA usando validación del objeto EvaluacionItem
+        // Bloqueo de seguridad: Si estamos en modo exclusivo EXTRA, no dejamos cambiar.
         if (valorMayusculas != "EXTRA" && EvaluacionesDisponibles.Count == 1 && EvaluacionesDisponibles.Any(e => e.Id == "EXTRA"))
         {
             valorMayusculas = "EXTRA";
@@ -441,6 +442,7 @@ public partial class MainViewModel : ObservableObject
         SincronizarCalificacionSemestral();
         _isUpdatingProgrammatically = false;
 
+        // Guarda el Semestral en cascada si no es un archivo exclusivo de extra
         if (!string.Equals(EvaluacionSeleccionada, "SEM", StringComparison.OrdinalIgnoreCase) &&
             !string.Equals(EvaluacionSeleccionada, "EXTRA", StringComparison.OrdinalIgnoreCase) &&
             _evaluacionIdPorNombre.TryGetValue("SEM", out var idSem))
@@ -453,7 +455,7 @@ public partial class MainViewModel : ObservableObject
         }
 
         TieneCambios = false;
-        ParcialesVm.TieneCambios = false;
+        if (ParcialesVm != null) ParcialesVm.TieneCambios = false;
 
         MessageBox.Show(
             ok ? "Guardado correcto." : "No se pudo guardar el archivo CAP.",

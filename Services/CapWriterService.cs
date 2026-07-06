@@ -51,19 +51,32 @@ public class CapWriterService
             if (alumnoActual == null)
                 continue;
 
-            string valorNuevo = alumnoActual.Calificación[nombreEvaluacion];
+            string valorBase = alumnoActual.Calificación[nombreEvaluacion]?.Trim() ?? "";
+            string valorBaseUpper = valorBase.ToUpperInvariant();
+
+            string valorNormal = valorBase;
+            string valorStr = valorBase;
+            string valorLiteral = "";
+
+            // Lógica exacta: si es NP se pone la S, de lo contrario se deja en blanco ("") y se borra la "S"
+            if (valorBaseUpper == "NP")
+            {
+                valorNormal = "-555";
+                valorStr = "NP";
+                valorLiteral = "S";
+            }
 
             if (lineaTrim.StartsWith(patronNormal, StringComparison.OrdinalIgnoreCase))
             {
-                lineas[i] = $"{patronNormal}{valorNuevo}";
+                lineas[i] = $"{patronNormal}{valorNormal}";
             }
             else if (lineaTrim.StartsWith(patronStr, StringComparison.OrdinalIgnoreCase))
             {
-                lineas[i] = $"{patronStr}{valorNuevo}";
+                lineas[i] = $"{patronStr}{valorStr}";
             }
             else if (lineaTrim.StartsWith(patronLiteral, StringComparison.OrdinalIgnoreCase))
             {
-                lineas[i] = $"{patronLiteral}";
+                lineas[i] = $"{patronLiteral}{valorLiteral}";
             }
         }
 

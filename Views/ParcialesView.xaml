@@ -315,12 +315,14 @@
                                                            VerticalAlignment="Center"
                                                            FontSize="11"
                                                            Foreground="#334155" />
+                                                
                                                 <TextBox Grid.Column="1"
                                                          Text="{Binding Nombre, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                          Height="24"
                                                          FontSize="11"
                                                          VerticalContentAlignment="Center"
                                                          IsEnabled="{Binding Activa}"
+                                                         CharacterCasing="Upper"
                                                          Style="{StaticResource RoundedTextBoxStyle}"
                                                          TextChanged="ActividadProp_TextChanged" />
                                             </Grid>

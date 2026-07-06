@@ -129,6 +129,9 @@ public partial class ParcialesView : UserControl
     private static string NormalizeToSingleDecimalRange(string input)
     {
         if (string.IsNullOrWhiteSpace(input)) return string.Empty;
+        if (input.Trim().ToUpperInvariant() == "SC") return "SC"; // Permite el valor manual SC
+        if (input.Trim().ToUpperInvariant() == "S") return "S";   // Permite teclear S momentaneamente
+
         string s = input.Trim().Replace(',', '.');
         var sb = new System.Text.StringBuilder();
         foreach (char c in s)

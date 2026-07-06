@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.ViewModels;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views;
@@ -37,15 +38,13 @@ public partial class ExtraView : UserControl
             mainVm.TieneCambios = true;
         }
 
-        // LÓGICA DE DETENCIÓN ESTRICTA POR GRUPO:
+        // LÓGICA DE DETENCIÓN ESTRICTA POR GRUPO
         var groupItem = FindVisualParent<GroupItem>(tb);
         if (groupItem != null)
         {
             var textBoxes = FindVisualChildren<TextBox>(groupItem).ToList();
             int index = textBoxes.IndexOf(tb);
             
-            // Si el índice existe y NO es el último de la lista de este Grupo, avanza.
-            // Al llegar al final de este grupo, se detiene completamente.
             if (index >= 0 && index < textBoxes.Count - 1)
             {
                 var nextTb = textBoxes[index + 1];
@@ -60,9 +59,59 @@ public partial class ExtraView : UserControl
     {
         if (sender is TextBox tb)
         {
-            string text = tb.Text.Trim().ToUpperInvariant();
+            var change = e.Changes.FirstOrDefault();
+            string textUpper = tb.Text.ToUpperInvariant();
             
-            if (text != "NP")
+            // Extraemos al alumno atado a este TextBox para inyectarle el dato a la fuerza
+            var alumno = tb.DataContext as Alumno;
+
+            if (change != null)
+            {
+                // Si teclea N (agrega un caracter y queda "N") -> Autocompleta NP
+                if (change.AddedLength > 0 && textUpper == "N")
+                {
+                    tb.Text = "NP";
+                    tb.SelectionStart = 2; 
+                    
+                    // FORZAMOS LA ACTUALIZACIÓN INTERNA
+                    if (alumno != null) alumno.Calificación["EXTRA"] = "NP"; 
+                    
+                    if (DataContext is MainViewModel mvm) 
+                    {
+                        mvm.TieneCambios = true;
+                        mvm.ActualizarConteoEvaluadosExtra();
+                    }
+                    return;
+                }
+                
+                // Si borra un caracter del "NP" y solo queda "N" -> Se limpia la celda
+                if (change.RemovedLength > 0 && textUpper == "N")
+                {
+                    tb.Text = "";
+                    
+                    // FORZAMOS LA ACTUALIZACIÓN INTERNA
+                    if (alumno != null) alumno.Calificación["EXTRA"] = "";
+                    
+                    if (DataContext is MainViewModel mvm) 
+                    {
+                        mvm.TieneCambios = true;
+                        mvm.ActualizarConteoEvaluadosExtra();
+                    }
+                    return;
+                }
+            }
+
+            // Normalización general si no se autocompletó nada arriba
+            if (textUpper == "NP")
+            {
+                if (tb.Text != "NP")
+                {
+                    tb.Text = "NP";
+                    tb.SelectionStart = 2;
+                }
+                if (alumno != null) alumno.Calificación["EXTRA"] = "NP";
+            }
+            else
             {
                 string normalized = NormalizeToSingleDecimalRange(tb.Text);
                 if (tb.Text != normalized && normalized != "NP")
@@ -71,13 +120,14 @@ public partial class ExtraView : UserControl
                     tb.Text = normalized;
                     tb.SelectionStart = System.Math.Min(sel, tb.Text.Length);
                 }
+                if (alumno != null) alumno.Calificación["EXTRA"] = tb.Text;
             }
         }
 
-        if (DataContext is MainViewModel mainVm)
+        if (DataContext is MainViewModel mainVmFinal)
         {
-            mainVm.TieneCambios = true;
-            mainVm.ActualizarConteoEvaluadosExtra();
+            mainVmFinal.TieneCambios = true;
+            mainVmFinal.ActualizarConteoEvaluadosExtra();
         }
     }
 
