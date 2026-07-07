@@ -1,19 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
 {
     public class DataSyncService
     {
-        private readonly string _carpeta;
-
         public DataSyncService()
         {
-            _carpeta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-            if (!Directory.Exists(_carpeta)) Directory.CreateDirectory(_carpeta);
         }
 
         public IEnumerable<(string Key, MateriaParcial Value)> CargarParciales()

@@ -228,24 +228,29 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-        public void BuscarCarpeta()
+    public void BuscarCarpeta()
+    {
+        // Usamos el diálogo nativo moderno de WPF disponible desde .NET 8+
+        var dialog = new Microsoft.Win32.OpenFolderDialog
         {
-            // Usamos el diálogo nativo moderno de WPF disponible desde .NET 8+
-            var dialog = new Microsoft.Win32.OpenFolderDialog
-            {
-                Title = "Selecciona la unidad o carpeta con los archivos CAP",
-                Multiselect = false
-            };
-    
-            if (dialog.ShowDialog() == true)
-            {
-                RutaUsb = dialog.FolderName; // Ojo, aquí la propiedad se llama FolderName
-                ProcesarDirectorioSeleccionado();
-            }
+            Title = "Selecciona la unidad o carpeta con los archivos CAP",
+            Multiselect = false
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            RutaUsb = dialog.FolderName; // Ojo, aquí la propiedad se llama FolderName
+            ProcesarDirectorioSeleccionado();
         }
+    }
 
     private void ProcesarDirectorioSeleccionado()
     {
+        if (!string.IsNullOrWhiteSpace(RutaUsb))
+        {
+            GlobalSettings.CurrentCapDirectory = RutaUsb;
+        }
+
         ArchivosDisponibles.Clear();
         Alumnos.Clear();
         EvaluacionesDisponibles.Clear();

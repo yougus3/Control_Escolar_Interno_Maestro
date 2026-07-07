@@ -1,18 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
+using LiteDB; 
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 
-// Implementación ligera de persistencia basada en archivos JSON para sustituir a LiteDB
-// Provee la API mínima que usan los servicios de la aplicación.
 public class LiteDbService : IDisposable
 {
     private readonly string _dataFolder;
-    private readonly string _parcialesPath;
+    private readonly string _dbPath;
     private readonly string _gruposPath;
+    private readonly LiteDatabase _db;
 
     private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -22,35 +23,65 @@ public class LiteDbService : IDisposable
 
     public LiteDbService()
     {
-        _dataFolder = Path.Combine(AppContext.BaseDirectory, "Data");
+        // Usa la ruta dinámica establecida por el usuario o la USB
+        _dataFolder = Path.Combine(GlobalSettings.CurrentCapDirectory, "Data");
         if (!Directory.Exists(_dataFolder)) Directory.CreateDirectory(_dataFolder);
-        _parcialesPath = Path.Combine(_dataFolder, "parciales.json");
+        
+        // Archivo de la base de datos REAL de LiteDB para Parciales y Configuraciones
+        _dbPath = Path.Combine(_dataFolder, "parciales.db");
+        _db = new LiteDatabase(_dbPath);
+
+        // Archivo JSON original para Grupos
         _gruposPath = Path.Combine(_dataFolder, "grupo.json");
     }
 
-    // Devuelve como tuplas para permitir deconstrucción: foreach (var (key,val) in lite.GetAllParciales())
+    // --- MÉTODOS CON LITEDB (Parciales y Configuración) ---
+
     public IEnumerable<(string Key, MateriaParcial Value)> GetAllParciales()
     {
-        var dict = LoadParcialesFile();
-        foreach (var kv in dict)
-            yield return (kv.Key, kv.Value);
+        var col = _db.GetCollection<MateriaParcialRecord>("Parciales");
+        foreach (var doc in col.FindAll())
+        {
+            yield return (doc.Id, doc.Data);
+        }
     }
 
     public MateriaParcial? GetMateria(string clave)
     {
         if (string.IsNullOrWhiteSpace(clave)) return null;
-        var dict = LoadParcialesFile();
-        if (dict.TryGetValue(clave, out var materia)) return materia;
-        return null;
+        var col = _db.GetCollection<MateriaParcialRecord>("Parciales");
+        var record = col.FindById(clave);
+        return record?.Data;
     }
 
     public void SaveMateria(string clave, MateriaParcial materia)
     {
-        if (string.IsNullOrWhiteSpace(clave)) return;
-        var dict = LoadParcialesFile();
-        dict[clave] = materia ?? new MateriaParcial();
-        SaveParcialesFile(dict);
+        if (string.IsNullOrWhiteSpace(clave) || materia == null) return;
+        var col = _db.GetCollection<MateriaParcialRecord>("Parciales");
+        
+        var record = new MateriaParcialRecord { Id = clave, Data = materia };
+        col.Upsert(record);
     }
+
+    public IEnumerable<(string Key, ConfiguracionParciales Value)> GetAllConfiguraciones()
+    {
+        var col = _db.GetCollection<ConfiguracionRecord>("Configuraciones");
+        foreach (var doc in col.FindAll())
+        {
+            yield return (doc.Id, doc.Data);
+        }
+    }
+
+    public void SaveConfiguracion(string clave, ConfiguracionParciales cfg)
+    {
+        if (string.IsNullOrWhiteSpace(clave) || cfg == null) return;
+        var col = _db.GetCollection<ConfiguracionRecord>("Configuraciones");
+        
+        var record = new ConfiguracionRecord { Id = clave, Data = cfg };
+        col.Upsert(record);
+    }
+
+    // --- MÉTODOS CON JSON (Solo para Grupos) ---
 
     public Dictionary<string, string> GetGrupos()
     {
@@ -82,11 +113,12 @@ public class LiteDbService : IDisposable
         return result;
     }
 
-    public void SaveGrupos(Dictionary<string,string> grupos)
+    public void SaveGrupos(Dictionary<string, string> grupos)
     {
         try
         {
-            var text = JsonSerializer.Serialize(grupos ?? new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase), _jsonOptions);
+            // Se especifica explícitamente System.Text.Json para evitar ambigüedad con LiteDB
+            var text = System.Text.Json.JsonSerializer.Serialize(grupos ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase), _jsonOptions);
             File.WriteAllText(_gruposPath, text);
         }
         catch
@@ -94,79 +126,24 @@ public class LiteDbService : IDisposable
         }
     }
 
-    // Configuraciones (API mínima)
-    public IEnumerable<(string Key, Models.ConfiguracionParciales Value)> GetAllConfiguraciones()
-    {
-        var result = new List<(string Key, Models.ConfiguracionParciales Value)>();
-        var path = Path.Combine(_dataFolder, "configuraciones.json");
-        if (!File.Exists(path)) return result;
-        try
-        {
-            var text = File.ReadAllText(path);
-            if (string.IsNullOrWhiteSpace(text)) return result;
-            var dict = JsonSerializer.Deserialize<Dictionary<string, Models.ConfiguracionParciales>>(text, _jsonOptions);
-            if (dict == null) return result;
-            foreach (var kv in dict)
-                result.Add((kv.Key, kv.Value));
-        }
-        catch { }
-        return result;
-    }
-
-    public void SaveConfiguracion(string clave, Models.ConfiguracionParciales cfg)
-    {
-        var path = Path.Combine(_dataFolder, "configuraciones.json");
-        try
-        {
-            Dictionary<string, Models.ConfiguracionParciales> dict = new(StringComparer.OrdinalIgnoreCase);
-            if (File.Exists(path))
-            {
-                var text = File.ReadAllText(path);
-                if (!string.IsNullOrWhiteSpace(text))
-                {
-                    var loaded = JsonSerializer.Deserialize<Dictionary<string, Models.ConfiguracionParciales>>(text, _jsonOptions);
-                    if (loaded != null) dict = loaded;
-                }
-            }
-            dict[clave] = cfg ?? new Models.ConfiguracionParciales();
-            var outText = JsonSerializer.Serialize(dict, _jsonOptions);
-            File.WriteAllText(path, outText);
-        }
-        catch { }
-    }
-
-    private Dictionary<string, MateriaParcial> LoadParcialesFile()
-    {
-        try
-        {
-            if (!File.Exists(_parcialesPath)) return new Dictionary<string, MateriaParcial>(StringComparer.OrdinalIgnoreCase);
-            var text = File.ReadAllText(_parcialesPath);
-            if (string.IsNullOrWhiteSpace(text)) return new Dictionary<string, MateriaParcial>(StringComparer.OrdinalIgnoreCase);
-            var dict = JsonSerializer.Deserialize<Dictionary<string, MateriaParcial>>(text, _jsonOptions);
-            if (dict == null) return new Dictionary<string, MateriaParcial>(StringComparer.OrdinalIgnoreCase);
-            return new Dictionary<string, MateriaParcial>(dict, StringComparer.OrdinalIgnoreCase);
-        }
-        catch
-        {
-            return new Dictionary<string, MateriaParcial>(StringComparer.OrdinalIgnoreCase);
-        }
-    }
-
-    private void SaveParcialesFile(Dictionary<string, MateriaParcial> dict)
-    {
-        try
-        {
-            var text = JsonSerializer.Serialize(dict, _jsonOptions);
-            File.WriteAllText(_parcialesPath, text);
-        }
-        catch
-        {
-            // ignore write failures for now
-        }
-    }
-
     public void Dispose()
     {
-        // nothing to dispose
+        _db?.Dispose();
+    }
+
+    // --- Clases Privadas para estructurar los documentos en LiteDB ---
+    
+    private class MateriaParcialRecord
+    {
+        [BsonId] 
+        public string Id { get; set; } = string.Empty;
+        public MateriaParcial Data { get; set; } = new();
+    }
+
+    private class ConfiguracionRecord
+    {
+        [BsonId]
+        public string Id { get; set; } = string.Empty;
+        public ConfiguracionParciales Data { get; set; } = new();
     }
 }
