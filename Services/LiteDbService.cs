@@ -23,15 +23,15 @@ public class LiteDbService : IDisposable
 
     public LiteDbService()
     {
-        // Usa la ruta dinámica establecida por el usuario o la USB
+        // Usa la ruta dinámica de la USB / Carpeta de CAPs
         _dataFolder = Path.Combine(GlobalSettings.CurrentCapDirectory, "Data");
         if (!Directory.Exists(_dataFolder)) Directory.CreateDirectory(_dataFolder);
         
-        // Archivo de la base de datos REAL de LiteDB para Parciales y Configuraciones
+        // Configuraciones y Parciales van encriptados en el DB LITE
         _dbPath = Path.Combine(_dataFolder, "parciales.db");
         _db = new LiteDatabase(_dbPath);
 
-        // Archivo JSON original para Grupos
+        // Grupos se queda libre en JSON
         _gruposPath = Path.Combine(_dataFolder, "grupo.json");
     }
 
@@ -108,7 +108,6 @@ public class LiteDbService : IDisposable
         }
         catch
         {
-            // ignore and return empty map
         }
         return result;
     }
@@ -117,7 +116,6 @@ public class LiteDbService : IDisposable
     {
         try
         {
-            // Se especifica explícitamente System.Text.Json para evitar ambigüedad con LiteDB
             var text = System.Text.Json.JsonSerializer.Serialize(grupos ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase), _jsonOptions);
             File.WriteAllText(_gruposPath, text);
         }
