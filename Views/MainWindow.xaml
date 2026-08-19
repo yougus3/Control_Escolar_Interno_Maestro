@@ -335,7 +335,7 @@
 
                 <TextBox Grid.Column="1"
                          Style="{StaticResource RoundedTextBoxStyle}"
-                         Text="{Binding RutaUsb, UpdateSourceTrigger=PropertyChanged}"
+                         Text="{Binding RutaUsbLabel, UpdateSourceTrigger=PropertyChanged}"
                          VerticalContentAlignment="Center"
                          Height="32"
                          IsReadOnly="{Binding RutaUsbEditable, Converter={StaticResource InverseBoolConverter}}" />

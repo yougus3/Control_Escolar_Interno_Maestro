@@ -1,37 +1,67 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <OutputType>WinExe</OutputType>
-        <TargetFramework>net10.0-windows</TargetFramework>
-        <RootNamespace>Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon</RootNamespace>
-        <SatelliteResourceLanguages>none</SatelliteResourceLanguages>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <UseWPF>true</UseWPF>
-        <PlatformTarget>x86</PlatformTarget>
-        <ApplicationIcon>logo.ico</ApplicationIcon>
-        <Platforms>AnyCPU;x86</Platforms>
-        <NeutralLanguage>es-MX</NeutralLanguage>
-    </PropertyGroup>
+	<PropertyGroup>
+		<!-- Aplicación WPF -->
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0-windows</TargetFramework>
+		<UseWPF>true</UseWPF>
 
-    <ItemGroup>
-      <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-      <PackageReference Include="LiteDB" Version="5.0.13" />
-    </ItemGroup>
+		<!-- Nombre / namespace -->
+		<RootNamespace>Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon</RootNamespace>
 
-    <ItemGroup>
-        <None Update="Data\**\*">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
+		<!-- Compilación -->
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
 
-    <ItemGroup>
-      <None Remove="logo.jpg" />
-      <Content Include="logo.ico">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-      <Resource Include="logo.jpg">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Resource>
-    </ItemGroup>
+		<!-- Windows 32 bits -->
+		<PlatformTarget>x86</PlatformTarget>
+		<RuntimeIdentifier>win-x86</RuntimeIdentifier>
+
+		<!-- Publicación independiente de .NET -->
+		<SelfContained>true</SelfContained>
+
+		<!-- Todo dentro de un solo EXE -->
+		<PublishSingleFile>true</PublishSingleFile>
+
+		<!-- Incluye las DLL nativas dentro del EXE -->
+		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+
+		<!-- Recursos -->
+		<SatelliteResourceLanguages>none</SatelliteResourceLanguages>
+		<NeutralLanguage>es-MX</NeutralLanguage>
+
+		<!-- Icono -->
+		<ApplicationIcon>logo.ico</ApplicationIcon>
+
+		<!-- Plataformas disponibles en Visual Studio -->
+		<Platforms>AnyCPU;x86</Platforms>
+
+		<!-- Release limpio -->
+		<DebugType>None</DebugType>
+		<DebugSymbols>false</DebugSymbols>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+		<PackageReference Include="LiteDB" Version="5.0.13" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Data\**\*">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Remove="logo.jpg" />
+
+		<Content Include="logo.ico">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+
+		<Resource Include="logo.jpg">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+	</ItemGroup>
+
 </Project>
