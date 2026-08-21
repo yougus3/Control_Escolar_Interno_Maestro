@@ -245,6 +245,8 @@ public class CapParserService
             resultado.EvaluacionesDisponibles.Add("P2");
             resultado.EvaluacionesDisponibles.Add("P3");
             resultado.EvaluacionesDisponibles.Add("SEM");
+            // Soporte inicial para PREEXTRAORDINARIO (UI similar a SEM, cálculos específicos se implementarán después)
+            resultado.EvaluacionesDisponibles.Add("PREEXTRAORDINARIO");
         }
 
         // CONTROL DE DERECHO: DETECTAMOS SI EL ARCHIVO CAP TIENE EVALUACIÓN EXTRAORDINARIA

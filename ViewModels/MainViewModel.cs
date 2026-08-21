@@ -13,7 +13,6 @@ using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.ViewModels;
 
-// Objeto para bindear el id original "P1" pero que en pantalla diga "PARCIAL 1"
 public class EvaluacionItem
 {
     public string Id { get; set; } = string.Empty;
@@ -39,28 +38,40 @@ public partial class MainViewModel : ObservableObject
 
     private bool _isUpdatingProgrammatically = false;
 
-    // PROPIEDAD AGREGADA PARA CONTROLAR EL AVISO EN EXTRAVIEW
-    public bool IsUpdatingProgrammatically => _isUpdatingProgrammatically;
+    public bool IsUpdatingProgrammatically =>
+        _isUpdatingProgrammatically;
 
-    public string? ArchivoCompletoActual => _archivoCompletoActual;
+    public string? ArchivoCompletoActual =>
+        _archivoCompletoActual;
 
     public ParcialesViewModel ParcialesVm { get; }
 
-    [ObservableProperty] private string _rutaUsb = string.Empty; // ruta real en disco (data folder)
-    [ObservableProperty] private bool _rutaUsbEditable = false; // no editable: siempre desde carpeta data
+    [ObservableProperty]
+    private string _rutaUsb = string.Empty;
 
-    // Texto mostrado en la UI al lado del botón Buscar.
-    // "Raiz" cuando se usa la carpeta data en raíz del exe.
-    [ObservableProperty] private string _rutaUsbLabel = string.Empty;
+    [ObservableProperty]
+    private bool _rutaUsbEditable = false;
 
-    [ObservableProperty] private string _currentView = "List";
-    [ObservableProperty] private bool _tieneCambios;
+    [ObservableProperty]
+    private string _rutaUsbLabel = string.Empty;
 
-    // Propiedades exclusivas para ExtraView NavBar
-    [ObservableProperty] private string _nombreMateriaExtra = string.Empty;
-    [ObservableProperty] private string _nombreProfesorExtra = string.Empty;
-    [ObservableProperty] private string _textoEvaluadosExtra = string.Empty;
-    [ObservableProperty] private bool _faltanPorEvaluarExtra = false;
+    [ObservableProperty]
+    private string _currentView = "List";
+
+    [ObservableProperty]
+    private bool _tieneCambios;
+
+    [ObservableProperty]
+    private string _nombreMateriaExtra = string.Empty;
+
+    [ObservableProperty]
+    private string _nombreProfesorExtra = string.Empty;
+
+    [ObservableProperty]
+    private string _textoEvaluadosExtra = string.Empty;
+
+    [ObservableProperty]
+    private bool _faltanPorEvaluarExtra = false;
 
     public List<AlumnoFaltante> ListaNoEvaluadosExtra { get; private set; } = new();
 
@@ -69,21 +80,26 @@ public partial class MainViewModel : ObservableObject
     public string? ArchivoSeleccionado
     {
         get => _archivoSeleccionado;
+
         set
         {
-            if (_archivoSeleccionado != value)
-            {
-                // Si no estamos en actualización programática,
-                // preguntar por cambios pendientes.
-                if (!_isUpdatingProgrammatically && !ManejarCambiosPendientes())
-                {
-                    OnPropertyChanged(nameof(ArchivoSeleccionado));
-                    return;
-                }
+            if (_archivoSeleccionado == value)
+                return;
 
-                SetProperty(ref _archivoSeleccionado, value);
-                CargarArchivoSeleccionado(value);
+            if (!_isUpdatingProgrammatically &&
+                !ManejarCambiosPendientes())
+            {
+                OnPropertyChanged(
+                    nameof(ArchivoSeleccionado));
+
+                return;
             }
+
+            SetProperty(
+                ref _archivoSeleccionado,
+                value);
+
+            CargarArchivoSeleccionado(value);
         }
     }
 
@@ -92,19 +108,26 @@ public partial class MainViewModel : ObservableObject
     public string? EvaluacionSeleccionada
     {
         get => _evaluacionSeleccionada;
+
         set
         {
-            if (_evaluacionSeleccionada != value)
-            {
-                if (!_isUpdatingProgrammatically && !ManejarCambiosPendientes())
-                {
-                    OnPropertyChanged(nameof(EvaluacionSeleccionada));
-                    return;
-                }
+            if (_evaluacionSeleccionada == value)
+                return;
 
-                SetProperty(ref _evaluacionSeleccionada, value);
-                CambiarEvaluacion(value);
+            if (!_isUpdatingProgrammatically &&
+                !ManejarCambiosPendientes())
+            {
+                OnPropertyChanged(
+                    nameof(EvaluacionSeleccionada));
+
+                return;
             }
+
+            SetProperty(
+                ref _evaluacionSeleccionada,
+                value);
+
+            CambiarEvaluacion(value);
         }
     }
 
@@ -114,12 +137,18 @@ public partial class MainViewModel : ObservableObject
 
     public ObservableCollection<Alumno> Alumnos { get; } = new();
 
-    private readonly System.Collections.Generic.List<Alumno> _subscribedAlumnos = new();
+    private readonly List<Alumno> _subscribedAlumnos = new();
 
     public bool EsExtraSeleccionado =>
         string.Equals(
             EvaluacionSeleccionada,
             "EXTRA",
+            StringComparison.OrdinalIgnoreCase);
+
+    public bool EsPreExtraordinarioSeleccionado =>
+        string.Equals(
+            EvaluacionSeleccionada,
+            "PREEXTRAORDINARIO",
             StringComparison.OrdinalIgnoreCase);
 
     public MainViewModel()
@@ -129,32 +158,24 @@ public partial class MainViewModel : ObservableObject
         _scannerService = new FileScannerService();
         _configuracionService = new ConfiguracionParcialesService();
 
-        _configuracionActual = _configuracionService.ObtenerConfiguracion();
+        _configuracionActual =
+            _configuracionService.ObtenerConfiguracion();
 
-        ParcialesVm = new ParcialesViewModel(this);
+        ParcialesVm =
+            new ParcialesViewModel(this);
 
-        // Fijamos la carpeta data en la raíz del ejecutable
-        // como origen único de archivos CAP.
         try
         {
-            var carpetaData = Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory ?? string.Empty,
-                "data");
+            var carpetaData =
+                Path.Combine(
+                    AppDomain.CurrentDomain.BaseDirectory ?? string.Empty,
+                    "data");
 
-            // Asegurar existencia de la carpeta data
-            try
-            {
-                if (!Directory.Exists(carpetaData))
-                    Directory.CreateDirectory(carpetaData);
-            }
-            catch
-            {
-            }
+            if (!Directory.Exists(carpetaData))
+                Directory.CreateDirectory(carpetaData);
 
             RutaUsb = carpetaData;
             RutaUsbEditable = false;
-
-            // Etiqueta en UI.
             RutaUsbLabel = "Raiz";
         }
         catch
@@ -163,7 +184,8 @@ public partial class MainViewModel : ObservableObject
             RutaUsbLabel = string.Empty;
         }
 
-        if (!string.IsNullOrWhiteSpace(RutaUsb))
+        if (!string.IsNullOrWhiteSpace(
+                RutaUsb))
         {
             ProcesarDirectorioSeleccionado();
         }
@@ -171,43 +193,59 @@ public partial class MainViewModel : ObservableObject
 
     public void ActualizarConteoEvaluadosExtra()
     {
-        if (CurrentView != "Extra")
+        if (!string.Equals(
+                CurrentView,
+                "Extra",
+                StringComparison.OrdinalIgnoreCase))
+        {
             return;
+        }
 
         int total = Alumnos.Count;
         int evaluados = 0;
 
-        var lista = new List<AlumnoFaltante>();
+        var lista =
+            new List<AlumnoFaltante>();
 
         foreach (var alumno in Alumnos)
         {
-            if (!string.IsNullOrWhiteSpace(alumno.Calificación["EXTRA"]))
+            if (!string.IsNullOrWhiteSpace(
+                    alumno.Calificación["EXTRA"]))
             {
                 evaluados++;
             }
             else
             {
-                lista.Add(new AlumnoFaltante
-                {
-                    Materia = NombreMateriaExtra,
-                    Grupo = alumno.Grupo,
-                    Matricula = alumno.Matricula,
-                    Nombre = alumno.Nombre,
-                    Razon = "Falta calificación de extraordinario"
-                });
+                lista.Add(
+                    new AlumnoFaltante
+                    {
+                        Materia = NombreMateriaExtra,
+                        Grupo = alumno.Grupo,
+                        Matricula = alumno.Matricula,
+                        Nombre = alumno.Nombre,
+                        Razon =
+                            "Falta calificación de extraordinario"
+                    });
             }
         }
 
-        TextoEvaluadosExtra = $"{evaluados} de {total}";
-        FaltanPorEvaluarExtra = evaluados < total;
-        ListaNoEvaluadosExtra = lista;
+        TextoEvaluadosExtra =
+            $"{evaluados} de {total}";
+
+        FaltanPorEvaluarExtra =
+            evaluados < total;
+
+        ListaNoEvaluadosExtra =
+            lista;
     }
 
     private bool ManejarCambiosPendientes()
     {
-        if (TieneCambios)
-        {
-            var res = MessageBox.Show(
+        if (!TieneCambios)
+            return true;
+
+        var res =
+            MessageBox.Show(
                 "Hay cambios sin guardar en esta vista. ¿Deseas guardar antes de cambiar?\n\n" +
                 "Sí = Guardar y continuar\n" +
                 "No = Descartar cambios\n" +
@@ -216,55 +254,80 @@ public partial class MainViewModel : ObservableObject
                 MessageBoxButton.YesNoCancel,
                 MessageBoxImage.Warning);
 
-            if (res == MessageBoxResult.Cancel)
-                return false;
+        if (res == MessageBoxResult.Cancel)
+            return false;
 
-            if (res == MessageBoxResult.Yes)
-                Guardar();
+        if (res == MessageBoxResult.Yes)
+            Guardar();
 
-            TieneCambios = false;
-        }
+        TieneCambios = false;
 
         return true;
     }
 
     public void RecargarConfiguracionYArchivoActual()
     {
-        if (!string.IsNullOrWhiteSpace(ArchivoSeleccionado))
+        if (!string.IsNullOrWhiteSpace(
+                ArchivoSeleccionado))
         {
-            CargarArchivoSeleccionado(ArchivoSeleccionado);
+            CargarArchivoSeleccionado(
+                ArchivoSeleccionado);
         }
     }
 
-    private static string ObtenerClaveMateriaDesdeRuta(string? rutaCompleta)
+    private static string ObtenerClaveMateriaDesdeRuta(
+        string? rutaCompleta)
     {
-        if (string.IsNullOrWhiteSpace(rutaCompleta))
+        if (string.IsNullOrWhiteSpace(
+                rutaCompleta))
+        {
             return string.Empty;
+        }
 
-        string nombre = Path.GetFileNameWithoutExtension(rutaCompleta);
+        string nombre =
+            Path.GetFileNameWithoutExtension(
+                rutaCompleta);
 
         return string.IsNullOrWhiteSpace(nombre)
             ? string.Empty
             : nombre.Trim().Replace(' ', '_');
     }
 
-    private bool EvaluacionEstaHabilitada(string evaluacion)
+    private bool EvaluacionEstaHabilitada(
+        string evaluacion)
     {
-        if (string.IsNullOrWhiteSpace(evaluacion))
+        if (string.IsNullOrWhiteSpace(
+                evaluacion))
+        {
             return false;
+        }
 
         return evaluacion.Trim().ToUpperInvariant() switch
         {
-            "P1" => _configuracionActual.Parcial1Habilitado,
-            "P2" => _configuracionActual.Parcial2Habilitado,
-            "P3" => _configuracionActual.Parcial3Habilitado,
-            "SEM" => _configuracionActual.SemestralHabilitado,
-            "EXTRA" => _configuracionActual.ExtraHabilitado,
+            "P1" =>
+                _configuracionActual.Parcial1Habilitado,
+
+            "P2" =>
+                _configuracionActual.Parcial2Habilitado,
+
+            "P3" =>
+                _configuracionActual.Parcial3Habilitado,
+
+            "SEM" =>
+                _configuracionActual.SemestralHabilitado,
+
+            "PREEXTRAORDINARIO" =>
+                _configuracionActual.PreExtraordinarioHabilitado,
+
+            "EXTRA" =>
+                _configuracionActual.ExtraHabilitado,
+
             _ => true
         };
     }
 
-    private string ObtenerNombreEvaluacionVisual(string eval)
+    private string ObtenerNombreEvaluacionVisual(
+        string eval)
     {
         return eval.ToUpperInvariant() switch
         {
@@ -272,6 +335,7 @@ public partial class MainViewModel : ObservableObject
             "P2" => "PARCIAL 2",
             "P3" => "PARCIAL 3",
             "SEM" => "SEMESTRAL",
+            "PREEXTRAORDINARIO" => "PREEXTRAORDINARIO",
             "EXTRA" => "EXTRAORDINARIO/INTER",
             _ => eval
         };
@@ -280,19 +344,15 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void BuscarCarpeta()
     {
-        // La aplicación ya no utiliza USB.
-        // Siempre utiliza la carpeta data ubicada
-        // en la raíz del ejecutable.
         try
         {
-            var carpetaData = Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory ?? string.Empty,
-                "data");
+            var carpetaData =
+                Path.Combine(
+                    AppDomain.CurrentDomain.BaseDirectory ?? string.Empty,
+                    "data");
 
             if (!Directory.Exists(carpetaData))
-            {
                 Directory.CreateDirectory(carpetaData);
-            }
 
             RutaUsb = carpetaData;
             RutaUsbEditable = false;
@@ -312,38 +372,50 @@ public partial class MainViewModel : ObservableObject
 
     private void ProcesarDirectorioSeleccionado()
     {
-        if (!string.IsNullOrWhiteSpace(RutaUsb))
+        if (!string.IsNullOrWhiteSpace(
+                RutaUsb))
         {
-            GlobalSettings.CurrentCapDirectory = RutaUsb;
+            GlobalSettings.CurrentCapDirectory =
+                RutaUsb;
         }
 
         ArchivosDisponibles.Clear();
         Alumnos.Clear();
         EvaluacionesDisponibles.Clear();
+
         _mapaArchivos.Clear();
         _evaluacionIdPorNombre.Clear();
+
         _archivoCompletoActual = null;
         TieneCambios = false;
 
         _archivoSeleccionado = null;
-        OnPropertyChanged(nameof(ArchivoSeleccionado));
+        OnPropertyChanged(
+            nameof(ArchivoSeleccionado));
 
         _evaluacionSeleccionada = null;
-        OnPropertyChanged(nameof(EvaluacionSeleccionada));
+        OnPropertyChanged(
+            nameof(EvaluacionSeleccionada));
 
         CurrentView = "List";
 
-        var archivos = _scannerService.ObtenerArchivosCap(RutaUsb);
+        var archivos =
+            _scannerService.ObtenerArchivosCap(
+                RutaUsb);
 
         foreach (var archivo in archivos)
         {
-            var info = _parserService.ObtenerInfoParaCombo(archivo);
+            var info =
+                _parserService.ObtenerInfoParaCombo(
+                    archivo);
+
             string nombreCombo;
 
             if (info.IsExtra)
             {
                 string profesorMostrar =
-                    string.IsNullOrWhiteSpace(info.NombreProfesor)
+                    string.IsNullOrWhiteSpace(
+                        info.NombreProfesor)
                         ? "SIN REGISTRO"
                         : info.NombreProfesor;
 
@@ -353,182 +425,270 @@ public partial class MainViewModel : ObservableObject
             else
             {
                 var resTemp =
-                    _parserService.ProcesarArchivoCompleto(archivo);
+                    _parserService.ProcesarArchivoCompleto(
+                        archivo);
 
                 string grupoNormal =
-                    resTemp.Alumnos.FirstOrDefault()?.Grupo ?? "S/G";
+                    resTemp.Alumnos.FirstOrDefault()?.Grupo
+                    ?? "S/G";
 
                 nombreCombo =
                     $"{info.NombreBase} - Grupo: {grupoNormal}";
             }
 
-            _mapaArchivos[nombreCombo] = archivo;
-            ArchivosDisponibles.Add(nombreCombo);
+            _mapaArchivos[nombreCombo] =
+                archivo;
+
+            ArchivosDisponibles.Add(
+                nombreCombo);
         }
 
         if (ArchivosDisponibles.Any())
         {
-            ArchivoSeleccionado = ArchivosDisponibles.First();
+            ArchivoSeleccionado =
+                ArchivosDisponibles.First();
         }
 
-        OnPropertyChanged(nameof(EsExtraSeleccionado));
+        OnPropertyChanged(
+            nameof(EsExtraSeleccionado));
+
+        OnPropertyChanged(
+            nameof(EsPreExtraordinarioSeleccionado));
     }
 
-    private void CargarArchivoSeleccionado(string? value)
+    private void CargarArchivoSeleccionado(
+        string? value)
     {
         _isUpdatingProgrammatically = true;
 
-        Alumnos.Clear();
-        EvaluacionesDisponibles.Clear();
-        _evaluacionIdPorNombre.Clear();
-
-        _evaluacionSeleccionada = null;
-        OnPropertyChanged(nameof(EvaluacionSeleccionada));
-
-        CurrentView = "List";
-        _archivoCompletoActual = null;
-
-        if (string.IsNullOrWhiteSpace(value) ||
-            !_mapaArchivos.TryGetValue(value, out string? rutaCompleta))
+        try
         {
-            OnPropertyChanged(nameof(EsExtraSeleccionado));
-            _isUpdatingProgrammatically = false;
-            return;
-        }
+            Alumnos.Clear();
+            EvaluacionesDisponibles.Clear();
+            _evaluacionIdPorNombre.Clear();
 
-        if (!File.Exists(rutaCompleta))
-        {
-            OnPropertyChanged(nameof(EsExtraSeleccionado));
-            _isUpdatingProgrammatically = false;
-            return;
-        }
+            _evaluacionSeleccionada = null;
+            OnPropertyChanged(
+                nameof(EvaluacionSeleccionada));
 
-        _archivoCompletoActual = rutaCompleta;
+            CurrentView = "List";
+            _archivoCompletoActual = null;
 
-        string claveMateria =
-            ObtenerClaveMateriaDesdeRuta(rutaCompleta);
-
-        _configuracionActual =
-            _configuracionService.ObtenerConfiguracion(claveMateria);
-
-        var infoCombo =
-            _parserService.ObtenerInfoParaCombo(rutaCompleta);
-
-        NombreMateriaExtra = infoCombo.NombreBase;
-
-        NombreProfesorExtra =
-            string.IsNullOrWhiteSpace(infoCombo.NombreProfesor)
-                ? "SIN REGISTRO"
-                : infoCombo.NombreProfesor;
-
-        var resultado =
-            _parserService.ProcesarArchivoCompleto(rutaCompleta);
-
-        foreach (var kvp in resultado.EvaluacionIdPorNombre)
-        {
-            _evaluacionIdPorNombre[kvp.Key] = kvp.Value;
-        }
-
-        bool esExtra =
-            resultado.EvaluacionesDisponibles.Any(
-                e => e.Equals(
-                    "EXTRA",
-                    StringComparison.OrdinalIgnoreCase));
-
-        if (esExtra)
-        {
-            EvaluacionesDisponibles.Add(
-                new EvaluacionItem
-                {
-                    Id = "EXTRA",
-                    Nombre = "EXTRAORDINARIO/INTER"
-                });
-        }
-        else
-        {
-            foreach (var eval in resultado.EvaluacionesDisponibles)
+            if (string.IsNullOrWhiteSpace(value) ||
+                !_mapaArchivos.TryGetValue(
+                    value,
+                    out string? rutaCompleta))
             {
-                if (EvaluacionEstaHabilitada(eval))
-                {
-                    EvaluacionesDisponibles.Add(
-                        new EvaluacionItem
-                        {
-                            Id = eval,
-                            Nombre = ObtenerNombreEvaluacionVisual(eval)
-                        });
-                }
+                return;
             }
 
-            if (EvaluacionesDisponibles.Count == 0)
+            if (!File.Exists(rutaCompleta))
+                return;
+
+            _archivoCompletoActual =
+                rutaCompleta;
+
+            string claveMateria =
+                ObtenerClaveMateriaDesdeRuta(
+                    rutaCompleta);
+
+            _configuracionActual =
+                _configuracionService.ObtenerConfiguracion(
+                    claveMateria);
+
+            var infoCombo =
+                _parserService.ObtenerInfoParaCombo(
+                    rutaCompleta);
+
+            NombreMateriaExtra =
+                infoCombo.NombreBase;
+
+            NombreProfesorExtra =
+                string.IsNullOrWhiteSpace(
+                    infoCombo.NombreProfesor)
+                    ? "SIN REGISTRO"
+                    : infoCombo.NombreProfesor;
+
+            var resultado =
+                _parserService.ProcesarArchivoCompleto(
+                    rutaCompleta);
+
+            foreach (var kvp in resultado.EvaluacionIdPorNombre)
+            {
+                _evaluacionIdPorNombre[kvp.Key] =
+                    kvp.Value;
+            }
+
+            bool esExtra =
+                resultado.EvaluacionesDisponibles.Any(
+                    e => e.Equals(
+                        "EXTRA",
+                        StringComparison.OrdinalIgnoreCase));
+
+            if (esExtra)
             {
                 EvaluacionesDisponibles.Add(
                     new EvaluacionItem
                     {
-                        Id = "P1",
-                        Nombre = "PARCIAL 1"
+                        Id = "EXTRA",
+                        Nombre = "EXTRAORDINARIO/INTER"
                     });
             }
-        }
-
-        foreach (var alumno in resultado.Alumnos)
-        {
-            Alumnos.Add(alumno);
-        }
-
-        SuscribirAlumnos();
-
-        if (esExtra)
-        {
-            EvaluacionSeleccionada = "EXTRA";
-        }
-        else
-        {
-            EvaluacionSeleccionada =
-                EvaluacionesDisponibles.LastOrDefault()?.Id;
-        }
-
-        OnPropertyChanged(nameof(EsExtraSeleccionado));
-
-        TieneCambios = false;
-
-        Application.Current?.Dispatcher.BeginInvoke(
-            DispatcherPriority.Background,
-            new Action(() =>
+            else
             {
-                _isUpdatingProgrammatically = false;
-
-                if (esExtra)
+                foreach (var eval in resultado.EvaluacionesDisponibles)
                 {
-                    ActualizarConteoEvaluadosExtra();
+                    if (!EvaluacionEstaHabilitada(eval))
+                        continue;
+
+                    EvaluacionesDisponibles.Add(
+                        new EvaluacionItem
+                        {
+                            Id = eval,
+                            Nombre =
+                                ObtenerNombreEvaluacionVisual(
+                                    eval)
+                        });
                 }
-            }));
+
+                /*
+                 * PRE no viene del CAP.
+                 *
+                 * Lo agregamos manualmente.
+                 */
+                if (_configuracionActual
+                        .PreExtraordinarioHabilitado)
+                {
+                    bool existePRE =
+                        EvaluacionesDisponibles.Any(
+                            e => string.Equals(
+                                e.Id,
+                                "PREEXTRAORDINARIO",
+                                StringComparison.OrdinalIgnoreCase));
+
+                    if (!existePRE)
+                    {
+                        EvaluacionesDisponibles.Add(
+                            new EvaluacionItem
+                            {
+                                Id =
+                                    "PREEXTRAORDINARIO",
+                                Nombre =
+                                    "PREEXTRAORDINARIO"
+                            });
+                    }
+                }
+
+                if (EvaluacionesDisponibles.Count == 0)
+                {
+                    EvaluacionesDisponibles.Add(
+                        new EvaluacionItem
+                        {
+                            Id = "P1",
+                            Nombre = "PARCIAL 1"
+                        });
+                }
+            }
+
+            foreach (var alumno in resultado.Alumnos)
+            {
+                Alumnos.Add(alumno);
+            }
+
+            SuscribirAlumnos();
+
+            if (esExtra)
+            {
+                EvaluacionSeleccionada =
+                    "EXTRA";
+            }
+            else if (
+                _configuracionActual
+                    .PreExtraordinarioHabilitado &&
+                EvaluacionesDisponibles.Any(
+                    e => string.Equals(
+                        e.Id,
+                        "PREEXTRAORDINARIO",
+                        StringComparison.OrdinalIgnoreCase)))
+            {
+                EvaluacionSeleccionada =
+                    "PREEXTRAORDINARIO";
+            }
+            else
+            {
+                EvaluacionSeleccionada =
+                    EvaluacionesDisponibles
+                        .LastOrDefault()
+                        ?.Id;
+            }
+
+            OnPropertyChanged(
+                nameof(EsExtraSeleccionado));
+
+            OnPropertyChanged(
+                nameof(EsPreExtraordinarioSeleccionado));
+
+            TieneCambios = false;
+        }
+        finally
+        {
+            Application.Current?.Dispatcher.BeginInvoke(
+                DispatcherPriority.Background,
+                new Action(
+                    () =>
+                    {
+                        _isUpdatingProgrammatically =
+                            false;
+
+                        if (string.Equals(
+                                CurrentView,
+                                "Extra",
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            ActualizarConteoEvaluadosExtra();
+                        }
+                    }));
+        }
     }
 
-    private void CambiarEvaluacion(string? value)
+    private void CambiarEvaluacion(
+        string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
             CurrentView = "List";
-            OnPropertyChanged(nameof(EsExtraSeleccionado));
+
+            OnPropertyChanged(
+                nameof(EsExtraSeleccionado));
+
+            OnPropertyChanged(
+                nameof(EsPreExtraordinarioSeleccionado));
+
             return;
         }
 
-        string valorMayusculas =
+        string valor =
             value.ToUpperInvariant();
 
-        if (valorMayusculas != "EXTRA" &&
+        if (valor != "EXTRA" &&
             EvaluacionesDisponibles.Count == 1 &&
-            EvaluacionesDisponibles.Any(e => e.Id == "EXTRA"))
+            EvaluacionesDisponibles.Any(
+                e => e.Id == "EXTRA"))
         {
-            valorMayusculas = "EXTRA";
+            valor = "EXTRA";
         }
 
-        if (valorMayusculas == "SEM")
+        if (valor == "SEM")
         {
             CurrentView = "Semestral";
+
             SincronizarCalificacionSemestral();
         }
-        else if (valorMayusculas == "EXTRA")
+        else if (valor == "PREEXTRAORDINARIO")
+        {
+            CurrentView = "Preextraordinario";
+        }
+        else if (valor == "EXTRA")
         {
             CurrentView = "Extra";
         }
@@ -537,19 +697,101 @@ public partial class MainViewModel : ObservableObject
             CurrentView = "Parciales";
         }
 
+        /*
+         * No usamos "PREEXTRAORDINARIO" como una clave de
+         * Calificación de Alumno porque PRE se mantiene en
+         * PreExtraordinarioService.
+         */
         foreach (var alumno in Alumnos)
         {
-            alumno.ActualizarSeleccion(value);
+            if (valor != "PREEXTRAORDINARIO")
+            {
+                alumno.ActualizarSeleccion(
+                    value);
+            }
         }
 
-        OnPropertyChanged(nameof(EsExtraSeleccionado));
+        OnPropertyChanged(
+            nameof(EsExtraSeleccionado));
+
+        OnPropertyChanged(
+            nameof(EsPreExtraordinarioSeleccionado));
+
         TieneCambios = false;
+    }
+
+    /*
+     * Este método es llamado por PreextraordinarioView
+     * después de que LiteDB y MainViewModel ya fueron actualizados.
+     */
+    public bool GuardarResultadosPreEnCap()
+    {
+        if (string.IsNullOrWhiteSpace(
+                _archivoCompletoActual))
+        {
+            return false;
+        }
+
+        try
+        {
+            bool guardadoP2 = false;
+            bool guardadoP3 = false;
+            bool guardadoSem = false;
+
+            if (_evaluacionIdPorNombre.TryGetValue(
+                    "P2",
+                    out var idP2) &&
+                !string.IsNullOrWhiteSpace(idP2))
+            {
+                guardadoP2 =
+                    _writerService.GuardarEvaluacion(
+                        _archivoCompletoActual,
+                        Alumnos.ToList(),
+                        "P2",
+                        idP2);
+            }
+
+            if (_evaluacionIdPorNombre.TryGetValue(
+                    "P3",
+                    out var idP3) &&
+                !string.IsNullOrWhiteSpace(idP3))
+            {
+                guardadoP3 =
+                    _writerService.GuardarEvaluacion(
+                        _archivoCompletoActual,
+                        Alumnos.ToList(),
+                        "P3",
+                        idP3);
+            }
+
+            if (_evaluacionIdPorNombre.TryGetValue(
+                    "SEM",
+                    out var idSem) &&
+                !string.IsNullOrWhiteSpace(idSem))
+            {
+                guardadoSem =
+                    _writerService.GuardarEvaluacion(
+                        _archivoCompletoActual,
+                        Alumnos.ToList(),
+                        "SEM",
+                        idSem);
+            }
+
+            return guardadoP2 ||
+                   guardadoP3 ||
+                   guardadoSem;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     [RelayCommand]
     public void Guardar()
     {
-        if (string.IsNullOrWhiteSpace(_archivoCompletoActual))
+        if (string.IsNullOrWhiteSpace(
+                _archivoCompletoActual))
         {
             MessageBox.Show(
                 "No hay archivo cargado para guardar.",
@@ -560,7 +802,8 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(EvaluacionSeleccionada))
+        if (string.IsNullOrWhiteSpace(
+                EvaluacionSeleccionada))
         {
             MessageBox.Show(
                 "No hay evaluación seleccionada.",
@@ -568,6 +811,24 @@ public partial class MainViewModel : ObservableObject
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
 
+            return;
+        }
+
+        /*
+         * PRE se guarda al capturar cada alumno.
+         */
+        if (string.Equals(
+                EvaluacionSeleccionada,
+                "PREEXTRAORDINARIO",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            MessageBox.Show(
+                "El PREEXTRAORDINARIO se guarda automáticamente al capturar cada calificación.",
+                "PREEXTRAORDINARIO",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+
+            TieneCambios = false;
             return;
         }
 
@@ -592,17 +853,23 @@ public partial class MainViewModel : ObservableObject
             ParcialesVm.PrepararGuardado();
         }
 
-        var ok = _writerService.GuardarEvaluacion(
-            _archivoCompletoActual,
-            Alumnos.ToList(),
-            EvaluacionSeleccionada,
-            idEval);
+        var ok =
+            _writerService.GuardarEvaluacion(
+                _archivoCompletoActual,
+                Alumnos.ToList(),
+                EvaluacionSeleccionada,
+                idEval);
 
         _isUpdatingProgrammatically = true;
 
-        SincronizarCalificacionSemestral();
-
-        _isUpdatingProgrammatically = false;
+        try
+        {
+            SincronizarCalificacionSemestral();
+        }
+        finally
+        {
+            _isUpdatingProgrammatically = false;
+        }
 
         if (!string.Equals(
                 EvaluacionSeleccionada,
@@ -641,12 +908,16 @@ public partial class MainViewModel : ObservableObject
 
     private void SincronizarCalificacionSemestral()
     {
-        if (string.IsNullOrWhiteSpace(ArchivoSeleccionado))
+        if (string.IsNullOrWhiteSpace(
+                ArchivoSeleccionado))
+        {
             return;
+        }
 
         string claveMateria = string.Empty;
 
-        if (!string.IsNullOrWhiteSpace(ArchivoCompletoActual))
+        if (!string.IsNullOrWhiteSpace(
+                ArchivoCompletoActual))
         {
             try
             {
@@ -665,18 +936,25 @@ public partial class MainViewModel : ObservableObject
             }
         }
 
-        if (string.IsNullOrWhiteSpace(claveMateria) &&
-            !string.IsNullOrWhiteSpace(ArchivoSeleccionado))
+        if (string.IsNullOrWhiteSpace(
+                claveMateria) &&
+            !string.IsNullOrWhiteSpace(
+                ArchivoSeleccionado))
         {
-            string texto = ArchivoSeleccionado.Trim();
+            string texto =
+                ArchivoSeleccionado.Trim();
 
             int indexEspacio =
-                texto.IndexOf(" - Grupo:");
+                texto.IndexOf(
+                    " - Grupo:");
 
             if (indexEspacio > 0)
             {
                 texto =
-                    texto.Substring(0, indexEspacio).Trim();
+                    texto.Substring(
+                        0,
+                        indexEspacio)
+                    .Trim();
             }
 
             int indexSegundoEspacio =
@@ -685,7 +963,9 @@ public partial class MainViewModel : ObservableObject
             if (indexSegundoEspacio <= 0)
             {
                 claveMateria =
-                    texto.Replace(' ', '_');
+                    texto.Replace(
+                        ' ',
+                        '_');
             }
             else
             {
@@ -702,10 +982,14 @@ public partial class MainViewModel : ObservableObject
             }
         }
 
-        if (string.IsNullOrWhiteSpace(claveMateria))
+        if (string.IsNullOrWhiteSpace(
+                claveMateria))
+        {
             return;
+        }
 
-        var jsonService = new ParcialJsonService();
+        var jsonService =
+            new ParcialJsonService();
 
         var m1 =
             jsonService.ObtenerMateria(
@@ -719,8 +1003,12 @@ public partial class MainViewModel : ObservableObject
             jsonService.ObtenerMateria(
                 $"{claveMateria}_P3");
 
-        if (m1 == null || m2 == null || m3 == null)
+        if (m1 == null ||
+            m2 == null ||
+            m3 == null)
+        {
             return;
+        }
 
         bool p1Activa =
             m1.Calificaciones.TryGetValue(
@@ -809,15 +1097,20 @@ public partial class MainViewModel : ObservableObject
                 !p2Valida ||
                 !p3Valida)
             {
-                alumno.Calificación["SEM"] = "";
+                alumno.Calificación["SEM"] =
+                    string.Empty;
+
                 continue;
             }
 
             double promedio =
-                (p1Num + p2Num + p3Num) / 3.0;
+                (p1Num +
+                 p2Num +
+                 p3Num) / 3.0;
 
             int promedioRedondeado =
-                RedondearPromedio(promedio);
+                RedondearPromedio(
+                    promedio);
 
             int faltasP1 =
                 p1Activa &&
@@ -870,31 +1163,31 @@ public partial class MainViewModel : ObservableObject
             if (totalClases > 0)
             {
                 int asistencias =
-                    totalClases - totalFaltas;
+                    totalClases -
+                    totalFaltas;
 
                 double porcentajeAsistencia =
-                    ((double)asistencias / totalClases) * 100.0;
+                    ((double)asistencias /
+                     totalClases) *
+                    100.0;
 
                 cumpleAsistencia =
                     porcentajeAsistencia >= 80.0;
             }
 
-            if (cumpleAsistencia)
-            {
-                alumno.Calificación["SEM"] =
-                    promedioRedondeado.ToString();
-            }
-            else
-            {
-                alumno.Calificación["SEM"] = "0";
-            }
+            alumno.Calificación["SEM"] =
+                cumpleAsistencia
+                    ? promedioRedondeado.ToString()
+                    : "0";
         }
     }
 
-    private int RedondearPromedio(double promedio)
+    private int RedondearPromedio(
+        double promedio)
     {
         if (promedio < 6.0)
-            return (int)Math.Floor(promedio);
+            return (int)Math.Floor(
+                promedio);
 
         return (int)Math.Round(
             promedio,
@@ -924,7 +1217,8 @@ public partial class MainViewModel : ObservableObject
                 alumno.Calificación.PropertyChanged +=
                     Alumno_CalificacionChanged;
 
-                _subscribedAlumnos.Add(alumno);
+                _subscribedAlumnos.Add(
+                    alumno);
             }
         }
     }

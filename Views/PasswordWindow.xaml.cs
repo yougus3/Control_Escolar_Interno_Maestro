@@ -5,7 +5,8 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views;
 
 public partial class PasswordWindow : Window
 {
-    private const string PasswordAdmin = "141184DANJAREDGSGSH";
+    //private const string PasswordAdmin = "141184DANJAREDGSGSH";
+    private const string PasswordAdmin = "23280";
 
     public PasswordWindow()
     {

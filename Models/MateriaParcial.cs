@@ -12,4 +12,11 @@ public class MateriaParcial
     // Porcentaje acumulado definido por el docente para este CAP+parcial.
     // Se guarda en parciales.json junto a actividades y calificaciones.
     public double PorcentajeAcumulado { get; set; }
+
+    // Backups para preextraordinario: se usan para restaurar actividades y capturas
+    // cuando se revierte el pre.
+    public List<ActividadParcial>? ActividadesBackup { get; set; }
+
+    // Datos originales por alumno (capturas en P2/P3) antes de aplicar PRE.
+    public Dictionary<string, PreOriginalData>? PreOriginals { get; set; }
 }

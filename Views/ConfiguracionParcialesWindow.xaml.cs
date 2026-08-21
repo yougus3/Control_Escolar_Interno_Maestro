@@ -214,6 +214,7 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             _evaluacionesGlobalesDisponibles.Add("P2");
             _evaluacionesGlobalesDisponibles.Add("P3");
             _evaluacionesGlobalesDisponibles.Add("SEM");
+            _evaluacionesGlobalesDisponibles.Add("PREEXTRAORDINARIO");
             
             if (string.IsNullOrWhiteSpace(_evaluacionGlobalSeleccionada))
                 EvaluacionGlobalSeleccionada = "P1";
@@ -256,6 +257,7 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 Parcial2Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P2", StringComparison.OrdinalIgnoreCase),
                 Parcial3Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P3", StringComparison.OrdinalIgnoreCase),
                 SemestralHabilitado = string.Equals(EvaluacionGlobalSeleccionada, "SEM", StringComparison.OrdinalIgnoreCase),
+                PreExtraordinarioHabilitado = string.Equals(EvaluacionGlobalSeleccionada, "PREEXTRAORDINARIO", StringComparison.OrdinalIgnoreCase),
                 ExtraHabilitado = false,
                 CapturaDirectaHabilitada = true
             };
@@ -364,14 +366,40 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 bool soloExtra = resultado.EvaluacionesDisponibles != null && resultado.EvaluacionesDisponibles.Count == 1 &&
                                  string.Equals(resultado.EvaluacionesDisponibles.First(), "EXTRA", StringComparison.OrdinalIgnoreCase);
 
+                // Intentar leer la configuración específica del CAP (por clave de materia). Si existe, usarla
+                // para determinar qué evaluación está habilitada para este CAP. Si no hay configuración por CAP,
+                // se seguirá usando la configuración global existente.
+                var cfgService = new ConfiguracionParcialesService();
+                string claveMateria = ObtenerClaveMateriaDesdeRuta(rutaCompleta);
+                var cfgPorCap = cfgService.ObtenerConfiguracion(claveMateria);
+                bool tieneCfgPorCap = cfgPorCap != null && (cfgPorCap.Parcial1Habilitado || cfgPorCap.Parcial2Habilitado || cfgPorCap.Parcial3Habilitado || cfgPorCap.SemestralHabilitado || cfgPorCap.ExtraHabilitado);
+
                 foreach (var eval in resultado.EvaluacionesDisponibles)
                 {
                     if (soloExtra)
                     {
                         EvaluacionesDisponiblesDirecta.Add(eval);
+                        continue;
+                    }
+
+                    bool habilitadoPorCap = false;
+                    if (tieneCfgPorCap)
+                    {
+                        if (string.Equals(eval, "P1", StringComparison.OrdinalIgnoreCase)) habilitadoPorCap = cfgPorCap.Parcial1Habilitado;
+                        else if (string.Equals(eval, "P2", StringComparison.OrdinalIgnoreCase)) habilitadoPorCap = cfgPorCap.Parcial2Habilitado;
+                        else if (string.Equals(eval, "P3", StringComparison.OrdinalIgnoreCase)) habilitadoPorCap = cfgPorCap.Parcial3Habilitado;
+                        else if (string.Equals(eval, "SEM", StringComparison.OrdinalIgnoreCase)) habilitadoPorCap = cfgPorCap.SemestralHabilitado;
+                        else if (string.Equals(eval, "PREEXTRAORDINARIO", StringComparison.OrdinalIgnoreCase)) habilitadoPorCap = cfgPorCap.PreExtraordinarioHabilitado;
+                        else if (string.Equals(eval, "EXTRA", StringComparison.OrdinalIgnoreCase)) habilitadoPorCap = cfgPorCap.ExtraHabilitado;
+                    }
+
+                    if (tieneCfgPorCap)
+                    {
+                        if (habilitadoPorCap) EvaluacionesDisponiblesDirecta.Add(eval);
                     }
                     else
                     {
+                        // Ninguna configuración por CAP: usar la lógica global existente
                         if (EvaluacionEstaHabilitada(eval))
                         {
                             EvaluacionesDisponiblesDirecta.Add(eval);
@@ -455,16 +483,74 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 return;
             }
 
-            if (!TryNormalizarCalificacion(CalificacionNuevaDirecta, out string valorNormalizado))
+            string valorNormalizado;
+            // Validación especial para PREEXTRAORDINARIO: aceptar NP o enteros 0..6
+            if (string.Equals(EvaluacionSeleccionadaDirecta, "PREEXTRAORDINARIO", StringComparison.OrdinalIgnoreCase))
             {
-                MessageBox.Show("La calificación debe ser un número entre 0 y 10.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                var texto = (CalificacionNuevaDirecta ?? string.Empty).Trim().ToUpperInvariant();
+                if (texto == "NP")
+                {
+                    // permitir NP
+                }
+                else if (int.TryParse(texto, out int iv))
+                {
+                    if (iv < 0 || iv > 6)
+                    {
+                        MessageBox.Show("Para PREEXTRAORDINARIO solo se permiten enteros de 0 a 6 o NP.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Para PREEXTRAORDINARIO solo se permiten enteros de 0 a 6 o NP.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Normalizar valor (mantener NP o número sin decimales)
+                if (texto == "NP")
+                    valorNormalizado = "NP";
+                else
+                    valorNormalizado = int.Parse(texto).ToString();
+            }
+            else
+            {
+                if (!TryNormalizarCalificacion(CalificacionNuevaDirecta, out string valorNormalizadoLocal))
+                {
+                    MessageBox.Show("La calificación debe ser un número entre 0 y 10.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                valorNormalizado = valorNormalizadoLocal;
             }
 
             AlumnoSeleccionadoDirecto.ValorSeleccionado = valorNormalizado;
             AlumnoSeleccionadoDirecto.Calificación[EvaluacionSeleccionadaDirecta] = valorNormalizado;
             SincronizarConMainVm(EvaluacionSeleccionadaDirecta, AlumnoSeleccionadoDirecto.Matricula, valorNormalizado);
             _writerService.GuardarEvaluacion(rutaCompleta, AlumnosDirectos.ToList(), EvaluacionSeleccionadaDirecta, idEval);
+
+            // Si guardaron PREEXTRAORDINARIO con valor 6, ajustar P2 y P3 para sumar 18 puntos (9 y 9)
+            if (string.Equals(EvaluacionSeleccionadaDirecta, "PREEXTRAORDINARIO", StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(valorNormalizado, "6", StringComparison.OrdinalIgnoreCase))
+            {
+                // Intentar obtener ids de P2,P3,SEM
+                _evaluacionIdPorNombreDirecta.TryGetValue("P2", out var idP2);
+                _evaluacionIdPorNombreDirecta.TryGetValue("P3", out var idP3);
+                _evaluacionIdPorNombreDirecta.TryGetValue("SEM", out var idSem);
+
+                // Actualizar en memoria
+                AlumnoSeleccionadoDirecto.Calificación["P2"] = "9";
+                AlumnoSeleccionadoDirecto.Calificación["P3"] = "9";
+                // Poner SEM a 6 si el docente ingresó 6 en PRE (regla indicada)
+                AlumnoSeleccionadoDirecto.Calificación["SEM"] = "6";
+
+                // Guardar P2,P3,SEM en el CAP si tenemos sus ids
+                if (!string.IsNullOrWhiteSpace(idP2))
+                    _writerService.GuardarEvaluacion(rutaCompleta, AlumnosDirectos.ToList(), "P2", idP2);
+                if (!string.IsNullOrWhiteSpace(idP3))
+                    _writerService.GuardarEvaluacion(rutaCompleta, AlumnosDirectos.ToList(), "P3", idP3);
+                if (!string.IsNullOrWhiteSpace(idSem))
+                    _writerService.GuardarEvaluacion(rutaCompleta, AlumnosDirectos.ToList(), "SEM", idSem);
+            }
+
             CalificacionActualDirecta = valorNormalizado;
             CalificacionNuevaDirecta = valorNormalizado;
             EstadoDirecto = "Calificación guardada en el CAP.";
