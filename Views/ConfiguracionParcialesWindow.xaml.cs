@@ -207,42 +207,81 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
 
         private void CargarEvaluacionesGlobales()
         {
-            if (_evaluacionesGlobalesDisponibles.Count > 0) return;
+            if (_evaluacionesGlobalesDisponibles.Count > 0)
+                return;
 
             _evaluacionesGlobalesDisponibles.Clear();
+
             _evaluacionesGlobalesDisponibles.Add("P1");
             _evaluacionesGlobalesDisponibles.Add("P2");
             _evaluacionesGlobalesDisponibles.Add("P3");
             _evaluacionesGlobalesDisponibles.Add("SEM");
             _evaluacionesGlobalesDisponibles.Add("PREEXTRAORDINARIO");
-            
-            if (string.IsNullOrWhiteSpace(_evaluacionGlobalSeleccionada))
-                EvaluacionGlobalSeleccionada = "P1";
         }
 
         private void CargarEstadoGlobal()
         {
-            var rutaGlobal = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "configuracion_global.json");
+            var rutaGlobal = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "configuracion_global.json");
+
+            bool existeConfiguracion = false;
+
             if (File.Exists(rutaGlobal))
             {
                 try
                 {
                     var json = File.ReadAllText(rutaGlobal);
+
                     var data = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
-                    if (data != null && data.TryGetValue("EvaluacionGlobal", out var eval))
+
+                    if (data != null &&
+                        data.TryGetValue("EvaluacionGlobal", out var eval) &&
+                        !string.IsNullOrWhiteSpace(eval))
                     {
                         _evaluacionGlobalSeleccionada = eval;
+                        existeConfiguracion = true;
                     }
                 }
-                catch { }
+                catch
+                {
+                    // Si el archivo está corrupto, se tratará como configuración nueva.
+                }
             }
 
-            if (string.IsNullOrWhiteSpace(_evaluacionGlobalSeleccionada) || string.Equals(_evaluacionGlobalSeleccionada, "EXTRA", StringComparison.OrdinalIgnoreCase))
+            // SOLO la primera vez se establece P1.
+            if (!existeConfiguracion)
+            {
+                _evaluacionGlobalSeleccionada = "P1";
+
+                try
+                {
+                    var data = new Dictionary<string, string>
+                    {
+                        ["EvaluacionGlobal"] = "P1"
+                    };
+
+                    var json = JsonSerializer.Serialize(data);
+
+                    File.WriteAllText(rutaGlobal, json);
+                }
+                catch
+                {
+                    // No impedir que abra la ventana si no puede escribirse el archivo.
+                }
+            }
+
+            // EXTRA no es una selección global válida.
+            if (string.Equals(
+                    _evaluacionGlobalSeleccionada,
+                    "EXTRA",
+                    StringComparison.OrdinalIgnoreCase))
             {
                 _evaluacionGlobalSeleccionada = "P1";
             }
 
             AplicarConfiguracionGlobal();
+
             OnPropertyChanged(nameof(EvaluacionGlobalSeleccionada));
         }
 
