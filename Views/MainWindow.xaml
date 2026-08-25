@@ -264,7 +264,7 @@
                                FontWeight="Bold" />
                     <TextBlock Text="Control Escolar Interno Maestro"
                                Foreground="#A5B4FC"
-                               FontSize="12"
+                               FontSize="15"
                                FontWeight="SemiBold" />
                 </StackPanel>
 

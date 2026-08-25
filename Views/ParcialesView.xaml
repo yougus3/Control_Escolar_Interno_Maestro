@@ -384,20 +384,20 @@
                                 <MultiDataTrigger.Conditions>
 
                                     <Condition Binding="{Binding EsActividad1}"
-                   Value="True" />
+                                               Value="True" />
 
                                     <Condition Binding="{Binding Nombre}"
-                   Value="" />
+                                               Value="" />
 
                                 </MultiDataTrigger.Conditions>
 
                                 <Setter TargetName="Placeholder"
-            Property="Text"
-            Value="EJEMPLO: TAREAS" />
+                                        Property="Text"
+                                        Value="EJEMPLO: TAREAS" />
 
                                 <Setter TargetName="Placeholder"
-            Property="Visibility"
-            Value="Visible" />
+                                        Property="Visibility"
+                                        Value="Visible" />
 
                             </MultiDataTrigger>
 
@@ -407,20 +407,20 @@
                                 <MultiDataTrigger.Conditions>
 
                                     <Condition Binding="{Binding NumeroActividad}"
-                   Value="2" />
+                                               Value="2" />
 
                                     <Condition Binding="{Binding Nombre}"
-                   Value="" />
+                                               Value="" />
 
                                 </MultiDataTrigger.Conditions>
 
                                 <Setter TargetName="Placeholder"
-            Property="Text"
-            Value="EJEMPLO: EXAMEN" />
+                                        Property="Text"
+                                        Value="EJEMPLO: EXAMEN" />
 
                                 <Setter TargetName="Placeholder"
-            Property="Visibility"
-            Value="Visible" />
+                                        Property="Visibility"
+                                        Value="Visible" />
 
                             </MultiDataTrigger>
 
@@ -430,20 +430,20 @@
                                 <MultiDataTrigger.Conditions>
 
                                     <Condition Binding="{Binding NumeroActividad}"
-                   Value="3" />
+                                               Value="3" />
 
                                     <Condition Binding="{Binding Nombre}"
-                   Value="" />
+                                               Value="" />
 
                                 </MultiDataTrigger.Conditions>
 
                                 <Setter TargetName="Placeholder"
-            Property="Text"
-            Value="EJEMPLO: PROYECTO" />
+                                        Property="Text"
+                                        Value="EJEMPLO: PROYECTO" />
 
                                 <Setter TargetName="Placeholder"
-            Property="Visibility"
-            Value="Visible" />
+                                        Property="Visibility"
+                                        Value="Visible" />
 
                             </MultiDataTrigger>
 
