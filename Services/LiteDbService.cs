@@ -23,16 +23,37 @@ public class LiteDbService : IDisposable
 
     public LiteDbService()
     {
-        // Usa la ruta dinámica de la USB / Carpeta de CAPs
-        _dataFolder = Path.Combine(GlobalSettings.CurrentCapDirectory, "Data");
-        if (!Directory.Exists(_dataFolder)) Directory.CreateDirectory(_dataFolder);
+        // 1. Obtener la ruta base asegurando que nunca sea nula
+        string baseDir = string.IsNullOrWhiteSpace(GlobalSettings.CurrentCapDirectory) 
+            ? AppContext.BaseDirectory 
+            : GlobalSettings.CurrentCapDirectory;
+
+        // Limpiar la barra final por seguridad (ej. "C:\Ruta\" -> "C:\Ruta")
+        string normalizedBaseDir = baseDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        // 2. Validar si la ruta ya incluye la carpeta "Data" para evitar "Data\Data"
+        if (normalizedBaseDir.EndsWith("Data", StringComparison.OrdinalIgnoreCase))
+        {
+            _dataFolder = normalizedBaseDir;
+        }
+        else
+        {
+            _dataFolder = Path.Combine(normalizedBaseDir, "Data");
+        }
+
+        // 3. Crear el directorio Data si no existe
+        if (!Directory.Exists(_dataFolder)) 
+        {
+            Directory.CreateDirectory(_dataFolder);
+        }
+        
+        // 4. FORZAR RUTAS ABSOLUTAS: Esto evita que archivos se creen en la raíz del .exe 
+        // si el "CurrentDirectory" de Windows cambia accidentalmente al usar un FileDialog.
+        _dbPath = Path.GetFullPath(Path.Combine(_dataFolder, "parciales.db"));
+        _gruposPath = Path.GetFullPath(Path.Combine(_dataFolder, "grupo.json"));
         
         // Configuraciones y Parciales van encriptados en el DB LITE
-        _dbPath = Path.Combine(_dataFolder, "parciales.db");
         _db = new LiteDatabase(_dbPath);
-
-        // Grupos se queda libre en JSON
-        _gruposPath = Path.Combine(_dataFolder, "grupo.json");
     }
 
     // --- MÉTODOS CON LITEDB (Parciales y Configuración) ---

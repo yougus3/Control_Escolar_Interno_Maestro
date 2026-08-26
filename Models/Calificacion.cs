@@ -1,52 +1,52 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Linq;
 
-namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
+    namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 
-public class Calificación : INotifyPropertyChanged
-{
-    private readonly Dictionary<string, string> _valores =
-        new(StringComparer.OrdinalIgnoreCase);
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    protected void OnPropertyChanged(string name)
+    public class Calificación : INotifyPropertyChanged
     {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-    }
+        private readonly Dictionary<string, string> _valores =
+            new(StringComparer.OrdinalIgnoreCase);
 
-    public string this[string key]
-    {
-        get
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected void OnPropertyChanged(string name)
         {
-            if (string.IsNullOrWhiteSpace(key))
-                return "";
-
-            return _valores.TryGetValue(key, out var valor) ? valor : "";
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
-        set
+
+        public string this[string key]
         {
-            if (string.IsNullOrWhiteSpace(key))
-                return;
+            get
+            {
+                if (string.IsNullOrWhiteSpace(key))
+                    return "";
 
-            string k = key.Trim();
-            string v = string.IsNullOrWhiteSpace(value) ? "" : value.Trim();
+                return _valores.TryGetValue(key, out var valor) ? valor : "";
+            }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(key))
+                    return;
 
-            // Evitar reasignaciones y notificaciones redundantes que pueden provocar reentradas
-            if (_valores.TryGetValue(k, out var existing) && existing == v)
-                return;
+                string k = key.Trim();
+                string v = string.IsNullOrWhiteSpace(value) ? "" : value.Trim();
 
-            _valores[k] = v;
-            // Notify WPF bindings that the indexer item changed. The binding path uses indexer: Calificación[KEY]
-            // WPF listens for PropertyChanged with name "Item[KEY]"
-            OnPropertyChanged($"Item[{k}]");
+                // Evitar reasignaciones y notificaciones redundantes que pueden provocar reentradas
+                if (_valores.TryGetValue(k, out var existing) && existing == v)
+                    return;
+
+                _valores[k] = v;
+                // Notify WPF bindings that the indexer item changed. The binding path uses indexer: Calificación[KEY]
+                // WPF listens for PropertyChanged with name "Item[KEY]"
+                OnPropertyChanged($"Item[{k}]");
+            }
+        }
+
+        public IEnumerable<string> ObtenerClaves()
+        {
+            return _valores.Keys.ToList();
         }
     }
-
-    public IEnumerable<string> ObtenerClaves()
-    {
-        return _valores.Keys.ToList();
-    }
-}

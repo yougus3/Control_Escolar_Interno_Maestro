@@ -3,129 +3,314 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:vm="clr-namespace:Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views"
              xmlns:converters="clr-namespace:Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Converters"
              mc:Ignorable="d"
              d:DesignHeight="400"
              d:DesignWidth="800">
 
     <Grid Background="#F1F5F9">
+
         <Border Background="White"
                 BorderBrush="#D7DEE8"
                 BorderThickness="1"
                 CornerRadius="12"
                 Padding="12"
                 Margin="0">
+
             <Grid>
+
                 <Grid.Resources>
+
                     <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
                     <converters:PromediosConverter x:Key="PromediosConverter" />
                     <converters:CalifOrdinariaConverter x:Key="CalifOrdinariaConverter" />
                     <converters:ExtraFinalConverter x:Key="ExtraFinalConverter" />
                     <converters:CalificacionColorConverter x:Key="ColorCalifConverter" />
+                    <converters:DerechoSemestralConverter x:Key="DerechoSemestralConverter" />
 
                     <SolidColorBrush x:Key="AppBlue" Color="#1B365D" />
                     <SolidColorBrush x:Key="AppBlueSoft" Color="#EFF6FF" />
                     <SolidColorBrush x:Key="AppBlueSoftBorder" Color="#BFDBFE" />
 
-                    <Style x:Key="RoundedTextBoxStyle" TargetType="TextBox">
-                        <Setter Property="Background" Value="White" />
-                        <Setter Property="BorderBrush" Value="#CBD5E1" />
-                        <Setter Property="BorderThickness" Value="1" />
-                        <Setter Property="Foreground" Value="#0F172A" />
-                        <Setter Property="Padding" Value="8,2" />
-                        <Setter Property="VerticalContentAlignment" Value="Center" />
-                        <Setter Property="FontSize" Value="11" />
-                         <Setter Property="Template">
+                    <!-- EXACTAMENTE EL MISMO ESTILO DE BLOQUEO DE EXTRA -->
+                    <Style x:Key="RoundedTextBoxStyle"
+                           TargetType="TextBox">
+
+                        <Setter Property="Background"
+                                Value="White" />
+
+                        <Setter Property="BorderBrush"
+                                Value="#CBD5E1" />
+
+                        <Setter Property="BorderThickness"
+                                Value="1" />
+
+                        <Setter Property="Foreground"
+                                Value="#0F172A" />
+
+                        <Setter Property="Padding"
+                                Value="8,2" />
+
+                        <Setter Property="VerticalContentAlignment"
+                                Value="Center" />
+
+                        <Setter Property="FontSize"
+                                Value="11" />
+
+                        <Setter Property="Template">
+
                             <Setter.Value>
+
                                 <ControlTemplate TargetType="TextBox">
+
                                     <Border x:Name="Bd"
                                             Background="{TemplateBinding Background}"
                                             BorderBrush="{TemplateBinding BorderBrush}"
                                             BorderThickness="{TemplateBinding BorderThickness}"
                                             CornerRadius="8"
                                             SnapsToDevicePixels="True">
-                                        <ScrollViewer x:Name="PART_ContentHost"
-                                                      Margin="0"
-                                                      VerticalAlignment="Center" />
+
+                                        <Grid>
+
+                                            <ScrollViewer x:Name="PART_ContentHost"
+                                                          Margin="0"
+                                                          VerticalAlignment="Center" />
+
+                                            <!-- MISMO MENSAJE -->
+                                            <TextBlock x:Name="LeyendaBloqueo"
+                                                       Text="SIN DERECHO"
+                                                       Foreground="#D32F2F"
+                                                       FontWeight="Bold"
+                                                       FontSize="10"
+                                                       TextWrapping="Wrap"
+                                                       TextAlignment="Center"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       Visibility="Collapsed" />
+
+                                        </Grid>
+
                                     </Border>
+
                                     <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                             <Setter TargetName="Bd" Property="BorderBrush" Value="#93C5FD" />
+
+                                        <Trigger Property="IsKeyboardFocused"
+                                                 Value="True">
+
+                                            <Setter TargetName="Bd"
+                                                    Property="BorderBrush"
+                                                    Value="{StaticResource AppBlue}" />
+
+                                            <Setter TargetName="Bd"
+                                                    Property="BorderThickness"
+                                                    Value="1.5" />
+
                                         </Trigger>
-                                        <Trigger Property="IsKeyboardFocused" Value="True">
-                                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AppBlue}" />
-                                            <Setter TargetName="Bd" Property="BorderThickness" Value="1.5" />
+
+                                        <Trigger Property="IsMouseOver"
+                                                 Value="True">
+
+                                            <Setter TargetName="Bd"
+                                                    Property="BorderBrush"
+                                                    Value="#93C5FD" />
+
                                         </Trigger>
-                                        <Trigger Property="IsEnabled" Value="False">
-                                             <Setter TargetName="Bd" Property="Background" Value="#F3F4F6" />
-                                             <Setter TargetName="Bd" Property="BorderBrush" Value="#CBD5E1" />
-                                             <Setter Property="Foreground" Value="#94A3B8" />
+
+                                        <!-- MISMA VALIDACIÓN VISUAL DE EXTRA -->
+                                        <Trigger Property="IsEnabled"
+                                                 Value="False">
+
+                                            <Setter TargetName="Bd"
+                                                    Property="Background"
+                                                    Value="#FEE2E2" />
+
+                                            <Setter TargetName="Bd"
+                                                    Property="BorderBrush"
+                                                    Value="#F87171" />
+
+                                            <Setter Property="ToolTip"
+                                                    Value="Este alumno no tiene derecho a la evaluación porque ya aprobó la materia en ordinario." />
+
+                                            <Setter TargetName="PART_ContentHost"
+                                                    Property="Visibility"
+                                                    Value="Collapsed" />
+
+                                            <Setter TargetName="LeyendaBloqueo"
+                                                    Property="Visibility"
+                                                    Value="Visible" />
+
                                         </Trigger>
+
                                     </ControlTemplate.Triggers>
+
                                 </ControlTemplate>
+
                             </Setter.Value>
+
                         </Setter>
+
                     </Style>
 
-                    <Style x:Key="BlueGradeBlock" TargetType="Border">
-                        <Setter Property="Background" Value="{StaticResource AppBlueSoft}" />
-                        <Setter Property="BorderBrush" Value="{StaticResource AppBlueSoftBorder}" />
-                        <Setter Property="BorderThickness" Value="1" />
-                        <Setter Property="CornerRadius" Value="8" />
-                        <Setter Property="Padding" Value="10,4" />
-                        <Setter Property="HorizontalAlignment" Value="Center" />
-                        <Setter Property="VerticalAlignment" Value="Center" />
+                    <Style x:Key="BlueGradeBlock"
+                           TargetType="Border">
+
+                        <Setter Property="Background"
+                                Value="{StaticResource AppBlueSoft}" />
+
+                        <Setter Property="BorderBrush"
+                                Value="{StaticResource AppBlueSoftBorder}" />
+
+                        <Setter Property="BorderThickness"
+                                Value="1" />
+
+                        <Setter Property="CornerRadius"
+                                Value="8" />
+
+                        <Setter Property="Padding"
+                                Value="10,4" />
+
+                        <Setter Property="HorizontalAlignment"
+                                Value="Center" />
+
+                        <Setter Property="VerticalAlignment"
+                                Value="Center" />
+
                     </Style>
+
                 </Grid.Resources>
-                
+
+
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0" Margin="6">
+
+                <!-- ENCABEZADO -->
+
+                <Grid Grid.Row="0"
+                      Margin="6">
+
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <StackPanel Orientation="Horizontal" Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock Text="Evaluación: SEMESTRAL" FontSize="14" FontWeight="SemiBold" Foreground="#1B365D" />
+
+                    <StackPanel Orientation="Horizontal"
+                                Grid.Column="0"
+                                VerticalAlignment="Center">
+
+                        <TextBlock Text="Evaluación: SEMESTRAL"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#1B365D" />
+
                     </StackPanel>
+
                 </Grid>
 
-                <Grid Grid.Row="1" Margin="12,10,12,0">
+
+                <!-- ENCABEZADOS -->
+
+                <Grid Grid.Row="1"
+                      Margin="12,10,12,0">
+
                     <Grid.ColumnDefinitions>
+
                         <ColumnDefinition Width="80" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="70" />
                         <ColumnDefinition Width="70" />
                         <ColumnDefinition Width="70" />
                         <ColumnDefinition Width="80" />
-                        <ColumnDefinition Width="170" /> 
+                        <ColumnDefinition Width="170" />
+
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Matrícula" FontWeight="Bold" Foreground="#1B365D" FontSize="13" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="1" Text="Nombre del Alumno" FontWeight="Bold" Foreground="#1B365D" FontSize="13" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="2" Text="Parcial 1" FontWeight="Bold" Foreground="#1B365D" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="3" Text="Parcial 2" FontWeight="Bold" Foreground="#1B365D" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="4" Text="Parcial 3" FontWeight="Bold" Foreground="#1B365D" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="5" Text="Promedio" FontWeight="Bold" Foreground="#1B365D" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="6" Text="Semestral" FontWeight="Bold" Foreground="#1B365D" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+
+                    <TextBlock Grid.Column="0"
+                               Text="Matrícula"
+                               FontWeight="Bold"
+                               Foreground="#1B365D"
+                               FontSize="13"
+                               VerticalAlignment="Center" />
+
+                    <TextBlock Grid.Column="1"
+                               Text="Nombre del Alumno"
+                               FontWeight="Bold"
+                               Foreground="#1B365D"
+                               FontSize="13"
+                               VerticalAlignment="Center" />
+
+                    <TextBlock Grid.Column="2"
+                               Text="Parcial 1"
+                               FontWeight="Bold"
+                               Foreground="#1B365D"
+                               FontSize="13"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+
+                    <TextBlock Grid.Column="3"
+                               Text="Parcial 2"
+                               FontWeight="Bold"
+                               Foreground="#1B365D"
+                               FontSize="13"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+
+                    <TextBlock Grid.Column="4"
+                               Text="Parcial 3"
+                               FontWeight="Bold"
+                               Foreground="#1B365D"
+                               FontSize="13"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+
+                    <TextBlock Grid.Column="5"
+                               Text="Promedio"
+                               FontWeight="Bold"
+                               Foreground="#1B365D"
+                               FontSize="13"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+
+                    <TextBlock Grid.Column="6"
+                               Text="Semestral"
+                               FontWeight="Bold"
+                               Foreground="#1B365D"
+                               FontSize="13"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+
                 </Grid>
 
-                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="6">
-                    <ItemsControl ItemsSource="{Binding Alumnos}">
+
+                <!-- ALUMNOS -->
+
+                <ScrollViewer Grid.Row="2"
+                              VerticalScrollBarVisibility="Auto"
+                              Margin="6">
+
+                    <ItemsControl x:Name="AlumnosItemsControl"
+                                  ItemsSource="{Binding Alumnos}">
+
                         <ItemsControl.ItemTemplate>
+
                             <DataTemplate>
+
                                 <Border Background="#FAFBFD"
                                         BorderBrush="#E2E8F0"
                                         BorderThickness="1"
                                         CornerRadius="8"
                                         Padding="6"
                                         Margin="0,4">
+
                                     <Grid>
+
                                         <Grid.ColumnDefinitions>
+
                                             <ColumnDefinition Width="80" />
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="70" />
@@ -133,18 +318,29 @@
                                             <ColumnDefinition Width="70" />
                                             <ColumnDefinition Width="80" />
                                             <ColumnDefinition Width="170" />
+
                                         </Grid.ColumnDefinitions>
+
+
+                                        <!-- MATRÍCULA -->
 
                                         <TextBlock Text="{Binding Matricula}"
                                                    FontWeight="SemiBold"
                                                    Foreground="#1E293B"
                                                    FontSize="14"
                                                    VerticalAlignment="Center" />
+
+
+                                        <!-- NOMBRE -->
+
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Nombre}"
                                                    Foreground="#334155"
                                                    FontSize="14"
                                                    VerticalAlignment="Center" />
+
+
+                                        <!-- P1 -->
 
                                         <TextBlock Grid.Column="2"
                                                    Text="{Binding Calificación[P1]}"
@@ -152,51 +348,102 @@
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    FontWeight="Bold"
-                                                   FontSize="16" /> 
+                                                   FontSize="16" />
+
+
+                                        <!-- P2 -->
+
                                         <TextBlock Grid.Column="3"
                                                    Text="{Binding Calificación[P2]}"
                                                    Foreground="{Binding Calificación[P2], Converter={StaticResource ColorCalifConverter}}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    FontWeight="Bold"
-                                                   FontSize="16" /> 
+                                                   FontSize="16" />
+
+
+                                        <!-- P3 -->
+
                                         <TextBlock Grid.Column="4"
                                                    Text="{Binding Calificación[P3]}"
                                                    Foreground="{Binding Calificación[P3], Converter={StaticResource ColorCalifConverter}}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    FontWeight="Bold"
-                                                   FontSize="16" /> 
+                                                   FontSize="16" />
+
+
+                                        <!-- PROMEDIO -->
 
                                         <TextBlock Grid.Column="5"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
-                                                   FontWeight="Bold" FontSize="18">
+                                                   FontWeight="Bold"
+                                                   FontSize="18">
+
                                             <TextBlock.Text>
+
                                                 <MultiBinding Converter="{StaticResource PromediosConverter}">
+
                                                     <Binding Path="Calificación[P1]" />
                                                     <Binding Path="Calificación[P2]" />
                                                     <Binding Path="Calificación[P3]" />
+
                                                 </MultiBinding>
+
                                             </TextBlock.Text>
+
                                             <TextBlock.Foreground>
-                                                <Binding Path="Text" RelativeSource="{RelativeSource Self}" Converter="{StaticResource ColorCalifConverter}" />
+
+                                                <Binding Path="Text"
+                                                         RelativeSource="{RelativeSource Self}"
+                                                         Converter="{StaticResource ColorCalifConverter}" />
+
                                             </TextBlock.Foreground>
+
                                         </TextBlock>
 
-                                        <Grid Grid.Column="6" HorizontalAlignment="Center" VerticalAlignment="Center">
+
+                                        <!-- SEMESTRAL -->
+
+                                        <Grid Grid.Column="6"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center">
+
                                             <Grid.ColumnDefinitions>
+
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="Auto" />
+
                                             </Grid.ColumnDefinitions>
 
-                                            <Button Grid.Column="0" Width="34" Height="34" Margin="0,0,12,0" Click="InfoAlumnoButton_Click" ToolTip="Ver información del alumno">
-                                                <Viewbox Width="16" Height="16">
-                                                    <Path Fill="#475569" Data="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2ZM13,17H11V11H13V17ZM13,9H11V7H13V9Z"/>
+
+                                            <!-- BOTÓN INFO -->
+
+                                            <Button Grid.Column="0"
+                                                    Width="34"
+                                                    Height="34"
+                                                    Margin="0,0,12,0"
+                                                    Click="InfoAlumnoButton_Click"
+                                                    ToolTip="Ver información del alumno">
+
+                                                <Viewbox Width="16"
+                                                         Height="16">
+
+                                                    <Path Fill="#475569"
+                                                          Data="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2ZM13,17H11V11H13V17ZM13,9H11V7H13V9Z" />
+
                                                 </Viewbox>
+
                                             </Button>
 
-                                            <Border Grid.Column="1" Style="{StaticResource BlueGradeBlock}" Margin="0">
+
+                                            <!-- CAMPO SEMESTRAL -->
+
+                                            <Border Grid.Column="1"
+                                                    Style="{StaticResource BlueGradeBlock}"
+                                                    Margin="0">
+
                                                 <TextBox Text="{Binding Calificación[SEM], Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                          Foreground="{Binding Calificación[SEM], Converter={StaticResource ColorCalifConverter}}"
                                                          Style="{StaticResource RoundedTextBoxStyle}"
@@ -207,16 +454,48 @@
                                                          Width="100"
                                                          PreviewTextInput="SemTextBox_PreviewTextInput"
                                                          KeyDown="SemTextBox_KeyDown"
-                                                         MaxLength="3" />
+                                                         MaxLength="3">
+
+                                                    <!--
+                                                        DERECHO SEMESTRAL:
+                                                        Promedio >= 6.00 => editable
+                                                        Promedio < 6.00 => SIN DERECHO
+                                                    -->
+
+                                                    <TextBox.IsEnabled>
+
+                                                        <MultiBinding Converter="{StaticResource DerechoSemestralConverter}">
+
+                                                            <Binding Path="Calificación[P1]" />
+                                                            <Binding Path="Calificación[P2]" />
+                                                            <Binding Path="Calificación[P3]" />
+
+                                                        </MultiBinding>
+
+                                                    </TextBox.IsEnabled>
+
+                                                </TextBox>
+
                                             </Border>
+
                                         </Grid>
+
                                     </Grid>
+
                                 </Border>
+
                             </DataTemplate>
+
                         </ItemsControl.ItemTemplate>
+
                     </ItemsControl>
+
                 </ScrollViewer>
+
             </Grid>
+
         </Border>
+
     </Grid>
+
 </UserControl>
