@@ -1,4 +1,4 @@
-﻿<Window x:Class="Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.ConfiguracionParcialesWindow"
+<Window x:Class="Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.ConfiguracionParcialesWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:converters="clr-namespace:Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Converters"

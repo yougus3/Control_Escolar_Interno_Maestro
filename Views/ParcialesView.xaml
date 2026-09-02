@@ -1583,7 +1583,7 @@
 
                                                     <TextBox
                                                         Grid.Column="1"
-                                                        Text="{Binding PuntajeObtenido, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                        Text="{Binding DisplayPuntajeObtenido, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                         Height="22"
                                                         VerticalContentAlignment="Center"
                                                         HorizontalContentAlignment="Center"

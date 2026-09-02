@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -25,7 +25,10 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
         private readonly CapParserService _parserService;
         private readonly CapWriterService _writerService;
         private readonly FileScannerService _scannerService;
-        private readonly ReporteCalificacionesPdfService _reportePdfService;
+
+        // El servicio PDF se crea al momento de exportar,
+        // porque necesita el CAP seleccionado.
+        private ReporteCalificacionesPdfService? _reportePdfService;
 
         private readonly Dictionary<string, string> _mapaArchivos =
             new(StringComparer.OrdinalIgnoreCase);
@@ -294,8 +297,9 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             _scannerService =
                 new FileScannerService();
 
-            _reportePdfService =
-                new ReporteCalificacionesPdfService();
+            // IMPORTANTE:
+            // El servicio PDF NO se crea aquí porque todavía
+            // no sabemos qué CAP va a exportar el usuario.
 
             DataContext = this;
 
@@ -445,9 +449,9 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             }
 
             if (string.Equals(
-                    _evaluacionGlobalSeleccionada,
-                    "EXTRA",
-                    StringComparison.OrdinalIgnoreCase))
+                _evaluacionGlobalSeleccionada,
+                "EXTRA",
+                StringComparison.OrdinalIgnoreCase))
             {
                 _evaluacionGlobalSeleccionada = "P1";
             }
@@ -514,7 +518,8 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             foreach (var kvp in _mapaArchivos)
             {
                 string claveMateria =
-                    ObtenerClaveMateriaDesdeRuta(kvp.Value);
+                    ObtenerClaveMateriaDesdeRuta(
+                        kvp.Value);
 
                 if (!string.IsNullOrWhiteSpace(
                     claveMateria))
@@ -802,9 +807,11 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                     }
                 }
 
-                foreach (var alumno in resultado.Alumnos)
+                foreach (var alumno in
+                         resultado.Alumnos)
                 {
-                    AlumnosDirectos.Add(alumno);
+                    AlumnosDirectos.Add(
+                        alumno);
                 }
 
                 if (EvaluacionesDisponiblesDirecta.Any())
@@ -946,23 +953,42 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
 
             string valorNormalizado;
 
+            // ========================================================
+            // PREEXTRAORDINARIO
+            // ========================================================
+
             if (string.Equals(
-                EvaluacionSeleccionadaDirecta,
-                "PREEXTRAORDINARIO",
-                StringComparison.OrdinalIgnoreCase))
+                    EvaluacionSeleccionadaDirecta,
+                    "PREEXTRAORDINARIO",
+                    StringComparison.OrdinalIgnoreCase))
             {
-                var texto =
+                string texto =
                     (CalificacionNuevaDirecta ?? string.Empty)
                     .Trim()
                     .ToUpperInvariant();
 
+                // NP
                 if (texto == "NP")
                 {
+                    valorNormalizado = "NP";
                 }
-                else if (int.TryParse(
-                    texto,
-                    out int iv))
+                else
                 {
+                    // La variable queda declarada e inicializada
+                    // correctamente para evitar CS0165.
+                    if (!int.TryParse(
+                            texto,
+                            out int iv))
+                    {
+                        MessageBox.Show(
+                            "Para PREEXTRAORDINARIO solo se permiten enteros de 0 a 6 o NP.",
+                            "Aviso",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+
+                        return;
+                    }
+
                     if (iv < 0 || iv > 6)
                     {
                         MessageBox.Show(
@@ -973,29 +999,17 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
 
                         return;
                     }
-                }
-                else
-                {
-                    MessageBox.Show(
-                        "Para PREEXTRAORDINARIO solo se permiten enteros de 0 a 6 o NP.",
-                        "Aviso",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
 
-                    return;
-                }
-
-                if (texto == "NP")
-                    valorNormalizado = "NP";
-                else
                     valorNormalizado =
-                        int.Parse(texto).ToString();
+                        iv.ToString(
+                            CultureInfo.InvariantCulture);
+                }
             }
             else
             {
                 if (!TryNormalizarCalificacion(
-                    CalificacionNuevaDirecta,
-                    out string valorNormalizadoLocal))
+                        CalificacionNuevaDirecta,
+                        out string valorNormalizadoLocal))
                 {
                     MessageBox.Show(
                         "La calificación debe ser un número entre 0 y 10.",
@@ -1010,6 +1024,10 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                     valorNormalizadoLocal;
             }
 
+            // ========================================================
+            // ACTUALIZAR ALUMNO
+            // ========================================================
+
             AlumnoSeleccionadoDirecto.ValorSeleccionado =
                 valorNormalizado;
 
@@ -1017,74 +1035,24 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 EvaluacionSeleccionadaDirecta] =
                 valorNormalizado;
 
+            // ========================================================
+            // SINCRONIZAR MAIN VM
+            // ========================================================
+
             SincronizarConMainVm(
                 EvaluacionSeleccionadaDirecta,
                 AlumnoSeleccionadoDirecto.Matricula,
                 valorNormalizado);
+
+            // ========================================================
+            // GUARDAR EN CAP
+            // ========================================================
 
             _writerService.GuardarEvaluacion(
                 rutaCompleta,
                 AlumnosDirectos.ToList(),
                 EvaluacionSeleccionadaDirecta,
                 idEval);
-
-            if (string.Equals(
-                    EvaluacionSeleccionadaDirecta,
-                    "PREEXTRAORDINARIO",
-                    StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(
-                    valorNormalizado,
-                    "6",
-                    StringComparison.OrdinalIgnoreCase))
-            {
-                _evaluacionIdPorNombreDirecta.TryGetValue(
-                    "P2",
-                    out var idP2);
-
-                _evaluacionIdPorNombreDirecta.TryGetValue(
-                    "P3",
-                    out var idP3);
-
-                _evaluacionIdPorNombreDirecta.TryGetValue(
-                    "SEM",
-                    out var idSem);
-
-                AlumnoSeleccionadoDirecto.Calificación["P2"] =
-                    "9";
-
-                AlumnoSeleccionadoDirecto.Calificación["P3"] =
-                    "9";
-
-                AlumnoSeleccionadoDirecto.Calificación["SEM"] =
-                    "6";
-
-                if (!string.IsNullOrWhiteSpace(idP2))
-                {
-                    _writerService.GuardarEvaluacion(
-                        rutaCompleta,
-                        AlumnosDirectos.ToList(),
-                        "P2",
-                        idP2);
-                }
-
-                if (!string.IsNullOrWhiteSpace(idP3))
-                {
-                    _writerService.GuardarEvaluacion(
-                        rutaCompleta,
-                        AlumnosDirectos.ToList(),
-                        "P3",
-                        idP3);
-                }
-
-                if (!string.IsNullOrWhiteSpace(idSem))
-                {
-                    _writerService.GuardarEvaluacion(
-                        rutaCompleta,
-                        AlumnosDirectos.ToList(),
-                        "SEM",
-                        idSem);
-                }
-            }
 
             CalificacionActualDirecta =
                 valorNormalizado;
@@ -1105,13 +1073,16 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             string matricula,
             string valor)
         {
+            if (!_mapaArchivos.TryGetValue(
+                    MateriaSeleccionadaDirecta ?? string.Empty,
+                    out var ruta))
+            {
+                return;
+            }
+
             if (!string.Equals(
                     _mainVm.ArchivoCompletoActual,
-                    _mapaArchivos.TryGetValue(
-                        MateriaSeleccionadaDirecta ?? string.Empty,
-                        out var ruta)
-                        ? ruta
-                        : string.Empty,
+                    ruta,
                     StringComparison.OrdinalIgnoreCase))
             {
                 return;
@@ -1154,7 +1125,8 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 return false;
 
             string limpio =
-                texto.Trim().Replace(',', '.');
+                texto.Trim()
+                    .Replace(',', '.');
 
             if (!double.TryParse(
                     limpio,
@@ -1185,8 +1157,66 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
         {
             try
             {
+                // ----------------------------------------------------
+                // OBTENER CAP DE LA MATERIA SELECCIONADA
+                // ----------------------------------------------------
+
+                if (string.IsNullOrWhiteSpace(
+                        MateriaSeleccionadaDirecta))
+                {
+                    MessageBox.Show(
+                        "Selecciona una materia antes de exportar el PDF.",
+                        "Aviso",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+
+                    return;
+                }
+
+                if (!_mapaArchivos.TryGetValue(
+                        MateriaSeleccionadaDirecta,
+                        out string? rutaCap) ||
+                    string.IsNullOrWhiteSpace(
+                        rutaCap))
+                {
+                    MessageBox.Show(
+                        "No se encontró el archivo CAP de la materia seleccionada.",
+                        "Aviso",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+
+                    return;
+                }
+
+                if (!File.Exists(rutaCap))
+                {
+                    MessageBox.Show(
+                        "El archivo CAP seleccionado ya no existe.",
+                        "Aviso",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+
+                    return;
+                }
+
+                // ----------------------------------------------------
+                // CREAR SERVICIO CON CAP REAL
+                // ----------------------------------------------------
+
+                _reportePdfService =
+                    new ReporteCalificacionesPdfService(
+                        rutaCap);
+
+                // ----------------------------------------------------
+                // GENERAR PDF
+                // ----------------------------------------------------
+
                 byte[] pdfBytes =
                     _reportePdfService.GenerarDiseno();
+
+                // ----------------------------------------------------
+                // GUARDAR ARCHIVO
+                // ----------------------------------------------------
 
                 var dialog =
                     new SaveFileDialog
@@ -1198,7 +1228,7 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                             "Archivo PDF (*.pdf)|*.pdf",
 
                         FileName =
-                            "Reporte_Calificaciones.pdf",
+                            $"{Path.GetFileNameWithoutExtension(rutaCap)}_Reporte.pdf",
 
                         DefaultExt =
                             ".pdf",
@@ -1246,7 +1276,8 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
         // ============================================================
 
         private void OnPropertyChanged(
-            [CallerMemberName] string? nombrePropiedad = null)
+            [CallerMemberName]
+            string? nombrePropiedad = null)
         {
             PropertyChanged?.Invoke(
                 this,
@@ -1287,14 +1318,17 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
         }
 
         // ============================================================
-        // CLAVE DE MATERIA
+        // OBTENER CLAVE DE MATERIA
         // ============================================================
 
         private string ObtenerClaveMateriaDesdeRuta(
             string rutaCompleta)
         {
-            if (string.IsNullOrWhiteSpace(rutaCompleta))
+            if (string.IsNullOrWhiteSpace(
+                    rutaCompleta))
+            {
                 return string.Empty;
+            }
 
             string nombre =
                 Path.GetFileNameWithoutExtension(
@@ -1302,7 +1336,8 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
 
             return string.IsNullOrWhiteSpace(nombre)
                 ? string.Empty
-                : nombre.Trim().Replace(' ', '_');
+                : nombre.Trim()
+                    .Replace(' ', '_');
         }
     }
 }

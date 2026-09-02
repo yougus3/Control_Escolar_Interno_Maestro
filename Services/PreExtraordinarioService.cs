@@ -385,6 +385,10 @@ public class PreExtraordinarioService
                 };
             }
 
+            var m1 =
+                _parcialJsonService.ObtenerMateria(
+                    $"{claveMateriaBase}_P1");
+
             var m2 =
                 _parcialJsonService.ObtenerMateria(
                     $"{claveMateriaBase}_P2");
@@ -463,136 +467,66 @@ public class PreExtraordinarioService
                 alumno.Calificación["SEM"]);
 
             // -------------------------------------------------------------
-            // CALCULAR CUÁNTO NECESITAN P2 Y P3
-            //
-            // (P1 + P2 + P3) / 3 = 6
-            //
-            // P2 = P3
-            //
-            // P2 = P3 = (18 - P1) / 2
+            // PRE APROBADO: simplificar comportamiento
             // -------------------------------------------------------------
+            // En lugar de ajustar actividades para alcanzar una calificación
+            // objetivo, se fijan las tres calificaciones parciales a 6.0 y el
+            // semestral a 6. Las demás reglas (respaldo y registro de PRE)
+            // se mantienen.
 
-            double objetivoP2P3 =
-                (18.0 - p1) / 2.0;
-
-            objetivoP2P3 =
-                Math.Max(
-                    0.0,
-                    Math.Min(
-                        10.0,
-                        objetivoP2P3));
-
-            // -------------------------------------------------------------
-            // MODIFICAR LAS ACTIVIDADES REALES
-            // -------------------------------------------------------------
-
-            bool p2Ok =
-                AjustarActividadesParaCalificacion(
-                    m2,
-                    claveAlumno,
-                    objetivoP2P3);
-
-            bool p3Ok =
-                AjustarActividadesParaCalificacion(
-                    m3,
-                    claveAlumno,
-                    objetivoP2P3);
-
-            if (!p2Ok || !p3Ok)
+            // Ajustar las capturas internas de P2 y P3 para reflejar 6.0
+            // Guardamos 60% del puntaje máximo en cada actividad activa
+            // de forma que el cálculo desde actividades dé 6.0.
+            foreach (var materia in new[] { m1, m2, m3 })
             {
-                RestaurarMateriaParcial(
-                    m2,
-                    claveAlumno);
+                materia.Calificaciones ??=
+                    new Dictionary<string, Dictionary<string, double>>(StringComparer.OrdinalIgnoreCase);
 
-                RestaurarMateriaParcial(
-                    m3,
-                    claveAlumno);
-
-                m2.PreOriginals.Remove(
-                    claveAlumno);
-
-                m3.PreOriginals.Remove(
-                    claveAlumno);
-
-                return new PreOperacionResultado
+                if (!materia.Calificaciones.TryGetValue(claveAlumno, out var captura) || captura == null)
                 {
-                    Exito = false,
-                    Mensaje =
-                        "No se pudo aplicar el PRE porque P2 y P3 deben tener actividades activas y válidas."
-                };
+                    captura = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+                    materia.Calificaciones[claveAlumno] = captura;
+                }
+
+                var actividadesActivas = materia.Actividades?
+                    .Where(a => a != null && a.Activa && a.PuntajeMaximo > 0)
+                    .Take(4)
+                    .ToList() ?? new List<ActividadParcial>();
+
+                foreach (var actividad in actividadesActivas)
+                {
+                    string nombre = actividad.Nombre?.Trim() ?? string.Empty;
+                    double valor = actividad.PuntajeMaximo * 0.6; // 60% del máximo -> contribuye a 6.0
+                    captura[nombre] = valor;
+                }
+
+                // Marcar PRE en la captura
+                MarcarPreEnCaptura(materia, claveAlumno);
+
+                // Guardar materia en LiteDB
+                _parcialJsonService.GuardarMateria($"{claveMateriaBase}_{(materia == m2 ? "P2" : "P3")}", materia);
             }
 
             // -------------------------------------------------------------
-            // MARCAR PRE EN P2/P3
+            // ACTUALIZAR MAINVIEWMODEL: fijar P1,P2,P3 a 6.0 y SEM a 6
             // -------------------------------------------------------------
 
-            MarcarPreEnCaptura(
-                m2,
-                claveAlumno);
+            if (alumno != null)
+            {
+                alumno.Calificación["P1"] = "6.0";
+                alumno.Calificación["P2"] = "6.0";
+                alumno.Calificación["P3"] = "6.0";
+                alumno.Calificación["SEM"] = "6";
+            }
 
-            MarcarPreEnCaptura(
-                m3,
-                claveAlumno);
-
-            // -------------------------------------------------------------
-            // GUARDAR P2/P3 EN LITEDB
-            // -------------------------------------------------------------
-
-            _parcialJsonService.GuardarMateria(
-                $"{claveMateriaBase}_P2",
-                m2);
-
-            _parcialJsonService.GuardarMateria(
-                $"{claveMateriaBase}_P3",
-                m3);
-
-            // -------------------------------------------------------------
-            // RECALCULAR DESDE LAS ACTIVIDADES REALES
-            // -------------------------------------------------------------
-
-            double p2Calculado =
-                CalcularCalificacionDesdeMateria(
-                    m2,
-                    claveAlumno);
-
-            double p3Calculado =
-                CalcularCalificacionDesdeMateria(
-                    m3,
-                    claveAlumno);
-
-            // -------------------------------------------------------------
-            // ACTUALIZAR MAINVIEWMODEL
-            // -------------------------------------------------------------
-
-            alumno.Calificación["P2"] =
-                FormatearCalificacion(
-                    p2Calculado);
-
-            alumno.Calificación["P3"] =
-                FormatearCalificacion(
-                    p3Calculado);
-
-            /*
-             * PRE APROBADO:
-             *
-             * SEM = 6
-             */
-            alumno.Calificación["SEM"] = "6";
-
-            // -------------------------------------------------------------
-            // REGISTRAR PA
-            // -------------------------------------------------------------
-
+            // Registrar PRE aprobado
             RegistrarEstadoPre(
                 materiaPre,
                 claveAlumno,
                 6,
                 aprobado: true);
 
-            // -------------------------------------------------------------
-            // GUARDAR REGISTRO PRE EN LITEDB
-            // -------------------------------------------------------------
-
+            // Guardar registro PRE en LiteDB
             _parcialJsonService.GuardarMateria(
                 $"{claveMateriaBase}_PRE",
                 materiaPre);
@@ -601,9 +535,7 @@ public class PreExtraordinarioService
             {
                 Exito = true,
                 Mensaje =
-                    $"PRE aprobado. P2 = {FormatearCalificacion(p2Calculado)}, " +
-                    $"P3 = {FormatearCalificacion(p3Calculado)}, " +
-                    "SEM = 6, Estado = PA."
+                    "PRE aprobado. P1, P2 y P3 fijados a 6.0; SEM = 6; Estado = PA."
             };
         }
         catch (Exception ex)
@@ -1126,14 +1058,10 @@ public class PreExtraordinarioService
                 porcentajeNormalizado;
         }
 
-        decimal calificacion =
-            acumulado / 10m;
+        decimal calificacion = acumulado / 10m;
 
-        calificacion =
-            Math.Truncate(
-                calificacion * 10m) /
-            10m;
-
+        // Devolvemos la calificación con la máxima precisión posible aquí.
+        // La presentación (UI / PDF) debe truncar a 1 decimal cuando se requiera.
         return (double)calificacion;
     }
 

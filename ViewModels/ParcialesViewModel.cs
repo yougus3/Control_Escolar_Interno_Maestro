@@ -20,11 +20,11 @@ public class AlumnoFaltante
     public string Nombre { get; set; } = string.Empty;
     public string Razon { get; set; } = string.Empty;
 }
-
 public partial class ParcialesViewModel : ObservableObject
 {
     private readonly MainViewModel _mainVm;
     private readonly ParcialJsonService _parcialJsonService;
+    private readonly PreExtraordinarioService _preService;
     private readonly Dictionary<string, string> _mapaGrupos =
         new(StringComparer.OrdinalIgnoreCase);
 
@@ -120,6 +120,12 @@ public partial class ParcialesViewModel : ObservableObject
     private string _leyendaCapturaDirecta = string.Empty;
 
     [ObservableProperty]
+    private bool _preActivo;
+
+    [ObservableProperty]
+    private bool _calificacionParcialEditable;
+
+    [ObservableProperty]
     private string _textoEvaluados = string.Empty;
 
     [ObservableProperty]
@@ -136,6 +142,9 @@ public partial class ParcialesViewModel : ObservableObject
 
         _parcialJsonService =
             new ParcialJsonService();
+
+        _preService =
+            new PreExtraordinarioService();
 
         CargarMapaGrupos();
 
@@ -359,6 +368,10 @@ public partial class ParcialesViewModel : ObservableObject
             ed.SetBloqueadoPorCapturaDirecta(
                 value);
         }
+
+        // Actualizar si la caja de calificación parcial está habilitada
+        CalificacionParcialEditable =
+            value && !PreActivo;
 
         if (AlumnoSeleccionado != null)
         {
@@ -964,10 +977,43 @@ public partial class ParcialesViewModel : ObservableObject
                     }
                     else
                     {
+                    // Si el PRE está activo para este alumno, mostramos
+                    // el valor truncado a un decimal en la UI pero mantenemos
+                    // la precisión interna en las estructuras de datos.
+                    // Determinar clave base de la materia desde el archivo actual
+                    string claveMateriaBase = string.Empty;
+                    try
+                    {
+                        if (MainVm != null && !string.IsNullOrWhiteSpace(MainVm.ArchivoCompletoActual))
+                        {
+                            claveMateriaBase = Path.GetFileNameWithoutExtension(MainVm.ArchivoCompletoActual)?.Trim().Replace(' ', '_') ?? string.Empty;
+                        }
+                    }
+                    catch
+                    {
+                        claveMateriaBase = string.Empty;
+                    }
+
+                    if (_preService != null &&
+                        !string.IsNullOrWhiteSpace(claveMateriaBase) &&
+                        AlumnoSeleccionado != null &&
+                        _preService.ObtenerEstadoPre(claveMateriaBase, AlumnoSeleccionado.Matricula).TienePRE)
+                    {
+                        decimal d = (decimal)valor;
+                        ed.PuntajeObtenido = TruncarUnDecimal(d).ToString("0.0", CultureInfo.InvariantCulture);
+                        // marcar vista bloqueada por PRE
+                        ed.SetBloqueadoPorPre(true);
+                        PreActivo = true;
+                    }
+                    else
+                    {
                         ed.PuntajeObtenido =
                             valor.ToString(
                                 "0.##",
                                 CultureInfo.InvariantCulture);
+                        ed.SetBloqueadoPorPre(false);
+                        PreActivo = false;
+                    }
                     }
                 }
                 else
@@ -1789,6 +1835,8 @@ public partial class ActividadParcialEditor : ObservableObject
 
     private bool _bloqueadoPorCapturaDirecta =
         false;
+    private bool _bloqueadoPorPre =
+        false;
 
     [ObservableProperty]
     private bool _estaCompleta;
@@ -1865,6 +1913,17 @@ public partial class ActividadParcialEditor : ObservableObject
             nameof(IsPuntajeEditableFinal));
     }
 
+    public void SetBloqueadoPorPre(bool bloqueado)
+    {
+        _bloqueadoPorPre = bloqueado;
+
+        OnPropertyChanged(
+            nameof(IsPuntajeEditable));
+
+        OnPropertyChanged(
+            nameof(IsPuntajeEditableFinal));
+    }
+
     public void RefrescarVista()
     {
         OnPropertyChanged(
@@ -1888,10 +1947,12 @@ public partial class ActividadParcialEditor : ObservableObject
 
     public bool IsPuntajeEditable =>
         !_bloqueadoPorCapturaDirecta &&
+        !_bloqueadoPorPre &&
         Activa;
 
     public bool IsPuntajeEditableFinal =>
         !_bloqueadoPorCapturaDirecta &&
+        !_bloqueadoPorPre &&
         Activa &&
         EstaCompleta;
 
@@ -1940,6 +2001,7 @@ public partial class ActividadParcialEditor : ObservableObject
         string value)
     {
         NotificarActualizacion();
+        OnPropertyChanged(nameof(DisplayPuntajeObtenido));
     }
 
     partial void OnNumeroActividadChanged(
@@ -2061,27 +2123,53 @@ public partial class ActividadParcialEditor : ObservableObject
         {
             if (!Activa)
                 return string.Empty;
-
-            string obt =
-                string.IsNullOrWhiteSpace(
-                    PuntajeObtenido)
+            // Mostrar la fracción "obtenido / máximo". Usar el valor bruto PuntajeObtenido.
+            // Si la actividad está bloqueada por PRE, truncar la parte obtenida a 1 decimal.
+            string obtRaw =
+                string.IsNullOrWhiteSpace(PuntajeObtenido)
                     ? string.Empty
                     : PuntajeObtenido;
 
-            string max =
-                string.IsNullOrWhiteSpace(
-                    PuntajeMaximo)
+            string maxRaw =
+                string.IsNullOrWhiteSpace(PuntajeMaximo)
                     ? string.Empty
                     : PuntajeMaximo;
 
-            if (
-                string.IsNullOrEmpty(obt) &&
-                string.IsNullOrEmpty(max))
-            {
+            if (string.IsNullOrEmpty(obtRaw) && string.IsNullOrEmpty(maxRaw))
                 return string.Empty;
+
+            string obtDisplay;
+
+            if (string.Equals(obtRaw, "SC", StringComparison.OrdinalIgnoreCase))
+            {
+                obtDisplay = "SC";
+            }
+            if (double.TryParse(obtRaw, NumberStyles.Any, CultureInfo.InvariantCulture, out double obtVal))
+            {
+                if (_bloqueadoPorPre)
+                    obtDisplay = Services.NumberUtils.ToSmartString(obtVal);
+                else
+                    obtDisplay = obtVal.ToString("0.##", CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                obtDisplay = obtRaw;
             }
 
-            return $"{obt} / {max}";
+            string maxDisplay;
+            if (double.TryParse(maxRaw, NumberStyles.Any, CultureInfo.InvariantCulture, out double maxVal))
+            {
+                maxDisplay = maxVal.ToString("0.##", CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                maxDisplay = maxRaw;
+            }
+
+            if (string.IsNullOrEmpty(obtDisplay) && string.IsNullOrEmpty(maxDisplay))
+                return string.Empty;
+
+            return $"{obtDisplay} / {maxDisplay}";
         }
     }
 
@@ -2137,5 +2225,31 @@ public partial class ActividadParcialEditor : ObservableObject
                 "0.0",
                 CultureInfo.InvariantCulture);
         }
+    }
+
+    public string DisplayPuntajeObtenido
+    {
+        get => GetDisplayPuntaje(PuntajeObtenido);
+        set
+        {
+            PuntajeObtenido = value;
+            OnPropertyChanged(nameof(DisplayPuntajeObtenido));
+        }
+    }
+
+    private string GetDisplayPuntaje(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return string.Empty;
+
+        if (string.Equals(raw, "SC", StringComparison.OrdinalIgnoreCase))
+            return raw;
+        if (double.TryParse(raw, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out double d))
+        {
+            // Usar ToSmartString: mostrar entero cuando corresponde o truncado a 1 decimal.
+            return Services.NumberUtils.ToSmartString(d);
+        }
+
+        return raw;
     }
 }

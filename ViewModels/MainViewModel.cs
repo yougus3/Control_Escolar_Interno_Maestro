@@ -734,21 +734,25 @@ public partial class MainViewModel : ObservableObject
 
         try
         {
+            bool guardadoP1 = false;
             bool guardadoP2 = false;
             bool guardadoP3 = false;
             bool guardadoSem = false;
+
+            if (_evaluacionIdPorNombre.TryGetValue(
+                    "P1",
+                    out var idP1) &&
+                !string.IsNullOrWhiteSpace(idP1))
+            {
+                guardadoP1 = _writerService.GuardarEvaluacion(_archivoCompletoActual, Alumnos.ToList(), "P1", idP1);
+            }
 
             if (_evaluacionIdPorNombre.TryGetValue(
                     "P2",
                     out var idP2) &&
                 !string.IsNullOrWhiteSpace(idP2))
             {
-                guardadoP2 =
-                    _writerService.GuardarEvaluacion(
-                        _archivoCompletoActual,
-                        Alumnos.ToList(),
-                        "P2",
-                        idP2);
+                guardadoP2 = _writerService.GuardarEvaluacion(_archivoCompletoActual, Alumnos.ToList(), "P2", idP2);
             }
 
             if (_evaluacionIdPorNombre.TryGetValue(
@@ -756,12 +760,7 @@ public partial class MainViewModel : ObservableObject
                     out var idP3) &&
                 !string.IsNullOrWhiteSpace(idP3))
             {
-                guardadoP3 =
-                    _writerService.GuardarEvaluacion(
-                        _archivoCompletoActual,
-                        Alumnos.ToList(),
-                        "P3",
-                        idP3);
+                guardadoP3 = _writerService.GuardarEvaluacion(_archivoCompletoActual, Alumnos.ToList(), "P3", idP3);
             }
 
             if (_evaluacionIdPorNombre.TryGetValue(
@@ -769,17 +768,10 @@ public partial class MainViewModel : ObservableObject
                     out var idSem) &&
                 !string.IsNullOrWhiteSpace(idSem))
             {
-                guardadoSem =
-                    _writerService.GuardarEvaluacion(
-                        _archivoCompletoActual,
-                        Alumnos.ToList(),
-                        "SEM",
-                        idSem);
+                guardadoSem = _writerService.GuardarEvaluacion(_archivoCompletoActual, Alumnos.ToList(), "SEM", idSem);
             }
 
-            return guardadoP2 ||
-                   guardadoP3 ||
-                   guardadoSem;
+            return guardadoP1 || guardadoP2 || guardadoP3 || guardadoSem;
         }
         catch
         {
