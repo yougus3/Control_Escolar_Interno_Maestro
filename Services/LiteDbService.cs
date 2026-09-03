@@ -30,16 +30,6 @@ public class LiteDbService : IDisposable
     // ============================================================
     // SMTP GMAIL
     // ============================================================
-    //
-    // CAMBIA ÚNICAMENTE ESTOS DOS VALORES.
-    //
-    // SmtpUser:
-    //     cuenta Gmail desde la que CEIM enviará.
-    //
-    // SmtpAppPassword:
-    //     contraseña de aplicación de Google.
-    //
-    // ============================================================
 
     private const string SmtpHost =
         "smtp.gmail.com";
@@ -51,10 +41,10 @@ public class LiteDbService : IDisposable
         true;
 
     private const string SmtpUser =
-        "TU_CORREO@gmail.com";
+        "gustavomiranda@prefecotemixco.edu.mx";
 
     private const string SmtpAppPassword =
-        "TU_CONTRASENA_DE_APLICACION";
+        "qiwv kanr twxa arxk";
 
     // ============================================================
     // CLAVE CONFIGURACION.BIN
@@ -189,8 +179,11 @@ public class LiteDbService : IDisposable
         var record =
             new MateriaParcialRecord
             {
-                Id = clave,
-                Data = materia
+                Id =
+                    clave,
+
+                Data =
+                    materia
             };
 
         col.Upsert(
@@ -236,8 +229,11 @@ public class LiteDbService : IDisposable
         var record =
             new ConfiguracionRecord
             {
-                Id = clave,
-                Data = cfg
+                Id =
+                    clave,
+
+                Data =
+                    cfg
             };
 
         col.Upsert(
@@ -252,13 +248,15 @@ public class LiteDbService : IDisposable
     {
         if (_configuracion == null)
         {
-            return new Dictionary<string, string>(
-                StringComparer.OrdinalIgnoreCase);
+            return
+                new Dictionary<string, string>(
+                    StringComparer.OrdinalIgnoreCase);
         }
 
-        return new Dictionary<string, string>(
-            _configuracion.Grupos,
-            StringComparer.OrdinalIgnoreCase);
+        return
+            new Dictionary<string, string>(
+                _configuracion.Grupos,
+                StringComparer.OrdinalIgnoreCase);
     }
 
     public string ObtenerGrupoPorMatricula(
@@ -273,18 +271,65 @@ public class LiteDbService : IDisposable
         if (_configuracion == null)
             return "S/G";
 
+        string matriculaBuscada =
+            matricula.Trim();
+
         return
             _configuracion.Grupos.TryGetValue(
-                matricula.Trim(),
+                matriculaBuscada,
                 out string? grupo) &&
             !string.IsNullOrWhiteSpace(
                 grupo)
-                ? grupo
+                ? grupo.Trim()
                 : "S/G";
     }
 
     // ============================================================
+    // NORMALIZAR CLAVE PROFESOR
+    // ============================================================
+
+    private static string NormalizarClaveProfesor(
+        string? clave)
+    {
+        if (string.IsNullOrWhiteSpace(
+                clave))
+        {
+            return string.Empty;
+        }
+
+        var caracteres =
+            clave
+                .Trim()
+                .Where(
+                    char.IsLetterOrDigit)
+                .ToArray();
+
+        return
+            new string(
+                caracteres)
+            .ToUpperInvariant();
+    }
+
+    // ============================================================
     // PROFESORES
+    // ============================================================
+    //
+    // IMPORTANTE:
+    //
+    // CONFIGURACION_CEIM guarda Profesores como:
+    //
+    // Dictionary<string, Profesor>
+    //
+    // donde:
+    //
+    //   KEY                = CLAVEPROFESOR
+    //   VALUE.Email        = correo
+    //
+    // NO usamos ninguna columna C.
+    //
+    // El nombre del maestro utilizado por CEIM para el reporte
+    // continúa viniendo del CAP.
+    //
     // ============================================================
 
     public List<ProfesorConfigurado>
@@ -296,15 +341,55 @@ public class LiteDbService : IDisposable
             return [];
         }
 
+        var resultado =
+            new List<ProfesorConfigurado>();
+
+        foreach (var item
+                 in _configuracion.Profesores)
+        {
+            string clave =
+                item.Key?.Trim()
+                ?? string.Empty;
+
+            var profesor =
+                item.Value;
+
+            if (string.IsNullOrWhiteSpace(
+                    clave))
+            {
+                continue;
+            }
+
+            if (profesor == null)
+            {
+                continue;
+            }
+
+            // La clave del diccionario es la autoridad.
+            // No dependemos de una CLAVEPROFESOR almacenada
+            // dentro del objeto Profesor.
+
+            profesor.CLAVEPROFESOR =
+                clave;
+
+            profesor.EMAIL =
+                profesor.EMAIL
+                ?.Trim()
+                ?? string.Empty;
+
+            // NO se utiliza NOMBREPROFESOR
+            // para identificar al docente.
+
+            resultado.Add(
+                profesor);
+        }
+
         return
-            _configuracion
-                .Profesores
-                .Where(p =>
-                    p != null &&
-                    !string.IsNullOrWhiteSpace(
-                        p.CLAVEPROFESOR))
+            resultado
                 .OrderBy(
-                    p => p.NOMBREPROFESOR)
+                    p =>
+                        p.CLAVEPROFESOR,
+                    StringComparer.OrdinalIgnoreCase)
                 .ToList();
     }
 
@@ -328,18 +413,41 @@ public class LiteDbService : IDisposable
             return null;
         }
 
-        string clave =
-            claveProfesor.Trim();
+        string claveBuscada =
+            NormalizarClaveProfesor(
+                claveProfesor);
 
-        return
-            _configuracion
-                .Profesores
-                .FirstOrDefault(
-                    p =>
-                        string.Equals(
-                            p.CLAVEPROFESOR?.Trim(),
-                            clave,
-                            StringComparison.OrdinalIgnoreCase));
+        foreach (var item
+                 in _configuracion.Profesores)
+        {
+            string claveDiccionario =
+                NormalizarClaveProfesor(
+                    item.Key);
+
+            if (claveDiccionario !=
+                claveBuscada)
+            {
+                continue;
+            }
+
+            var profesor =
+                item.Value;
+
+            if (profesor == null)
+                return null;
+
+            profesor.CLAVEPROFESOR =
+                item.Key.Trim();
+
+            profesor.EMAIL =
+                profesor.EMAIL
+                ?.Trim()
+                ?? string.Empty;
+
+            return profesor;
+        }
+
+        return null;
     }
 
     // ============================================================
@@ -359,6 +467,12 @@ public class LiteDbService : IDisposable
 
     // ============================================================
     // NOMBRE PROFESOR
+    // ============================================================
+    //
+    // No se obtiene de CONFIG_DOCENTE.
+    //
+    // Este método se conserva por compatibilidad.
+    //
     // ============================================================
 
     public string ObtenerNombreProfesor(
@@ -490,7 +604,7 @@ public class LiteDbService : IDisposable
                 profesor.EMAIL))
         {
             throw new InvalidOperationException(
-                $"El profesor '{profesor.NOMBREPROFESOR}' no tiene correo registrado.");
+                $"El profesor con CLAVEPROFESOR '{claveProfesor}' no tiene correo registrado.");
         }
 
         await EnviarCorreoAsync(
@@ -538,7 +652,8 @@ public class LiteDbService : IDisposable
 
     private void CargarConfiguracionBin()
     {
-        _configuracion = null;
+        _configuracion =
+            null;
 
         try
         {
@@ -552,9 +667,14 @@ public class LiteDbService : IDisposable
                 File.ReadAllBytes(
                     _configuracionBinPath);
 
-            const int HeaderSize = 4;
-            const int NonceSize = 12;
-            const int TagSize = 16;
+            const int HeaderSize =
+                4;
+
+            const int NonceSize =
+                12;
+
+            const int TagSize =
+                16;
 
             int minimo =
                 HeaderSize +
@@ -621,7 +741,8 @@ public class LiteDbService : IDisposable
                 return;
 
             byte[] cifrado =
-                new byte[encryptedLength];
+                new byte[
+                    encryptedLength];
 
             Buffer.BlockCopy(
                 datos,
@@ -631,7 +752,8 @@ public class LiteDbService : IDisposable
                 encryptedLength);
 
             byte[] texto =
-                new byte[encryptedLength];
+                new byte[
+                    encryptedLength];
 
             // ----------------------------------------------------
             // AES-GCM
@@ -654,6 +776,14 @@ public class LiteDbService : IDisposable
 
             // ----------------------------------------------------
             // DESERIALIZAR
+            // ----------------------------------------------------
+            //
+            // La estructura REAL producida por CONFIGURACION_CEIM
+            // es:
+            //
+            // Grupos     -> Dictionary<string,string>
+            // Profesores -> Dictionary<string,Profesor>
+            //
             // ----------------------------------------------------
 
             var configuracion =
@@ -678,50 +808,117 @@ public class LiteDbService : IDisposable
                     configuracion.Grupos,
                     StringComparer.OrdinalIgnoreCase);
 
+            // Normalizar matrículas
+            var gruposNormalizados =
+                new Dictionary<string, string>(
+                    StringComparer.OrdinalIgnoreCase);
+
+            foreach (var item
+                     in configuracion.Grupos)
+            {
+                if (string.IsNullOrWhiteSpace(
+                        item.Key))
+                {
+                    continue;
+                }
+
+                string matricula =
+                    item.Key.Trim();
+
+                string grupo =
+                    item.Value?.Trim()
+                    ?? string.Empty;
+
+                if (string.IsNullOrWhiteSpace(
+                        grupo))
+                {
+                    continue;
+                }
+
+                gruposNormalizados[
+                    matricula] =
+                    grupo;
+            }
+
+            configuracion.Grupos =
+                gruposNormalizados;
+
             // ----------------------------------------------------
             // PROFESORES
             // ----------------------------------------------------
 
             configuracion.Profesores ??=
-                [];
+                new Dictionary<
+                    string,
+                    ProfesorConfigurado>(
+                    StringComparer.OrdinalIgnoreCase);
 
             configuracion.Profesores =
-                configuracion
-                    .Profesores
-                    .Where(
-                        p => p != null)
-                    .Select(
-                        p =>
-                        {
-                            p.CLAVEPROFESOR =
-                                p.CLAVEPROFESOR
-                                ?.Trim()
-                                ?? string.Empty;
+                new Dictionary<
+                    string,
+                    ProfesorConfigurado>(
+                    configuracion.Profesores,
+                    StringComparer.OrdinalIgnoreCase);
 
-                            p.NOMBREPROFESOR =
-                                p.NOMBREPROFESOR
-                                ?.Trim()
-                                ?? string.Empty;
+            var profesoresNormalizados =
+                new Dictionary<
+                    string,
+                    ProfesorConfigurado>(
+                    StringComparer.OrdinalIgnoreCase);
 
-                            p.EMAIL =
-                                p.EMAIL
-                                ?.Trim()
-                                ?? string.Empty;
+            foreach (var item
+                     in configuracion.Profesores)
+            {
+                if (string.IsNullOrWhiteSpace(
+                        item.Key))
+                {
+                    continue;
+                }
 
-                            return p;
-                        })
-                    .Where(
-                        p =>
-                            !string.IsNullOrWhiteSpace(
-                                p.CLAVEPROFESOR))
-                    .ToList();
+                var profesor =
+                    item.Value;
+
+                if (profesor == null)
+                    continue;
+
+                string clave =
+                    item.Key.Trim();
+
+                profesor.CLAVEPROFESOR =
+                    clave;
+
+                profesor.EMAIL =
+                    profesor.EMAIL
+                    ?.Trim()
+                    ?? string.Empty;
+
+                // NO usamos NOMBREPROFESOR.
+                // El nombre viene del CAP.
+
+                profesoresNormalizados[
+                    clave] =
+                    profesor;
+            }
+
+            configuracion.Profesores =
+                profesoresNormalizados;
 
             _configuracion =
                 configuracion;
         }
         catch
         {
-            _configuracion = null;
+            // IMPORTANTE:
+            //
+            // Si aquí falla la configuración,
+            // no hay grupos ni docentes disponibles.
+            //
+            // El fallo anterior ocurría precisamente
+            // porque Profesores estaba declarado como List
+            // cuando realmente es Dictionary.
+            //
+            _configuracion =
+                null;
         }
     }
 
@@ -731,7 +928,7 @@ public class LiteDbService : IDisposable
 
     public void Dispose()
     {
-        _db?.Dispose();
+        _db.Dispose();
     }
 
     // ============================================================
@@ -748,28 +945,37 @@ public class LiteDbService : IDisposable
             new(
                 StringComparer.OrdinalIgnoreCase);
 
-        public List<ProfesorConfigurado> Profesores
+        public Dictionary<
+            string,
+            ProfesorConfigurado>
+            Profesores
         {
             get;
             set;
         } =
-            [];
+            new(
+                StringComparer.OrdinalIgnoreCase);
     }
 
     // ============================================================
     // PROFESOR
     // ============================================================
+    //
+    // El JSON realmente viene del modelo Profesor de
+    // CONFIGURACION_CEIM.
+    //
+    // Solo nos interesan:
+    //
+    //   ClaveProfesor
+    //   Email
+    //
+    // NOMBREPROFESOR NO participa.
+    //
+    // ============================================================
 
     public class ProfesorConfigurado
     {
         public string CLAVEPROFESOR
-        {
-            get;
-            set;
-        } =
-            string.Empty;
-
-        public string NOMBREPROFESOR
         {
             get;
             set;
@@ -783,15 +989,27 @@ public class LiteDbService : IDisposable
         } =
             string.Empty;
 
+        // Se mantiene únicamente por compatibilidad
+        // con el resto de CEIM.
+        //
+        // El nombre mostrado del profesor NO se obtiene
+        // de CONFIG_DOCENTE.
+        public string NOMBREPROFESOR
+        {
+            get;
+            set;
+        } =
+            string.Empty;
+
         public string TextoCombo =>
             string.IsNullOrWhiteSpace(
                 EMAIL)
-                ? NOMBREPROFESOR
-                : $"{NOMBREPROFESOR} | {EMAIL}";
+                ? CLAVEPROFESOR
+                : $"{CLAVEPROFESOR} | {EMAIL}";
     }
 
     // ============================================================
-    // LITEDB RECORDS
+    // RECORDS LITEDB
     // ============================================================
 
     private class MateriaParcialRecord

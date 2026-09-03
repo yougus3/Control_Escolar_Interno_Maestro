@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Microsoft.Win32;
 using PdfSharpCore.Pdf;
 using PdfSharpCore.Pdf.IO;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
@@ -32,10 +31,6 @@ public partial class ConfiguracionParcialesWindow :
     private readonly CapWriterService _writerService;
     private readonly FileScannerService _scannerService;
 
-    // ============================================================
-    // CONFIG GLOBAL
-    // ============================================================
-
     private string? _evaluacionGlobalSeleccionada;
 
     private readonly ObservableCollection<string>
@@ -45,10 +40,6 @@ public partial class ConfiguracionParcialesWindow :
     private bool _isGlobalComboEnabled = true;
 
     private bool _cargandoDatos;
-
-    // ============================================================
-    // MAPAS
-    // ============================================================
 
     private readonly Dictionary<string, string> _mapaArchivos =
         new(StringComparer.OrdinalIgnoreCase);
@@ -198,7 +189,7 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // PROPIEDADES CORREO
+    // PROPIEDADES PROFESOR
     // ============================================================
 
     public string ClaveProfesorCap
@@ -207,16 +198,37 @@ public partial class ConfiguracionParcialesWindow :
 
         set
         {
-            if (_claveProfesorCap == value)
+            string nuevo =
+                value?.Trim() ??
+                string.Empty;
+
+            if (string.Equals(
+                    _claveProfesorCap,
+                    nuevo,
+                    StringComparison.Ordinal))
+            {
                 return;
+            }
 
             _claveProfesorCap =
-                value;
+                nuevo;
 
             OnPropertyChanged();
 
             OnPropertyChanged(
                 nameof(ProfesorDetectadoTexto));
+
+            OnPropertyChanged(
+                nameof(CorreoProfesorSeleccionado));
+
+            OnPropertyChanged(
+                nameof(CorreoDestino));
+
+            OnPropertyChanged(
+                nameof(HayDestinatarioValido));
+
+            OnPropertyChanged(
+                nameof(PuedeEnviarCorreo));
         }
     }
 
@@ -227,8 +239,12 @@ public partial class ConfiguracionParcialesWindow :
 
         set
         {
-            if (_profesorSeleccionado == value)
+            if (ReferenceEquals(
+                    _profesorSeleccionado,
+                    value))
+            {
                 return;
+            }
 
             _profesorSeleccionado =
                 value;
@@ -246,6 +262,12 @@ public partial class ConfiguracionParcialesWindow :
 
             OnPropertyChanged(
                 nameof(HayDestinatarioValido));
+
+            OnPropertyChanged(
+                nameof(PuedeEnviarCorreo));
+
+            OnPropertyChanged(
+                nameof(ProfesorDetectadoTexto));
         }
     }
 
@@ -271,6 +293,9 @@ public partial class ConfiguracionParcialesWindow :
 
             OnPropertyChanged(
                 nameof(HayDestinatarioValido));
+
+            OnPropertyChanged(
+                nameof(PuedeEnviarCorreo));
 
             if (value)
             {
@@ -301,6 +326,9 @@ public partial class ConfiguracionParcialesWindow :
 
             OnPropertyChanged(
                 nameof(HayDestinatarioValido));
+
+            OnPropertyChanged(
+                nameof(PuedeEnviarCorreo));
         }
     }
 
@@ -323,6 +351,9 @@ public partial class ConfiguracionParcialesWindow :
 
             OnPropertyChanged(
                 nameof(HayDestinatarioValido));
+
+            OnPropertyChanged(
+                nameof(PuedeEnviarCorreo));
         }
     }
 
@@ -346,7 +377,8 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     public bool PuedeEnviarCorreo =>
-        !EnviandoCorreo;
+        !EnviandoCorreo &&
+        HayDestinatarioValido;
 
     public string EstadoCorreo
     {
@@ -394,7 +426,7 @@ public partial class ConfiguracionParcialesWindow :
             if (ProfesorSeleccionado == null)
             {
                 return
-                    $"CLAVEPROFESOR: {ClaveProfesorCap} | No existe en configuracion.bin.";
+                    $"CLAVEPROFESOR: {ClaveProfesorCap} | No se encontró ese docente en configuracion.bin.";
             }
 
             return
@@ -408,20 +440,74 @@ public partial class ConfiguracionParcialesWindow :
             ?.Trim()
             ?? string.Empty;
 
-    public string CorreoProfesorSeleccionado =>
-        ProfesorSeleccionado?
-            .EMAIL
-            ?.Trim()
-            ?? string.Empty;
+    // ============================================================
+    // CORREO
+    //
+    // OJO:
+    // ESTE CORREO PROVIENE DEL OBJETO CARGADO DESDE
+    // CONFIGURACION.BIN MEDIANTE LiteDbService.
+    //
+    // NO SE LEE CONFIG_DOCENTE DESDE ESTA VENTANA.
+    // ============================================================
+
+    public string CorreoProfesorSeleccionado
+    {
+        get
+        {
+            // Primero usamos el profesor ya seleccionado.
+            string correo =
+                ProfesorSeleccionado?
+                    .EMAIL
+                    ?.Trim()
+                    ?? string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(
+                    correo))
+            {
+                return correo;
+            }
+
+            // Respaldo:
+            // buscamos nuevamente dentro de _profesores,
+            // que fueron cargados desde configuracion.bin.
+            if (!string.IsNullOrWhiteSpace(
+                    ClaveProfesorCap))
+            {
+                string claveBuscada =
+                    NormalizarClaveProfesor(
+                        ClaveProfesorCap);
+
+                var profesor =
+                    _profesores.FirstOrDefault(
+                        p =>
+                            NormalizarClaveProfesor(
+                                p.CLAVEPROFESOR)
+                            ==
+                            claveBuscada);
+
+                return
+                    profesor?
+                        .EMAIL
+                        ?.Trim()
+                    ?? string.Empty;
+            }
+
+            return string.Empty;
+        }
+    }
 
     public string CorreoDestino
     {
         get
         {
             if (EnviarAOtroCorreo)
-                return CorreoAlternativo.Trim();
+            {
+                return
+                    CorreoAlternativo.Trim();
+            }
 
-            return CorreoProfesorSeleccionado.Trim();
+            return
+                CorreoProfesorSeleccionado.Trim();
         }
     }
 
@@ -430,7 +516,7 @@ public partial class ConfiguracionParcialesWindow :
             CorreoDestino);
 
     // ============================================================
-    // PROPIEDADES CONFIG GLOBAL
+    // CONFIG GLOBAL
     // ============================================================
 
     public bool IsGlobalComboEnabled
@@ -665,19 +751,19 @@ public partial class ConfiguracionParcialesWindow :
         DataContext =
             this;
 
+        CargarMateriasDisponibles();
+
+        SuscribirCambiosDeSeleccionCaps();
+
         CargarProfesores();
 
-        CargarMateriasDisponibles();
+        ActualizarProfesorDesdeCapsSeleccionados();
 
         VerificarSiCapEsExtra();
 
         CargarEvaluacionesGlobales();
 
         CargarEstadoGlobal();
-
-        SuscribirCambiosDeSeleccionCaps();
-
-        ActualizarProfesorDesdeCapsSeleccionados();
 
         if (MateriasDisponibles.Any())
         {
@@ -702,7 +788,32 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // PROFESORES DESDE BIN
+    // NORMALIZAR CLAVE
+    // ============================================================
+
+    private static string NormalizarClaveProfesor(
+        string? clave)
+    {
+        if (string.IsNullOrWhiteSpace(
+                clave))
+        {
+            return string.Empty;
+        }
+
+        var caracteres =
+            clave
+                .Trim()
+                .Where(char.IsLetterOrDigit)
+                .ToArray();
+
+        return
+            new string(
+                caracteres)
+            .ToUpperInvariant();
+    }
+
+    // ============================================================
+    // CARGAR PROFESORES
     // ============================================================
 
     private void CargarProfesores()
@@ -717,19 +828,27 @@ public partial class ConfiguracionParcialesWindow :
             foreach (var profesor
                      in lite.GetProfesores())
             {
+                if (profesor == null)
+                    continue;
+
+                profesor.CLAVEPROFESOR =
+                    profesor.CLAVEPROFESOR
+                        ?.Trim()
+                    ?? string.Empty;
+
+                profesor.EMAIL =
+                    profesor.EMAIL
+                        ?.Trim()
+                    ?? string.Empty;
+
                 _profesores.Add(
                     profesor);
             }
-
-            EstadoCorreo =
-                _profesores.Count > 0
-                    ? $"{_profesores.Count} profesores disponibles."
-                    : "No se encontraron profesores en configuracion.bin.";
         }
         catch (Exception ex)
         {
             EstadoCorreo =
-                $"No se pudieron cargar los profesores: {ex.Message}";
+                $"Error al cargar profesores: {ex.Message}";
         }
 
         OnPropertyChanged(
@@ -737,13 +856,16 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // DETECTAR CLAVE PROFESOR EN CAP
+    // LEER DATO CAP
     // ============================================================
 
-    private string ObtenerClaveProfesorDesdeCap(
-        string filePath)
+    private static string LeerDatoCap(
+        string filePath,
+        string nombreCampo)
     {
-        if (!File.Exists(
+        if (string.IsNullOrWhiteSpace(
+                filePath) ||
+            !File.Exists(
                 filePath))
         {
             return string.Empty;
@@ -759,32 +881,41 @@ public partial class ConfiguracionParcialesWindow :
                     "iso-8859-1");
 
             foreach (var linea
-                     in File.ReadAllLines(
+                     in File.ReadLines(
                          filePath,
                          encoding))
             {
-                string l =
-                    linea.Trim();
+                string lineaLimpia =
+                    linea
+                        .Trim()
+                        .TrimStart('\uFEFF');
 
-                if (!l.Contains('='))
+                if (!lineaLimpia.Contains('='))
                     continue;
 
                 var partes =
-                    l.Split(
+                    lineaLimpia.Split(
                         '=',
                         2);
 
                 if (partes.Length != 2)
                     continue;
 
-                if (string.Equals(
-                        partes[0].Trim(),
-                        "CLAVEPROFESOR",
+                string clave =
+                    partes[0].Trim();
+
+                if (!string.Equals(
+                        clave,
+                        nombreCampo,
                         StringComparison.OrdinalIgnoreCase))
                 {
-                    return
-                        partes[1].Trim();
+                    continue;
                 }
+
+                return
+                    partes[1]
+                        .Trim()
+                        .Trim('"');
             }
         }
         catch
@@ -795,14 +926,28 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // DETECTAR PROFESOR DE CAP SELECCIONADOS
+    // DATOS DEL PROFESOR DESDE CAP
+    // ============================================================
+
+    private string ObtenerClaveProfesorDesdeCap(
+        string filePath)
+    {
+        return
+            LeerDatoCap(
+                filePath,
+                "CLAVEPROFESOR");
+    }
+
+    // ============================================================
+    // CAP SELECCIONADOS
     // ============================================================
 
     private void ActualizarProfesorDesdeCapsSeleccionados()
     {
         var seleccionados =
             CapFiles
-                .Where(c => c.IsSelected)
+                .Where(
+                    c => c.IsSelected)
                 .ToList();
 
         var primero =
@@ -816,51 +961,51 @@ public partial class ConfiguracionParcialesWindow :
             ProfesorSeleccionado =
                 null;
 
-            EstadoCorreo =
-                "Selecciona al menos un CAP.";
-
             return;
         }
 
-        string clave =
+        string claveCap =
             primero.ClaveProfesor;
 
-        if (string.IsNullOrWhiteSpace(clave))
+        if (string.IsNullOrWhiteSpace(
+                claveCap))
         {
-            clave =
+            claveCap =
                 ObtenerClaveProfesorDesdeCap(
                     primero.FilePath);
+
+            primero.ClaveProfesor =
+                claveCap;
         }
 
         ClaveProfesorCap =
-            clave;
+            claveCap;
 
         SeleccionarProfesorDetectado();
-
-        // --------------------------------------------------------
-        // Comprobación cuando se seleccionan varios CAP
-        // --------------------------------------------------------
 
         var claves =
             seleccionados
                 .Select(
                     c =>
                     {
-                        string k =
+                        string clave =
                             c.ClaveProfesor;
 
-                        if (string.IsNullOrWhiteSpace(k))
+                        if (string.IsNullOrWhiteSpace(
+                                clave))
                         {
-                            k =
+                            clave =
                                 ObtenerClaveProfesorDesdeCap(
                                     c.FilePath);
                         }
 
-                        return k.Trim();
+                        return
+                            NormalizarClaveProfesor(
+                                clave);
                     })
                 .Where(
-                    k =>
-                        !string.IsNullOrWhiteSpace(k))
+                    c =>
+                        !string.IsNullOrWhiteSpace(c))
                 .Distinct(
                     StringComparer.OrdinalIgnoreCase)
                 .ToList();
@@ -868,28 +1013,34 @@ public partial class ConfiguracionParcialesWindow :
         if (claves.Count > 1)
         {
             EstadoCorreo =
-                "Los CAP seleccionados pertenecen a diferentes profesores. Se utilizará el profesor del primer CAP seleccionado.";
+                "Los CAP seleccionados pertenecen a diferentes profesores. Se tomó el profesor del primer CAP.";
         }
         else if (ProfesorSeleccionado != null)
         {
             EstadoCorreo =
                 $"Profesor detectado: {ProfesorSeleccionado.NOMBREPROFESOR}";
         }
-        else if (!string.IsNullOrWhiteSpace(
-                     clave))
-        {
-            EstadoCorreo =
-                $"Se detectó CLAVEPROFESOR {clave}, pero no existe en configuracion.bin.";
-        }
         else
         {
             EstadoCorreo =
-                "El CAP no contiene CLAVEPROFESOR.";
+                $"CLAVEPROFESOR detectado: {ClaveProfesorCap}, pero no se encontró coincidencia en configuracion.bin.";
         }
+
+        OnPropertyChanged(
+            nameof(CorreoProfesorSeleccionado));
+
+        OnPropertyChanged(
+            nameof(CorreoDestino));
+
+        OnPropertyChanged(
+            nameof(HayDestinatarioValido));
+
+        OnPropertyChanged(
+            nameof(PuedeEnviarCorreo));
     }
 
     // ============================================================
-    // SELECCIONAR PROFESOR DETECTADO
+    // BUSCAR PROFESOR EN CONFIGURACION.BIN
     // ============================================================
 
     private void SeleccionarProfesorDetectado()
@@ -903,20 +1054,21 @@ public partial class ConfiguracionParcialesWindow :
             return;
         }
 
-        var profesor =
-            _profesores.FirstOrDefault(
-                p =>
-                    string.Equals(
-                        p.CLAVEPROFESOR?.Trim(),
-                        ClaveProfesorCap.Trim(),
-                        StringComparison.OrdinalIgnoreCase));
+        string claveBuscada =
+            NormalizarClaveProfesor(
+                ClaveProfesorCap);
 
         ProfesorSeleccionado =
-            profesor;
+            _profesores.FirstOrDefault(
+                p =>
+                    NormalizarClaveProfesor(
+                        p.CLAVEPROFESOR)
+                    ==
+                    claveBuscada);
     }
 
     // ============================================================
-    // CAMBIOS CHECKBOX CAP
+    // CAMBIOS SELECCIÓN CAP
     // ============================================================
 
     private void SuscribirCambiosDeSeleccionCaps()
@@ -943,6 +1095,271 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
+    // EXPORTAR PDF
+    // ============================================================
+
+    private void ExportarPdf_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        try
+        {
+            var seleccionados =
+                CapFiles
+                    .Where(
+                        c => c.IsSelected)
+                    .ToList();
+
+            if (seleccionados.Count == 0)
+            {
+                MessageBox.Show(
+                    "Selecciona al menos un CAP para exportar.",
+                    "Exportar PDF",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+
+                return;
+            }
+
+            string primerCap =
+                seleccionados
+                    .First()
+                    .FilePath;
+
+            if (!File.Exists(
+                    primerCap))
+            {
+                MessageBox.Show(
+                    "El primer CAP seleccionado ya no existe.",
+                    "Exportar PDF",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+
+                return;
+            }
+
+            string ciclo =
+                ObtenerCicloEscolarDesdeCap(
+                    primerCap);
+
+            if (string.IsNullOrWhiteSpace(
+                    ciclo))
+            {
+                ciclo =
+                    "SIN_CICLO";
+            }
+
+            string nombreProfesor =
+                seleccionados
+                    .Select(
+                        c =>
+                            c.NombreProfesor?.Trim())
+                    .FirstOrDefault(
+                        n =>
+                            !string.IsNullOrWhiteSpace(n))
+                    ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(
+                    nombreProfesor) &&
+                ProfesorSeleccionado != null)
+            {
+                nombreProfesor =
+                    ProfesorSeleccionado
+                        .NOMBREPROFESOR
+                        ?.Trim()
+                    ?? string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    nombreProfesor))
+            {
+                nombreProfesor =
+                    "PROFESOR";
+            }
+
+            string documentos =
+                Environment.GetFolderPath(
+                    Environment.SpecialFolder.MyDocuments);
+
+            string carpetaDestino =
+                Path.Combine(
+                    documentos,
+                    LimpiarNombreArchivo(
+                        ciclo));
+
+            Directory.CreateDirectory(
+                carpetaDestino);
+
+            string nombreArchivo =
+                $"{LimpiarNombreArchivo(nombreProfesor)}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+            string rutaSalida =
+                Path.Combine(
+                    carpetaDestino,
+                    nombreArchivo);
+
+            byte[] pdf =
+                GenerarPdfCombinado(
+                    seleccionados);
+
+            if (pdf.Length == 0)
+            {
+                MessageBox.Show(
+                    "No se pudo generar el PDF.",
+                    "Exportar PDF",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+
+                return;
+            }
+
+            File.WriteAllBytes(
+                rutaSalida,
+                pdf);
+
+            ArchivoPdfActual =
+                rutaSalida;
+
+            var visor =
+                new PdfViewerWindow(
+                    rutaSalida)
+                {
+                    Owner = this
+                };
+
+            visor.Show();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"No se pudo exportar el PDF:\n\n{ex.Message}",
+                "Error de exportación",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
+    // ============================================================
+    // CICLO
+    // ============================================================
+
+    private static string ObtenerCicloEscolarDesdeCap(
+        string filePath)
+    {
+        string ciclo =
+            LeerDatoCap(
+                filePath,
+                "CICLO_DESCRIPCION");
+
+        if (string.IsNullOrWhiteSpace(
+                ciclo))
+        {
+            ciclo =
+                LeerDatoCap(
+                    filePath,
+                    "CICLO_CODIGOCORTO");
+        }
+
+        return
+            ciclo.Trim();
+    }
+
+    // ============================================================
+    // PDF COMBINADO
+    // ============================================================
+
+    private static byte[] GenerarPdfCombinado(
+        List<CapFileItem> seleccionados)
+    {
+        using var documento =
+            new PdfDocument();
+
+        foreach (var cap
+                 in seleccionados)
+        {
+            if (string.IsNullOrWhiteSpace(
+                    cap.FilePath))
+            {
+                continue;
+            }
+
+            if (!File.Exists(
+                    cap.FilePath))
+            {
+                continue;
+            }
+
+            var servicio =
+                new ReporteCalificacionesPdfService(
+                    cap.FilePath);
+
+            byte[] bytes =
+                servicio.GenerarDiseno();
+
+            if (bytes.Length == 0)
+                continue;
+
+            using var entradaStream =
+                new MemoryStream(
+                    bytes);
+
+            using var entrada =
+                PdfReader.Open(
+                    entradaStream,
+                    PdfDocumentOpenMode.Import);
+
+            for (int i = 0;
+                 i < entrada.PageCount;
+                 i++)
+            {
+                documento.AddPage(
+                    entrada.Pages[i]);
+            }
+        }
+
+        if (documento.PageCount == 0)
+        {
+            return Array.Empty<byte>();
+        }
+
+        using var salida =
+            new MemoryStream();
+
+        documento.Save(
+            salida);
+
+        return salida.ToArray();
+    }
+
+    // ============================================================
+    // LIMPIAR NOMBRE ARCHIVO
+    // ============================================================
+
+    private static string LimpiarNombreArchivo(
+        string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(
+                nombre))
+        {
+            return "SIN_NOMBRE";
+        }
+
+        string limpio =
+            nombre.Trim();
+
+        foreach (char caracter
+                 in Path.GetInvalidFileNameChars())
+        {
+            limpio =
+                limpio.Replace(
+                    caracter,
+                    '_');
+        }
+
+        return limpio;
+    }
+
+    // ============================================================
     // ENVIAR CALIFICACIONES
     // ============================================================
 
@@ -955,7 +1372,8 @@ public partial class ConfiguracionParcialesWindow :
 
         var seleccionados =
             CapFiles
-                .Where(c => c.IsSelected)
+                .Where(
+                    c => c.IsSelected)
                 .ToList();
 
         if (seleccionados.Count == 0)
@@ -991,8 +1409,8 @@ public partial class ConfiguracionParcialesWindow :
             !EnviarAOtroCorreo)
         {
             MessageBox.Show(
-                "No se pudo localizar en configuracion.bin al profesor indicado por CLAVEPROFESOR.",
-                "Enviar calificaciones",
+                $"El CAP contiene CLAVEPROFESOR '{ClaveProfesorCap}', pero no se encontró ese profesor en configuracion.bin.",
+                "Profesor no encontrado",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
 
@@ -1002,117 +1420,60 @@ public partial class ConfiguracionParcialesWindow :
         EnviandoCorreo =
             true;
 
-        EstadoCorreo =
-            "Generando el reporte PDF...";
-
         string? archivoTemporal =
             null;
 
         try
         {
-            // ====================================================
-            // GENERAR PDF COMBINADO
-            // ====================================================
+            EstadoCorreo =
+                "Generando reporte PDF...";
 
-            var documento =
-                new PdfDocument();
+            byte[] pdf =
+                GenerarPdfCombinado(
+                    seleccionados);
 
-            foreach (var cap
-                     in seleccionados)
-            {
-                if (!File.Exists(
-                        cap.FilePath))
-                {
-                    continue;
-                }
-
-                var servicioPdf =
-                    new ReporteCalificacionesPdfService(
-                        cap.FilePath);
-
-                byte[] bytes =
-                    servicioPdf.GenerarDiseno();
-
-                using var ms =
-                    new MemoryStream(
-                        bytes);
-
-                using var entrada =
-                    PdfReader.Open(
-                        ms,
-                        PdfDocumentOpenMode.Import);
-
-                for (
-                    int i = 0;
-                    i < entrada.PageCount;
-                    i++)
-                {
-                    documento.AddPage(
-                        entrada.Pages[i]);
-                }
-            }
-
-            if (documento.PageCount == 0)
+            if (pdf.Length == 0)
             {
                 throw new InvalidOperationException(
-                    "No se pudo generar ninguna página del reporte.");
+                    "No se pudo generar ninguna página del PDF.");
             }
 
-            // ====================================================
-            // ARCHIVO TEMPORAL
-            // ====================================================
-
-            string carpetaTemporal =
+            string tempFolder =
                 Path.Combine(
                     Path.GetTempPath(),
                     "CEIM");
 
             Directory.CreateDirectory(
-                carpetaTemporal);
+                tempFolder);
 
-            string nombreArchivo =
-                ConstruirNombrePdfCorreo(
-                    seleccionados);
+            string nombreProfesor =
+                string.IsNullOrWhiteSpace(
+                    NombreProfesorSeleccionado)
+                    ? "PROFESOR"
+                    : NombreProfesorSeleccionado;
 
             archivoTemporal =
                 Path.Combine(
-                    carpetaTemporal,
-                    nombreArchivo);
+                    tempFolder,
+                    $"{LimpiarNombreArchivo(nombreProfesor)}_Reporte.pdf");
 
-            documento.Save(
-                archivoTemporal);
+            File.WriteAllBytes(
+                archivoTemporal,
+                pdf);
 
             ArchivoPdfActual =
                 archivoTemporal;
 
             EstadoCorreo =
-                "Enviando correo...";
-
-            // ====================================================
-            // ASUNTO
-            // ====================================================
-
-            string nombreProfesor =
-                !string.IsNullOrWhiteSpace(
-                    NombreProfesorSeleccionado)
-                    ? NombreProfesorSeleccionado
-                    : "Docente";
+                $"Enviando a {destinatario}...";
 
             string asunto =
                 $"Reporte de calificaciones - {nombreProfesor}";
-
-            // ====================================================
-            // CUERPO
-            // ====================================================
 
             string cuerpo =
                 $"Buen día, {nombreProfesor}.\r\n\r\n" +
                 "Se adjunta el reporte de calificaciones correspondiente.\r\n\r\n" +
                 "Este correo fue enviado automáticamente desde CEIM.";
-
-            // ====================================================
-            // SMTP
-            // ====================================================
 
             using var lite =
                 new LiteDbService();
@@ -1138,7 +1499,7 @@ public partial class ConfiguracionParcialesWindow :
                 "No se pudo enviar el reporte.";
 
             MessageBox.Show(
-                $"No se pudo enviar el reporte.\n\n{ex.Message}",
+                $"No se pudo enviar el reporte:\n\n{ex.Message}",
                 "Error al enviar",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
@@ -1147,11 +1508,6 @@ public partial class ConfiguracionParcialesWindow :
         {
             EnviandoCorreo =
                 false;
-
-            // ----------------------------------------------------
-            // Limpiar archivo temporal.
-            // El Attachment ya fue liberado al terminar SendMailAsync.
-            // ----------------------------------------------------
 
             if (!string.IsNullOrWhiteSpace(
                     archivoTemporal))
@@ -1167,7 +1523,6 @@ public partial class ConfiguracionParcialesWindow :
                 }
                 catch
                 {
-                    // No interrumpir por limpieza.
                 }
             }
 
@@ -1176,48 +1531,44 @@ public partial class ConfiguracionParcialesWindow :
         }
     }
 
-    private string ConstruirNombrePdfCorreo(
-        List<CapFileItem> caps)
+    // ============================================================
+    // SELECCIONAR TODO
+    // ============================================================
+
+    private void SeleccionarTodoCaps_Click(
+        object sender,
+        RoutedEventArgs e)
     {
-        if (caps.Count == 1)
+        foreach (var cap
+                 in CapFiles)
         {
-            string baseNombre =
-                Path.GetFileNameWithoutExtension(
-                    caps[0].FilePath);
-
-            if (string.IsNullOrWhiteSpace(
-                    baseNombre))
-            {
-                baseNombre =
-                    "Reporte_Calificaciones";
-            }
-
-            return
-                $"{LimpiarNombreArchivo(baseNombre)}_Reporte.pdf";
+            cap.IsSelected =
+                true;
         }
 
-        return
-            $"Reporte_Calificaciones_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-    }
-
-    private static string LimpiarNombreArchivo(
-        string nombre)
-    {
-        foreach (
-            char caracter
-            in Path.GetInvalidFileNameChars())
-        {
-            nombre =
-                nombre.Replace(
-                    caracter,
-                    '_');
-        }
-
-        return nombre;
+        ActualizarProfesorDesdeCapsSeleccionados();
     }
 
     // ============================================================
-    // VERIFICAR EXTRA
+    // DESELECCIONAR TODO
+    // ============================================================
+
+    private void DeseleccionarTodoCaps_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        foreach (var cap
+                 in CapFiles)
+        {
+            cap.IsSelected =
+                false;
+        }
+
+        ActualizarProfesorDesdeCapsSeleccionados();
+    }
+
+    // ============================================================
+    // EXTRA
     // ============================================================
 
     private void VerificarSiCapEsExtra()
@@ -1262,20 +1613,11 @@ public partial class ConfiguracionParcialesWindow :
 
         _evaluacionesGlobalesDisponibles.Clear();
 
-        _evaluacionesGlobalesDisponibles.Add(
-            "P1");
-
-        _evaluacionesGlobalesDisponibles.Add(
-            "P2");
-
-        _evaluacionesGlobalesDisponibles.Add(
-            "P3");
-
-        _evaluacionesGlobalesDisponibles.Add(
-            "SEM");
-
-        _evaluacionesGlobalesDisponibles.Add(
-            "PREEXTRAORDINARIO");
+        _evaluacionesGlobalesDisponibles.Add("P1");
+        _evaluacionesGlobalesDisponibles.Add("P2");
+        _evaluacionesGlobalesDisponibles.Add("P3");
+        _evaluacionesGlobalesDisponibles.Add("SEM");
+        _evaluacionesGlobalesDisponibles.Add("PREEXTRAORDINARIO");
     }
 
     // ============================================================
@@ -1368,7 +1710,7 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // APLICAR GLOBAL
+    // APLICAR CONFIGURACIÓN GLOBAL
     // ============================================================
 
     private void AplicarConfiguracionGlobal()
@@ -1443,7 +1785,7 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // GUARDAR GLOBAL
+    // GUARDAR CONFIGURACIÓN GLOBAL
     // ============================================================
 
     private void GuardarConfiguracionGlobal()
@@ -1487,7 +1829,7 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // CARGAR MATERIAS Y CAPS
+    // CARGAR MATERIAS
     // ============================================================
 
     private void CargarMateriasDisponibles()
@@ -1837,7 +2179,7 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // ALUMNOS
+    // REFRESCAR ALUMNOS
     // ============================================================
 
     private void RefrescarAlumnosParaEvaluacion()
@@ -1870,6 +2212,10 @@ public partial class ConfiguracionParcialesWindow :
 
         RefrescarDatosAlumnoSeleccionado();
     }
+
+    // ============================================================
+    // REFRESCAR DATOS ALUMNO
+    // ============================================================
 
     private void RefrescarDatosAlumnoSeleccionado()
     {
@@ -2143,150 +2489,7 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // SELECCIONAR TODO
-    // ============================================================
-
-    private void SeleccionarTodoCaps_Click(
-        object sender,
-        RoutedEventArgs e)
-    {
-        foreach (var cap
-                 in CapFiles)
-        {
-            cap.IsSelected =
-                true;
-        }
-
-        ActualizarProfesorDesdeCapsSeleccionados();
-    }
-
-    // ============================================================
-    // DESELECCIONAR TODO
-    // ============================================================
-
-    private void DeseleccionarTodoCaps_Click(
-        object sender,
-        RoutedEventArgs e)
-    {
-        foreach (var cap
-                 in CapFiles)
-        {
-            cap.IsSelected =
-                false;
-        }
-
-        ActualizarProfesorDesdeCapsSeleccionados();
-    }
-
-    // ============================================================
-    // CERRAR
-    // ============================================================
-
-    private void Cerrar_Click(
-        object sender,
-        RoutedEventArgs e)
-    {
-        Close();
-    }
-
-    // ============================================================
-    // BROWSE FOR FOLDER
-    // ============================================================
-
-    [System.Runtime.InteropServices.StructLayout(
-        System.Runtime.InteropServices.LayoutKind.Sequential,
-        CharSet =
-            System.Runtime.InteropServices.CharSet.Auto)]
-    private struct BROWSEINFO
-    {
-        public IntPtr hwndOwner;
-        public IntPtr pidlRoot;
-        public IntPtr pszDisplayName;
-
-        [System.Runtime.InteropServices.MarshalAs(
-            System.Runtime.InteropServices.UnmanagedType.LPTStr)]
-        public string lpszTitle;
-
-        public uint ulFlags;
-        public IntPtr lpfn;
-        public IntPtr lParam;
-        public int iImage;
-    }
-
-    [System.Runtime.InteropServices.DllImport(
-        "shell32.dll",
-        CharSet =
-            System.Runtime.InteropServices.CharSet.Auto)]
-    private static extern IntPtr
-        SHBrowseForFolder(
-            ref BROWSEINFO lpbi);
-
-    [System.Runtime.InteropServices.DllImport(
-        "shell32.dll",
-        CharSet =
-            System.Runtime.InteropServices.CharSet.Auto)]
-    private static extern bool
-        SHGetPathFromIDList(
-            IntPtr pidl,
-            StringBuilder pszPath);
-
-    [System.Runtime.InteropServices.DllImport(
-        "ole32.dll")]
-    private static extern void
-        CoTaskMemFree(
-            IntPtr pv);
-
-    private static string? BrowseForFolder(
-        string title)
-    {
-        var bi =
-            new BROWSEINFO
-            {
-                hwndOwner =
-                    IntPtr.Zero,
-
-                pidlRoot =
-                    IntPtr.Zero,
-
-                lpszTitle =
-                    title,
-
-                ulFlags =
-                    0x0001 |
-                    0x0002
-            };
-
-        IntPtr pidl =
-            SHBrowseForFolder(
-                ref bi);
-
-        if (pidl == IntPtr.Zero)
-            return null;
-
-        try
-        {
-            var sb =
-                new StringBuilder(
-                    260);
-
-            if (SHGetPathFromIDList(
-                    pidl,
-                    sb))
-            {
-                return sb.ToString();
-            }
-        }
-        finally
-        {
-            CoTaskMemFree(
-                pidl);
-        }
-
-        return null;
-    }
-
-    // ============================================================
-    // PREVIEW CALIFICACIÓN
+    // PREVIEW INPUT
     // ============================================================
 
     private void Calificacion_PreviewTextInput(
@@ -2302,8 +2505,7 @@ public partial class ConfiguracionParcialesWindow :
                 e.Text);
 
         int indicePunto =
-            textoResultante.IndexOf(
-                '.');
+            textoResultante.IndexOf('.');
 
         if (indicePunto != -1 &&
             indicePunto != 1)
@@ -2344,6 +2546,17 @@ public partial class ConfiguracionParcialesWindow :
                 .Replace(
                     ' ',
                     '_');
+    }
+
+    // ============================================================
+    // CERRAR
+    // ============================================================
+
+    private void Cerrar_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        Close();
     }
 
     // ============================================================
