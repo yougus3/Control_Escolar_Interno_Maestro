@@ -441,60 +441,24 @@ public partial class ConfiguracionParcialesWindow :
             ?? string.Empty;
 
     // ============================================================
-    // CORREO
+    // CORREO DEL PROFESOR
     //
-    // OJO:
-    // ESTE CORREO PROVIENE DEL OBJETO CARGADO DESDE
-    // CONFIGURACION.BIN MEDIANTE LiteDbService.
+    // El dato viene de:
     //
-    // NO SE LEE CONFIG_DOCENTE DESDE ESTA VENTANA.
+    // configuracion.bin
+    //      ↓
+    // LiteDbService
+    //      ↓
+    // ProfesorConfigurado.EMAIL
+    //
+    // No se lee CONFIG_DOCENTE directamente aquí.
     // ============================================================
 
-    public string CorreoProfesorSeleccionado
-    {
-        get
-        {
-            // Primero usamos el profesor ya seleccionado.
-            string correo =
-                ProfesorSeleccionado?
-                    .EMAIL
-                    ?.Trim()
-                    ?? string.Empty;
-
-            if (!string.IsNullOrWhiteSpace(
-                    correo))
-            {
-                return correo;
-            }
-
-            // Respaldo:
-            // buscamos nuevamente dentro de _profesores,
-            // que fueron cargados desde configuracion.bin.
-            if (!string.IsNullOrWhiteSpace(
-                    ClaveProfesorCap))
-            {
-                string claveBuscada =
-                    NormalizarClaveProfesor(
-                        ClaveProfesorCap);
-
-                var profesor =
-                    _profesores.FirstOrDefault(
-                        p =>
-                            NormalizarClaveProfesor(
-                                p.CLAVEPROFESOR)
-                            ==
-                            claveBuscada);
-
-                return
-                    profesor?
-                        .EMAIL
-                        ?.Trim()
-                    ?? string.Empty;
-            }
-
-            return string.Empty;
-        }
-    }
+    public string CorreoProfesorSeleccionado =>
+        ProfesorSeleccionado?
+            .EMAIL
+            ?.Trim()
+            ?? string.Empty;
 
     public string CorreoDestino
     {
@@ -788,7 +752,7 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // NORMALIZAR CLAVE
+    // NORMALIZAR CLAVE PROFESOR
     // ============================================================
 
     private static string NormalizarClaveProfesor(
@@ -926,7 +890,7 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // DATOS DEL PROFESOR DESDE CAP
+    // CLAVE PROFESOR DESDE CAP
     // ============================================================
 
     private string ObtenerClaveProfesorDesdeCap(
@@ -939,7 +903,7 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // CAP SELECCIONADOS
+    // ACTUALIZAR PROFESOR DESDE CAPS
     // ============================================================
 
     private void ActualizarProfesorDesdeCapsSeleccionados()
@@ -1095,7 +1059,7 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // EXPORTAR PDF
+    // EXPORTAR PDF LOCAL
     // ============================================================
 
     private void ExportarPdf_Click(
@@ -1160,14 +1124,10 @@ public partial class ConfiguracionParcialesWindow :
                     ?? string.Empty;
 
             if (string.IsNullOrWhiteSpace(
-                    nombreProfesor) &&
-                ProfesorSeleccionado != null)
+                    nombreProfesor))
             {
                 nombreProfesor =
-                    ProfesorSeleccionado
-                        .NOMBREPROFESOR
-                        ?.Trim()
-                    ?? string.Empty;
+                    NombreProfesorSeleccionado;
             }
 
             if (string.IsNullOrWhiteSpace(
@@ -1240,7 +1200,7 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // CICLO
+    // CICLO ESCOLAR
     // ============================================================
 
     private static string ObtenerCicloEscolarDesdeCap(
@@ -1438,6 +1398,57 @@ public partial class ConfiguracionParcialesWindow :
                     "No se pudo generar ninguna página del PDF.");
             }
 
+            // ====================================================
+            // EL NOMBRE DEL ADJUNTO ES EL MISMO QUE EL LOCAL
+            // ====================================================
+
+            string primerCap =
+                seleccionados
+                    .First()
+                    .FilePath;
+
+            string ciclo =
+                ObtenerCicloEscolarDesdeCap(
+                    primerCap);
+
+            if (string.IsNullOrWhiteSpace(
+                    ciclo))
+            {
+                ciclo =
+                    "SIN_CICLO";
+            }
+
+            string nombreProfesor =
+                seleccionados
+                    .Select(
+                        c =>
+                            c.NombreProfesor?.Trim())
+                    .FirstOrDefault(
+                        n =>
+                            !string.IsNullOrWhiteSpace(n))
+                    ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(
+                    nombreProfesor))
+            {
+                nombreProfesor =
+                    NombreProfesorSeleccionado;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    nombreProfesor))
+            {
+                nombreProfesor =
+                    "PROFESOR";
+            }
+
+            string nombreArchivo =
+                $"{LimpiarNombreArchivo(nombreProfesor)}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+            // ====================================================
+            // CARPETA TEMPORAL
+            // ====================================================
+
             string tempFolder =
                 Path.Combine(
                     Path.GetTempPath(),
@@ -1446,16 +1457,10 @@ public partial class ConfiguracionParcialesWindow :
             Directory.CreateDirectory(
                 tempFolder);
 
-            string nombreProfesor =
-                string.IsNullOrWhiteSpace(
-                    NombreProfesorSeleccionado)
-                    ? "PROFESOR"
-                    : NombreProfesorSeleccionado;
-
             archivoTemporal =
                 Path.Combine(
                     tempFolder,
-                    $"{LimpiarNombreArchivo(nombreProfesor)}_Reporte.pdf");
+                    nombreArchivo);
 
             File.WriteAllBytes(
                 archivoTemporal,
@@ -1568,7 +1573,7 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // EXTRA
+    // VERIFICAR EXTRA
     // ============================================================
 
     private void VerificarSiCapEsExtra()
@@ -1710,7 +1715,7 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // APLICAR CONFIGURACIÓN GLOBAL
+    // APLICAR CONFIG GLOBAL
     // ============================================================
 
     private void AplicarConfiguracionGlobal()
@@ -1785,7 +1790,7 @@ public partial class ConfiguracionParcialesWindow :
     }
 
     // ============================================================
-    // GUARDAR CONFIGURACIÓN GLOBAL
+    // GUARDAR CONFIG GLOBAL
     // ============================================================
 
     private void GuardarConfiguracionGlobal()
@@ -2486,40 +2491,6 @@ public partial class ConfiguracionParcialesWindow :
                 CultureInfo.InvariantCulture);
 
         return true;
-    }
-
-    // ============================================================
-    // PREVIEW INPUT
-    // ============================================================
-
-    private void Calificacion_PreviewTextInput(
-        object sender,
-        TextCompositionEventArgs e)
-    {
-        TextBox tb =
-            (TextBox)sender;
-
-        string textoResultante =
-            tb.Text.Insert(
-                tb.CaretIndex,
-                e.Text);
-
-        int indicePunto =
-            textoResultante.IndexOf('.');
-
-        if (indicePunto != -1 &&
-            indicePunto != 1)
-        {
-            e.Handled =
-                true;
-
-            return;
-        }
-
-        e.Handled =
-            !Regex.IsMatch(
-                textoResultante,
-                @"^([0-9](\.[0-9]?)?|10?)$");
     }
 
     // ============================================================

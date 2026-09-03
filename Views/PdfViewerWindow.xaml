@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         Title="Vista previa del PDF"
+        WindowState="Maximized"
         Width="1100"
         Height="760"
         MinWidth="900"
@@ -45,19 +46,7 @@
                         TextTrimming="CharacterEllipsis"/>
 
                 </StackPanel>
-
-                <Button
-                    Content="CERRAR"
-                    Width="90"
-                    Height="30"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Click="Cerrar_Click"
-                    Background="#1B365D"
-                    Foreground="White"
-                    BorderThickness="0"
-                    FontWeight="SemiBold"
-                    Cursor="Hand"/>
+             
 
             </Grid>
 
