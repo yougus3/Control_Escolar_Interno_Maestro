@@ -21,8 +21,7 @@ public class ReporteCalificacionesPdfService
 
     private const string ColorGray = "#ADADAD";
     private const string ColorWhite = "#FFFFFF";
-    // Usar rojo más oscuro para que, al imprimir en blanco y negro, el contraste sea mayor
-    private const string ColorRed = "#8B0000";
+    private const string ColorRed = "#FF0000";
     private const string FontFamily = "Tahoma";
 
     private const float StudentCellHeight = 10f;

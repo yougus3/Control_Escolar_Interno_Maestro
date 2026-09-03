@@ -11,6 +11,10 @@
 
     <Window.Resources>
 
+        <!-- ====================================================== -->
+        <!-- COLORES -->
+        <!-- ====================================================== -->
+
         <SolidColorBrush x:Key="AppBlue"
                          Color="#1B365D" />
 
@@ -38,6 +42,12 @@
         <SolidColorBrush x:Key="AppTextSecondary"
                          Color="#64748B" />
 
+        <!-- ====================================================== -->
+        <!-- CONVERTER -->
+        <!-- ====================================================== -->
+
+        <converters:BooleanToVisibilityConverter
+            x:Key="BoolToVisibility" />
 
         <!-- ====================================================== -->
         <!-- CARD -->
@@ -59,7 +69,6 @@
                     Value="12" />
 
         </Style>
-
 
         <!-- ====================================================== -->
         <!-- BOTÓN PRINCIPAL -->
@@ -141,7 +150,6 @@
 
         </Style>
 
-
         <!-- ====================================================== -->
         <!-- BOTÓN VERDE -->
         <!-- ====================================================== -->
@@ -154,7 +162,6 @@
                     Value="#16A34A" />
 
         </Style>
-
 
         <!-- ====================================================== -->
         <!-- BOTÓN SECUNDARIO -->
@@ -227,7 +234,6 @@
 
         </Style>
 
-
         <!-- ====================================================== -->
         <!-- TEXTBOX -->
         <!-- ====================================================== -->
@@ -263,7 +269,8 @@
                                 CornerRadius="8"
                                 SnapsToDevicePixels="True">
 
-                            <ScrollViewer x:Name="PART_ContentHost" />
+                            <ScrollViewer
+                                x:Name="PART_ContentHost" />
 
                         </Border>
 
@@ -317,7 +324,6 @@
 
         </Style>
 
-
         <!-- ====================================================== -->
         <!-- COMBOBOX -->
         <!-- ====================================================== -->
@@ -350,7 +356,7 @@
                     <Style TargetType="ComboBoxItem">
 
                         <Setter Property="Padding"
-                                Value="8,6" />
+                                Value="8,7" />
 
                         <Setter Property="HorizontalContentAlignment"
                                 Value="Stretch" />
@@ -409,19 +415,21 @@
                                         ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
                                         IsHitTestVisible="False" />
 
-                                    <ToggleButton Grid.Column="1"
-                                                  Focusable="False"
-                                                  Background="Transparent"
-                                                  BorderThickness="0"
-                                                  ClickMode="Press"
-                                                  IsChecked="{Binding IsDropDownOpen,
-                                                                      RelativeSource={RelativeSource TemplatedParent},
-                                                                      Mode=TwoWay}">
+                                    <ToggleButton
+                                        Grid.Column="1"
+                                        Focusable="False"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        ClickMode="Press"
+                                        IsChecked="{Binding IsDropDownOpen,
+                                                            RelativeSource={RelativeSource TemplatedParent},
+                                                            Mode=TwoWay}">
 
-                                        <Path Data="M 0 0 L 4 4 L 8 0 Z"
-                                              Fill="#475569"
-                                              HorizontalAlignment="Center"
-                                              VerticalAlignment="Center" />
+                                        <Path
+                                            Data="M 0 0 L 4 4 L 8 0 Z"
+                                            Fill="#475569"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center" />
 
                                     </ToggleButton>
 
@@ -429,21 +437,23 @@
 
                             </Border>
 
-                            <Popup x:Name="Popup"
-                                   Placement="Bottom"
-                                   AllowsTransparency="True"
-                                   Focusable="False"
-                                   PopupAnimation="Fade"
-                                   IsOpen="{TemplateBinding IsDropDownOpen}"
-                                   PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}">
+                            <Popup
+                                x:Name="Popup"
+                                Placement="Bottom"
+                                AllowsTransparency="True"
+                                Focusable="False"
+                                PopupAnimation="Fade"
+                                IsOpen="{TemplateBinding IsDropDownOpen}"
+                                PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}">
 
-                                <Border Background="White"
-                                        BorderBrush="#CBD5E1"
-                                        BorderThickness="1"
-                                        CornerRadius="8"
-                                        Margin="0,4,0,0"
-                                        MinWidth="{Binding ActualWidth,
-                                                            RelativeSource={RelativeSource TemplatedParent}}">
+                                <Border
+                                    Background="White"
+                                    BorderBrush="#CBD5E1"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Margin="0,4,0,0"
+                                    MinWidth="{Binding ActualWidth,
+                                                        RelativeSource={RelativeSource TemplatedParent}}">
 
                                     <ScrollViewer
                                         SnapsToDevicePixels="True">
@@ -508,61 +518,26 @@
 
         </Style>
 
-
         <!-- ====================================================== -->
-        <!-- GROUPBOX -->
+        <!-- CHECKBOX -->
         <!-- ====================================================== -->
 
-        <Style TargetType="GroupBox">
+        <Style x:Key="BigCheckBoxStyle"
+               TargetType="CheckBox">
 
-            <Setter Property="Background"
-                    Value="Transparent" />
+            <Setter Property="Foreground"
+                    Value="#0F172A" />
 
-            <Setter Property="BorderThickness"
-                    Value="0" />
+            <Setter Property="FontSize"
+                    Value="13" />
 
-            <Setter Property="Padding"
-                    Value="0" />
-
-            <Setter Property="Template">
-
-                <Setter.Value>
-
-                    <ControlTemplate TargetType="GroupBox">
-
-                        <Border Background="White"
-                                BorderBrush="#D7DEE8"
-                                BorderThickness="1"
-                                CornerRadius="12"
-                                Padding="12">
-
-                            <DockPanel>
-
-                                <TextBlock
-                                    DockPanel.Dock="Top"
-                                    Text="{TemplateBinding Header}"
-                                    FontWeight="Bold"
-                                    FontSize="14"
-                                    Foreground="#1B365D"
-                                    Margin="0,0,0,10" />
-
-                                <ContentPresenter />
-
-                            </DockPanel>
-
-                        </Border>
-
-                    </ControlTemplate>
-
-                </Setter.Value>
-
-            </Setter>
+            <Setter Property="Margin"
+                    Value="0,0,0,8" />
 
         </Style>
 
-
         <!-- ====================================================== -->
-        <!-- TABCONTROL -->
+        <!-- TAB CONTROL -->
         <!-- ====================================================== -->
 
         <Style TargetType="TabControl">
@@ -578,9 +553,8 @@
 
         </Style>
 
-
         <!-- ====================================================== -->
-        <!-- TABITEM -->
+        <!-- TAB ITEM -->
         <!-- ====================================================== -->
 
         <Style TargetType="TabItem">
@@ -609,12 +583,13 @@
 
                     <ControlTemplate TargetType="TabItem">
 
-                        <Border x:Name="Bd"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="10,10,0,0"
-                                Padding="{TemplateBinding Padding}">
+                        <Border
+                            x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="10,10,0,0"
+                            Padding="{TemplateBinding Padding}">
 
                             <ContentPresenter
                                 HorizontalAlignment="Center"
@@ -660,12 +635,7 @@
 
         </Style>
 
-
-        <converters:BooleanToVisibilityConverter
-            x:Key="BoolToVisibility" />
-
     </Window.Resources>
-
 
     <!-- ========================================================== -->
     <!-- CONTENEDOR PRINCIPAL -->
@@ -683,31 +653,29 @@
 
         </Grid.RowDefinitions>
 
-
         <!-- ====================================================== -->
         <!-- TÍTULO -->
         <!-- ====================================================== -->
 
-        <TextBlock Text="Configuración"
-                   FontSize="20"
-                   FontWeight="Bold"
-                   Foreground="#1B365D"
-                   Margin="2,0,0,12" />
-
+        <TextBlock
+            Text="Configuración"
+            FontSize="20"
+            FontWeight="Bold"
+            Foreground="#1B365D"
+            Margin="2,0,0,12" />
 
         <!-- ====================================================== -->
         <!-- CONTENIDO -->
         <!-- ====================================================== -->
 
-        <Border Grid.Row="1"
-                Background="White"
-                BorderBrush="#D7DEE8"
-                BorderThickness="1"
-                CornerRadius="12">
+        <Border
+            Grid.Row="1"
+            Background="White"
+            BorderBrush="#D7DEE8"
+            BorderThickness="1"
+            CornerRadius="12">
 
-            <TabControl Background="Transparent"
-                        BorderThickness="0"
-                        Padding="0">
+            <TabControl>
 
                 <!-- ================================================== -->
                 <!-- PARCIALES -->
@@ -729,7 +697,6 @@
 
                         </Grid.RowDefinitions>
 
-
                         <StackPanel>
 
                             <TextBlock
@@ -746,8 +713,9 @@
                                     HorizontalAlignment="Left"
                                     ItemsSource="{Binding EvaluacionesGlobalesDisponibles}"
                                     SelectedItem="{Binding EvaluacionGlobalSeleccionada,
-                                                           Mode=TwoWay}"
-                                    IsEnabled="{Binding IsGlobalComboEnabled}"
+                                                            Mode=TwoWay}"
+                                    IsEnabled="{Binding IsGlobalComboEnabled,
+                                                        Mode=OneWay}"
                                     VerticalContentAlignment="Center"
                                     Style="{StaticResource RoundedComboStyle}" />
 
@@ -764,12 +732,12 @@
                                     FontWeight="SemiBold"
                                     Margin="0,8,0,0"
                                     Visibility="{Binding MensajeExtraVisible,
+                                                         Mode=OneWay,
                                                          Converter={StaticResource BoolToVisibility}}" />
 
                             </StackPanel>
 
                         </StackPanel>
-
 
                         <Border
                             Grid.Row="2"
@@ -780,14 +748,10 @@
                             Padding="12"
                             Margin="0,16,0,16">
 
-                            <StackPanel>
-
-                                <TextBlock
-                                    Text="Los cambios se guardan y aplican globalmente de forma automática."
-                                    Foreground="#64748B"
-                                    FontSize="12" />
-
-                            </StackPanel>
+                            <TextBlock
+                                Text="Los cambios se guardan y aplican globalmente de forma automática."
+                                Foreground="#64748B"
+                                FontSize="12" />
 
                         </Border>
 
@@ -795,12 +759,11 @@
 
                 </TabItem>
 
-
                 <!-- ================================================== -->
-                <!-- EXPORTACIÓN -->
+                <!-- ENVÍO DE CALIFICACIONES -->
                 <!-- ================================================== -->
 
-                <TabItem Header="Exportación">
+                <TabItem Header="Envío de calificaciones">
 
                     <Grid Margin="16">
 
@@ -812,36 +775,77 @@
 
                             <RowDefinition Height="*" />
 
-                            <RowDefinition Height="Auto" />
-
                         </Grid.RowDefinitions>
 
+                        <!-- ================================================== -->
+                        <!-- ENCABEZADO -->
+                        <!-- ================================================== -->
 
-                        <!-- TÍTULO -->
+                        <StackPanel>
 
-                        <TextBlock
-                            Text="Exportar calificaciones"
-                            FontSize="16"
-                            FontWeight="Bold"
-                            Foreground="#1B365D"
-                            Margin="0,0,0,6" />
+                            <TextBlock
+                                Text="Envío de calificaciones"
+                                FontSize="17"
+                                FontWeight="Bold"
+                                Foreground="#1B365D"
+                                Margin="0,0,0,4" />
 
+                            <TextBlock
+                                Text="Genera el reporte institucional y envíalo directamente al profesor correspondiente."
+                                Foreground="#64748B"
+                                FontSize="12"
+                                TextWrapping="Wrap"
+                                Margin="0,0,0,12" />
 
-                        <!-- DESCRIPCIÓN -->
+                        </StackPanel>
 
-                        <TextBlock
+                        <!-- ================================================== -->
+                        <!-- INFORMACIÓN DEL CAP -->
+                        <!-- ================================================== -->
+
+                        <Border
                             Grid.Row="1"
-                            Text="Genera el reporte de calificaciones en formato PDF."
-                            Foreground="#64748B"
-                            FontSize="13"
-                            Margin="0,0,0,18" />
+                            Background="#EFF6FF"
+                            BorderBrush="#BFDBFE"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="10"
+                            Margin="0,0,0,12">
 
+                            <Grid>
 
-                        <!-- PANEL -->
+                                <Grid.ColumnDefinitions>
+
+                                    <ColumnDefinition Width="Auto" />
+
+                                    <ColumnDefinition Width="*" />
+
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock
+                                    Text="Profesor:"
+                                    FontWeight="SemiBold"
+                                    Foreground="#1E40AF"
+                                    Margin="0,0,10,0" />
+
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Text="{Binding ProfesorDetectadoTexto,
+                                                   Mode=OneWay}"
+                                    Foreground="#334155"
+                                    TextTrimming="CharacterEllipsis" />
+
+                            </Grid>
+
+                        </Border>
+
+                        <!-- ================================================== -->
+                        <!-- CARD GRANDE -->
+                        <!-- ================================================== -->
 
                         <Border
                             Grid.Row="2"
-                            Background="#F8FAFC"
+                            Background="White"
                             BorderBrush="#D7DEE8"
                             BorderThickness="1"
                             CornerRadius="12"
@@ -855,64 +859,266 @@
 
                                     <RowDefinition Height="Auto" />
 
+                                    <RowDefinition Height="Auto" />
+
+                                    <RowDefinition Height="Auto" />
+
                                     <RowDefinition Height="*" />
+
+                                    <RowDefinition Height="Auto" />
 
                                 </Grid.RowDefinitions>
 
+                                <!-- ========================================== -->
+                                <!-- ENCABEZADO -->
+                                <!-- ========================================== -->
 
-                                <TextBlock
-                                    Text="Reporte de calificaciones"
-                                    FontSize="14"
-                                    FontWeight="Bold"
-                                    Foreground="#1B365D"
-                                    Margin="0,0,0,8" />
+                                <Grid>
 
+                                    <Grid.ColumnDefinitions>
 
-                                <TextBlock
+                                        <ColumnDefinition Width="*" />
+
+                                        <ColumnDefinition Width="Auto" />
+
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel>
+
+                                        <TextBlock
+                                            Text="Destinatario"
+                                            FontSize="15"
+                                            FontWeight="Bold"
+                                            Foreground="#1B365D" />
+
+                                        <TextBlock
+                                            Text="El destinatario se determina mediante CLAVEPROFESOR del CAP y configuracion.bin."
+                                            FontSize="11"
+                                            Foreground="#64748B"
+                                            Margin="0,3,0,0"
+                                            TextWrapping="Wrap" />
+
+                                    </StackPanel>
+
+                                    <Border
+                                        Grid.Column="1"
+                                        Background="#F0FDF4"
+                                        BorderBrush="#BBF7D0"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="10,5">
+
+                                        <TextBlock
+                                            Text="SMTP Gmail"
+                                            Foreground="#166534"
+                                            FontSize="11"
+                                            FontWeight="SemiBold" />
+
+                                    </Border>
+
+                                </Grid>
+
+                                <!-- ========================================== -->
+                                <!-- CHECKBOX CAP -->
+                                <!-- ========================================== -->
+
+                                <CheckBox
                                     Grid.Row="1"
-                                    Text="El reporte se generará utilizando el formato institucional configurado para el sistema."
-                                    Foreground="#64748B"
-                                    FontSize="12"
-                                    TextWrapping="Wrap"
-                                    MaxWidth="700" />
+                                    Style="{StaticResource BigCheckBoxStyle}"
+                                    IsChecked="{Binding UsarProfesorDelCap,
+                                                        Mode=TwoWay}"
+                                    Content="Usar profesor detectado del CAP"
+                                    Margin="0,18,0,10" />
 
+                                <!-- ========================================== -->
+                                <!-- PROFESOR + CLAVE -->
+                                <!-- ========================================== -->
+
+                                <Grid
+                                    Grid.Row="2"
+                                    Margin="0,0,0,12">
+
+                                    <Grid.ColumnDefinitions>
+
+                                        <ColumnDefinition Width="*" />
+
+                                        <ColumnDefinition Width="16" />
+
+                                        <ColumnDefinition Width="220" />
+
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel>
+
+                                        <TextBlock
+                                            Text="Profesor"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="#475569"
+                                            Margin="0,0,0,5" />
+
+                                        <ComboBox
+                                            Height="38"
+                                            ItemsSource="{Binding Profesores,
+                                                                  Mode=OneWay}"
+                                            SelectedItem="{Binding ProfesorSeleccionado,
+                                                                   Mode=TwoWay}"
+                                            IsEnabled="{Binding ProfesorComboHabilitado,
+                                                                Mode=OneWay}"
+                                            DisplayMemberPath="TextoCombo"
+                                            Style="{StaticResource RoundedComboStyle}" />
+
+                                    </StackPanel>
+
+                                    <StackPanel
+                                        Grid.Column="2">
+
+                                        <TextBlock
+                                            Text="CLAVEPROFESOR"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="#475569"
+                                            Margin="0,0,0,5" />
+
+                                        <TextBox
+                                            Height="38"
+                                            Text="{Binding ClaveProfesorCap,
+                                                          Mode=OneWay}"
+                                            IsReadOnly="True"
+                                            Background="#F8FAFC"
+                                            Style="{StaticResource RoundedTextBoxStyle}" />
+
+                                    </StackPanel>
+
+                                </Grid>
+
+                                <!-- ========================================== -->
+                                <!-- CORREO PROFESOR -->
+                                <!-- ========================================== -->
 
                                 <StackPanel
-                                    Grid.Row="2"
-                                    Orientation="Horizontal"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Bottom"
-                                    Margin="0,24,0,0">
+                                    Grid.Row="3"
+                                    Margin="0,0,0,12">
 
-                                    <Button
-                                        Content="Exportar PDF"
-                                        Width="150"
+                                    <TextBlock
+                                        Text="Correo del profesor"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="#475569"
+                                        Margin="0,0,0,5" />
+
+                                    <TextBox
                                         Height="38"
-                                        Style="{StaticResource PrimaryButtonStyle}"
-                                        Click="ExportarPdf_Click" />
+                                        Text="{Binding CorreoProfesorSeleccionado,
+                                                      Mode=OneWay}"
+                                        IsReadOnly="True"
+                                        Background="#F8FAFC"
+                                        Style="{StaticResource RoundedTextBoxStyle}" />
 
                                 </StackPanel>
 
+                                <!-- ========================================== -->
+                                <!-- CORREO ALTERNATIVO -->
+                                <!-- ========================================== -->
+
+                                <Border
+                                    Grid.Row="4"
+                                    Background="#F8FAFC"
+                                    BorderBrush="#E2E8F0"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Padding="14">
+
+                                    <Grid>
+
+                                        <Grid.RowDefinitions>
+
+                                            <RowDefinition Height="Auto" />
+
+                                            <RowDefinition Height="Auto" />
+
+                                            <RowDefinition Height="Auto" />
+
+                                            <RowDefinition Height="*" />
+
+                                        </Grid.RowDefinitions>
+
+                                        <CheckBox
+                                            Grid.Row="0"
+                                            Style="{StaticResource BigCheckBoxStyle}"
+                                            IsChecked="{Binding EnviarAOtroCorreo,
+                                                                Mode=TwoWay}"
+                                            Content="Enviar a otro correo" />
+
+                                        <TextBlock
+                                            Grid.Row="1"
+                                            Text="Al activarlo, el correo escrito abajo sustituirá al destinatario del profesor."
+                                            Foreground="#64748B"
+                                            FontSize="11"
+                                            Margin="22,0,0,10"
+                                            TextWrapping="Wrap" />
+
+                                        <TextBlock
+                                            Grid.Row="2"
+                                            Text="Correo alternativo"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="#475569"
+                                            Margin="0,0,0,5" />
+
+                                        <TextBox
+                                            Grid.Row="3"
+                                            Height="38"
+                                            Text="{Binding CorreoAlternativo,
+                                                           Mode=TwoWay,
+                                                           UpdateSourceTrigger=PropertyChanged}"
+                                            IsEnabled="{Binding EnviarAOtroCorreo,
+                                                                Mode=OneWay}"
+                                            Style="{StaticResource RoundedTextBoxStyle}"
+                                            MaxLength="200" />
+
+                                    </Grid>
+
+                                </Border>
+
+                                <!-- ========================================== -->
+                                <!-- BOTÓN ENVIAR -->
+                                <!-- ========================================== -->
+
+                                <Grid
+                                    Grid.Row="5"
+                                    Margin="0,14,0,0">
+
+                                    <Grid.ColumnDefinitions>
+
+                                        <ColumnDefinition Width="*" />
+
+                                        <ColumnDefinition Width="Auto" />
+
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock
+                                        Text="{Binding EstadoCorreo,
+                                                      Mode=OneWay}"
+                                        Foreground="#64748B"
+                                        FontSize="11"
+                                        VerticalAlignment="Center"
+                                        TextWrapping="Wrap"
+                                        Margin="0,0,15,0" />
+
+                                    <Button
+                                        Grid.Column="1"
+                                        Content="ENVIAR CALIFICACIONES"
+                                        Width="220"
+                                        Height="46"
+                                        Click="EnviarCalificaciones_Click"
+                                        IsEnabled="{Binding PuedeEnviarCorreo,
+                                                            Mode=OneWay}"
+                                        Style="{StaticResource SuccessButtonStyle}" />
+
+                                </Grid>
+
                             </Grid>
-
-                        </Border>
-
-
-                        <!-- INFORMACIÓN -->
-
-                        <Border
-                            Grid.Row="3"
-                            Background="#EFF6FF"
-                            BorderBrush="#BFDBFE"
-                            BorderThickness="1"
-                            CornerRadius="10"
-                            Padding="12"
-                            Margin="0,16,0,0">
-
-                            <TextBlock
-                                Text="El archivo PDF se guardará en la ubicación que selecciones."
-                                Foreground="#1E40AF"
-                                FontSize="12" />
 
                         </Border>
 
@@ -923,7 +1129,6 @@
             </TabControl>
 
         </Border>
-
 
         <!-- ====================================================== -->
         <!-- CERRAR -->

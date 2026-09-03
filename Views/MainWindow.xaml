@@ -360,7 +360,7 @@
                               ItemsSource="{Binding ArchivosDisponibles}"
                               SelectedItem="{Binding ArchivoSeleccionado}"
                               Height="32"
-                              Width="450"
+                              Width="480"
                               VerticalContentAlignment="Center" />
                               
                     <Button Command="{Binding GuardarCommand}"

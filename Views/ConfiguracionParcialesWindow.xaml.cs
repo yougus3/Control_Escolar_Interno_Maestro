@@ -6,541 +6,1329 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Win32;
+using PdfSharpCore.Pdf;
+using PdfSharpCore.Pdf.IO;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.ViewModels;
 
-namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
+namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views;
+
+public partial class ConfiguracionParcialesWindow :
+    Window,
+    INotifyPropertyChanged
 {
-    public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChanged
+    private readonly MainViewModel _mainVm;
+    private readonly ConfiguracionParcialesService _configuracionService;
+    private readonly CapParserService _parserService;
+    private readonly CapWriterService _writerService;
+    private readonly FileScannerService _scannerService;
+
+    // ============================================================
+    // CONFIG GLOBAL
+    // ============================================================
+
+    private string? _evaluacionGlobalSeleccionada;
+
+    private readonly ObservableCollection<string>
+        _evaluacionesGlobalesDisponibles =
+            new();
+
+    private bool _isGlobalComboEnabled = true;
+
+    private bool _cargandoDatos;
+
+    // ============================================================
+    // MAPAS
+    // ============================================================
+
+    private readonly Dictionary<string, string> _mapaArchivos =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly Dictionary<string, string>
+        _evaluacionIdPorNombreDirecta =
+            new(StringComparer.OrdinalIgnoreCase);
+
+    // ============================================================
+    // PROFESORES
+    // ============================================================
+
+    private readonly ObservableCollection<
+        LiteDbService.ProfesorConfigurado>
+        _profesores =
+            new();
+
+    private string _claveProfesorCap =
+        string.Empty;
+
+    private LiteDbService.ProfesorConfigurado?
+        _profesorSeleccionado;
+
+    private bool _usarProfesorDelCap = true;
+
+    private bool _enviarAOtroCorreo;
+
+    private string _correoAlternativo =
+        string.Empty;
+
+    private bool _enviandoCorreo;
+
+    private string _estadoCorreo =
+        string.Empty;
+
+    private string _archivoPdfGenerado =
+        string.Empty;
+
+    // ============================================================
+    // CALIFICACIÓN DIRECTA
+    // ============================================================
+
+    private string? _materiaSeleccionadaDirecta;
+
+    private string? _evaluacionSeleccionadaDirecta;
+
+    private Alumno? _alumnoSeleccionadoDirecto;
+
+    private string _calificacionNuevaDirecta =
+        string.Empty;
+
+    private string _estadoDirecto =
+        string.Empty;
+
+    private string _nombreAlumnoDirecto =
+        string.Empty;
+
+    private string _matriculaAlumnoDirecto =
+        string.Empty;
+
+    private string _grupoAlumnoDirecto =
+        string.Empty;
+
+    private string _calificacionActualDirecta =
+        string.Empty;
+
+    // ============================================================
+    // COLECCIONES
+    // ============================================================
+
+    public ObservableCollection<CapFileItem>
+        CapFiles { get; } =
+        new();
+
+    public ObservableCollection<string>
+        MateriasDisponibles { get; } =
+        new();
+
+    public ObservableCollection<string>
+        EvaluacionesDisponiblesDirecta { get; } =
+        new();
+
+    public ObservableCollection<Alumno>
+        AlumnosDirectos { get; } =
+        new();
+
+    public ObservableCollection<string>
+        EvaluacionesGlobalesDisponibles =>
+        _evaluacionesGlobalesDisponibles;
+
+    public ObservableCollection<
+        LiteDbService.ProfesorConfigurado>
+        Profesores =>
+        _profesores;
+
+    // ============================================================
+    // EVENTO
+    // ============================================================
+
+    public event PropertyChangedEventHandler?
+        PropertyChanged;
+
+    // ============================================================
+    // ITEM CAP
+    // ============================================================
+
+    public class CapFileItem :
+        INotifyPropertyChanged
     {
-        private readonly MainViewModel _mainVm;
-        private readonly ConfiguracionParcialesService _configuracionService;
-        private readonly CapParserService _parserService;
-        private readonly CapWriterService _writerService;
-        private readonly FileScannerService _scannerService;
+        private bool _isSelected = true;
 
-        // El servicio PDF se crea al momento de exportar,
-        // porque necesita el CAP seleccionado.
-        private ReporteCalificacionesPdfService? _reportePdfService;
+        public string DisplayName { get; set; } =
+            string.Empty;
 
-        private readonly Dictionary<string, string> _mapaArchivos =
-            new(StringComparer.OrdinalIgnoreCase);
+        public string FilePath { get; set; } =
+            string.Empty;
 
-        private readonly Dictionary<string, string> _evaluacionIdPorNombreDirecta =
-            new(StringComparer.OrdinalIgnoreCase);
-
-        private bool _cargandoDatos;
-
-        // ============================================================
-        // CONFIGURACIÓN GLOBAL
-        // ============================================================
-
-        private string? _evaluacionGlobalSeleccionada;
-
-        private readonly ObservableCollection<string> _evaluacionesGlobalesDisponibles =
-            new();
-
-        private bool _isGlobalComboEnabled = true;
-
-        // ============================================================
-        // CALIFICACIÓN DIRECTA
-        // ============================================================
-
-        private string? _materiaSeleccionadaDirecta;
-        private string? _evaluacionSeleccionadaDirecta;
-        private Alumno? _alumnoSeleccionadoDirecto;
-
-        private string _calificacionNuevaDirecta = string.Empty;
-        private string _estadoDirecto = string.Empty;
-        private string _nombreAlumnoDirecto = string.Empty;
-        private string _matriculaAlumnoDirecto = string.Empty;
-        private string _grupoAlumnoDirecto = string.Empty;
-        private string _calificacionActualDirecta = string.Empty;
-
-        // ============================================================
-        // COLECCIONES
-        // ============================================================
-
-        public ObservableCollection<string> MateriasDisponibles { get; } =
-            new();
-
-        public ObservableCollection<string> EvaluacionesDisponiblesDirecta { get; } =
-            new();
-
-        public ObservableCollection<Alumno> AlumnosDirectos { get; } =
-            new();
-
-        // ============================================================
-        // EVENTO
-        // ============================================================
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        // ============================================================
-        // PROPIEDADES CONFIGURACIÓN GLOBAL
-        // ============================================================
-
-        public bool IsGlobalComboEnabled
+        public bool IsSelected
         {
-            get => _isGlobalComboEnabled;
+            get => _isSelected;
 
             set
             {
-                if (_isGlobalComboEnabled == value)
+                if (_isSelected == value)
                     return;
 
-                _isGlobalComboEnabled = value;
+                _isSelected =
+                    value;
 
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(MensajeExtraVisible));
+                PropertyChanged?.Invoke(
+                    this,
+                    new PropertyChangedEventArgs(
+                        nameof(IsSelected)));
             }
         }
 
-        public bool MensajeExtraVisible =>
-            !IsGlobalComboEnabled;
+        public string NombreProfesor { get; set; } =
+            string.Empty;
 
-        public ObservableCollection<string> EvaluacionesGlobalesDisponibles =>
-            _evaluacionesGlobalesDisponibles;
+        public string ClaveProfesor { get; set; } =
+            string.Empty;
 
-        public string? EvaluacionGlobalSeleccionada
+        public bool IsExtra { get; set; }
+
+        public event PropertyChangedEventHandler?
+            PropertyChanged;
+    }
+
+    // ============================================================
+    // PROPIEDADES CORREO
+    // ============================================================
+
+    public string ClaveProfesorCap
+    {
+        get => _claveProfesorCap;
+
+        set
         {
-            get => _evaluacionGlobalSeleccionada;
-
-            set
-            {
-                if (_evaluacionGlobalSeleccionada == value)
-                    return;
-
-                _evaluacionGlobalSeleccionada = value;
-
-                OnPropertyChanged();
-
-                if (!_cargandoDatos)
-                    GuardarConfiguracionGlobal();
-            }
-        }
-
-        // ============================================================
-        // PROPIEDADES CALIFICACIÓN DIRECTA
-        // ============================================================
-
-        public string? MateriaSeleccionadaDirecta
-        {
-            get => _materiaSeleccionadaDirecta;
-
-            set
-            {
-                if (_materiaSeleccionadaDirecta == value)
-                    return;
-
-                _materiaSeleccionadaDirecta = value;
-
-                OnPropertyChanged();
-
-                if (!_cargandoDatos)
-                    CargarMateriaDirecta();
-            }
-        }
-
-        public string? EvaluacionSeleccionadaDirecta
-        {
-            get => _evaluacionSeleccionadaDirecta;
-
-            set
-            {
-                if (_evaluacionSeleccionadaDirecta == value)
-                    return;
-
-                _evaluacionSeleccionadaDirecta = value;
-
-                OnPropertyChanged();
-
-                if (!_cargandoDatos)
-                    RefrescarAlumnosParaEvaluacion();
-            }
-        }
-
-        public Alumno? AlumnoSeleccionadoDirecto
-        {
-            get => _alumnoSeleccionadoDirecto;
-
-            set
-            {
-                if (_alumnoSeleccionadoDirecto == value)
-                    return;
-
-                _alumnoSeleccionadoDirecto = value;
-
-                OnPropertyChanged();
-
-                RefrescarDatosAlumnoSeleccionado();
-            }
-        }
-
-        public string CalificacionNuevaDirecta
-        {
-            get => _calificacionNuevaDirecta;
-
-            set
-            {
-                if (_calificacionNuevaDirecta == value)
-                    return;
-
-                _calificacionNuevaDirecta = value;
-
-                OnPropertyChanged();
-            }
-        }
-
-        public string EstadoDirecto
-        {
-            get => _estadoDirecto;
-
-            set
-            {
-                if (_estadoDirecto == value)
-                    return;
-
-                _estadoDirecto = value;
-
-                OnPropertyChanged();
-            }
-        }
-
-        public string NombreAlumnoDirecto
-        {
-            get => _nombreAlumnoDirecto;
-
-            set
-            {
-                if (_nombreAlumnoDirecto == value)
-                    return;
-
-                _nombreAlumnoDirecto = value;
-
-                OnPropertyChanged();
-            }
-        }
-
-        public string MatriculaAlumnoDirecto
-        {
-            get => _matriculaAlumnoDirecto;
-
-            set
-            {
-                if (_matriculaAlumnoDirecto == value)
-                    return;
-
-                _matriculaAlumnoDirecto = value;
-
-                OnPropertyChanged();
-            }
-        }
-
-        public string GrupoAlumnoDirecto
-        {
-            get => _grupoAlumnoDirecto;
-
-            set
-            {
-                if (_grupoAlumnoDirecto == value)
-                    return;
-
-                _grupoAlumnoDirecto = value;
-
-                OnPropertyChanged();
-            }
-        }
-
-        public string CalificacionActualDirecta
-        {
-            get => _calificacionActualDirecta;
-
-            set
-            {
-                if (_calificacionActualDirecta == value)
-                    return;
-
-                _calificacionActualDirecta = value;
-
-                OnPropertyChanged();
-            }
-        }
-
-        // ============================================================
-        // CONSTRUCTOR
-        // ============================================================
-
-        public ConfiguracionParcialesWindow(MainViewModel mainVm)
-        {
-            InitializeComponent();
-
-            _mainVm = mainVm ??
-                      throw new ArgumentNullException(nameof(mainVm));
-
-            _configuracionService =
-                new ConfiguracionParcialesService();
-
-            _parserService =
-                new CapParserService();
-
-            _writerService =
-                new CapWriterService();
-
-            _scannerService =
-                new FileScannerService();
-
-            // IMPORTANTE:
-            // El servicio PDF NO se crea aquí porque todavía
-            // no sabemos qué CAP va a exportar el usuario.
-
-            DataContext = this;
-
-            CargarMateriasDisponibles();
-            VerificarSiCapEsExtra();
-            CargarEvaluacionesGlobales();
-            CargarEstadoGlobal();
-
-            if (MateriasDisponibles.Any())
-            {
-                _cargandoDatos = true;
-
-                try
-                {
-                    var primera =
-                        MateriasDisponibles.FirstOrDefault();
-
-                    MateriaSeleccionadaDirecta = primera;
-                }
-                finally
-                {
-                    _cargandoDatos = false;
-                }
-
-                if (!string.IsNullOrWhiteSpace(
-                    MateriaSeleccionadaDirecta))
-                {
-                    CargarMateriaDirecta();
-                }
-            }
-        }
-
-        // ============================================================
-        // VERIFICAR EXTRA
-        // ============================================================
-
-        private void VerificarSiCapEsExtra()
-        {
-            IsGlobalComboEnabled = true;
-
-            if (!string.IsNullOrWhiteSpace(
-                    _mainVm.ArchivoCompletoActual) &&
-                File.Exists(_mainVm.ArchivoCompletoActual))
-            {
-                var resultado =
-                    _parserService.ProcesarArchivoCompleto(
-                        _mainVm.ArchivoCompletoActual);
-
-                bool soloExtra =
-                    resultado.EvaluacionesDisponibles != null &&
-                    resultado.EvaluacionesDisponibles.Count == 1 &&
-                    string.Equals(
-                        resultado.EvaluacionesDisponibles.First(),
-                        "EXTRA",
-                        StringComparison.OrdinalIgnoreCase);
-
-                if (soloExtra)
-                {
-                    IsGlobalComboEnabled = false;
-                }
-            }
-        }
-
-        // ============================================================
-        // EVALUACIONES GLOBALES
-        // ============================================================
-
-        private void CargarEvaluacionesGlobales()
-        {
-            if (_evaluacionesGlobalesDisponibles.Count > 0)
+            if (_claveProfesorCap == value)
                 return;
 
-            _evaluacionesGlobalesDisponibles.Clear();
+            _claveProfesorCap =
+                value;
 
-            _evaluacionesGlobalesDisponibles.Add("P1");
-            _evaluacionesGlobalesDisponibles.Add("P2");
-            _evaluacionesGlobalesDisponibles.Add("P3");
-            _evaluacionesGlobalesDisponibles.Add("SEM");
-            _evaluacionesGlobalesDisponibles.Add("PREEXTRAORDINARIO");
+            OnPropertyChanged();
+
+            OnPropertyChanged(
+                nameof(ProfesorDetectadoTexto));
+        }
+    }
+
+    public LiteDbService.ProfesorConfigurado?
+        ProfesorSeleccionado
+    {
+        get => _profesorSeleccionado;
+
+        set
+        {
+            if (_profesorSeleccionado == value)
+                return;
+
+            _profesorSeleccionado =
+                value;
+
+            OnPropertyChanged();
+
+            OnPropertyChanged(
+                nameof(CorreoProfesorSeleccionado));
+
+            OnPropertyChanged(
+                nameof(NombreProfesorSeleccionado));
+
+            OnPropertyChanged(
+                nameof(CorreoDestino));
+
+            OnPropertyChanged(
+                nameof(HayDestinatarioValido));
+        }
+    }
+
+    public bool UsarProfesorDelCap
+    {
+        get => _usarProfesorDelCap;
+
+        set
+        {
+            if (_usarProfesorDelCap == value)
+                return;
+
+            _usarProfesorDelCap =
+                value;
+
+            OnPropertyChanged();
+
+            OnPropertyChanged(
+                nameof(ProfesorComboHabilitado));
+
+            OnPropertyChanged(
+                nameof(CorreoDestino));
+
+            OnPropertyChanged(
+                nameof(HayDestinatarioValido));
+
+            if (value)
+            {
+                SeleccionarProfesorDetectado();
+            }
+        }
+    }
+
+    public bool ProfesorComboHabilitado =>
+        !UsarProfesorDelCap;
+
+    public bool EnviarAOtroCorreo
+    {
+        get => _enviarAOtroCorreo;
+
+        set
+        {
+            if (_enviarAOtroCorreo == value)
+                return;
+
+            _enviarAOtroCorreo =
+                value;
+
+            OnPropertyChanged();
+
+            OnPropertyChanged(
+                nameof(CorreoDestino));
+
+            OnPropertyChanged(
+                nameof(HayDestinatarioValido));
+        }
+    }
+
+    public string CorreoAlternativo
+    {
+        get => _correoAlternativo;
+
+        set
+        {
+            if (_correoAlternativo == value)
+                return;
+
+            _correoAlternativo =
+                value;
+
+            OnPropertyChanged();
+
+            OnPropertyChanged(
+                nameof(CorreoDestino));
+
+            OnPropertyChanged(
+                nameof(HayDestinatarioValido));
+        }
+    }
+
+    public bool EnviandoCorreo
+    {
+        get => _enviandoCorreo;
+
+        private set
+        {
+            if (_enviandoCorreo == value)
+                return;
+
+            _enviandoCorreo =
+                value;
+
+            OnPropertyChanged();
+
+            OnPropertyChanged(
+                nameof(PuedeEnviarCorreo));
+        }
+    }
+
+    public bool PuedeEnviarCorreo =>
+        !EnviandoCorreo;
+
+    public string EstadoCorreo
+    {
+        get => _estadoCorreo;
+
+        private set
+        {
+            if (_estadoCorreo == value)
+                return;
+
+            _estadoCorreo =
+                value;
+
+            OnPropertyChanged();
+        }
+    }
+
+    public string ArchivoPdfActual
+    {
+        get => _archivoPdfGenerado;
+
+        private set
+        {
+            if (_archivoPdfGenerado == value)
+                return;
+
+            _archivoPdfGenerado =
+                value;
+
+            OnPropertyChanged();
+        }
+    }
+
+    public string ProfesorDetectadoTexto
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(
+                    ClaveProfesorCap))
+            {
+                return
+                    "No se encontró CLAVEPROFESOR en el CAP.";
+            }
+
+            if (ProfesorSeleccionado == null)
+            {
+                return
+                    $"CLAVEPROFESOR: {ClaveProfesorCap} | No existe en configuracion.bin.";
+            }
+
+            return
+                $"Profesor detectado: {ProfesorSeleccionado.NOMBREPROFESOR}";
+        }
+    }
+
+    public string NombreProfesorSeleccionado =>
+        ProfesorSeleccionado?
+            .NOMBREPROFESOR
+            ?.Trim()
+            ?? string.Empty;
+
+    public string CorreoProfesorSeleccionado =>
+        ProfesorSeleccionado?
+            .EMAIL
+            ?.Trim()
+            ?? string.Empty;
+
+    public string CorreoDestino
+    {
+        get
+        {
+            if (EnviarAOtroCorreo)
+                return CorreoAlternativo.Trim();
+
+            return CorreoProfesorSeleccionado.Trim();
+        }
+    }
+
+    public bool HayDestinatarioValido =>
+        !string.IsNullOrWhiteSpace(
+            CorreoDestino);
+
+    // ============================================================
+    // PROPIEDADES CONFIG GLOBAL
+    // ============================================================
+
+    public bool IsGlobalComboEnabled
+    {
+        get => _isGlobalComboEnabled;
+
+        set
+        {
+            if (_isGlobalComboEnabled == value)
+                return;
+
+            _isGlobalComboEnabled =
+                value;
+
+            OnPropertyChanged();
+
+            OnPropertyChanged(
+                nameof(MensajeExtraVisible));
+        }
+    }
+
+    public bool MensajeExtraVisible =>
+        !IsGlobalComboEnabled;
+
+    public string? EvaluacionGlobalSeleccionada
+    {
+        get => _evaluacionGlobalSeleccionada;
+
+        set
+        {
+            if (_evaluacionGlobalSeleccionada == value)
+                return;
+
+            _evaluacionGlobalSeleccionada =
+                value;
+
+            OnPropertyChanged();
+
+            if (!_cargandoDatos)
+            {
+                GuardarConfiguracionGlobal();
+            }
+        }
+    }
+
+    // ============================================================
+    // PROPIEDADES DIRECTA
+    // ============================================================
+
+    public string? MateriaSeleccionadaDirecta
+    {
+        get => _materiaSeleccionadaDirecta;
+
+        set
+        {
+            if (_materiaSeleccionadaDirecta == value)
+                return;
+
+            _materiaSeleccionadaDirecta =
+                value;
+
+            OnPropertyChanged();
+
+            if (!_cargandoDatos)
+            {
+                CargarMateriaDirecta();
+            }
+        }
+    }
+
+    public string? EvaluacionSeleccionadaDirecta
+    {
+        get => _evaluacionSeleccionadaDirecta;
+
+        set
+        {
+            if (_evaluacionSeleccionadaDirecta == value)
+                return;
+
+            _evaluacionSeleccionadaDirecta =
+                value;
+
+            OnPropertyChanged();
+
+            if (!_cargandoDatos)
+            {
+                RefrescarAlumnosParaEvaluacion();
+            }
+        }
+    }
+
+    public Alumno? AlumnoSeleccionadoDirecto
+    {
+        get => _alumnoSeleccionadoDirecto;
+
+        set
+        {
+            if (_alumnoSeleccionadoDirecto == value)
+                return;
+
+            _alumnoSeleccionadoDirecto =
+                value;
+
+            OnPropertyChanged();
+
+            RefrescarDatosAlumnoSeleccionado();
+        }
+    }
+
+    public string CalificacionNuevaDirecta
+    {
+        get => _calificacionNuevaDirecta;
+
+        set
+        {
+            if (_calificacionNuevaDirecta == value)
+                return;
+
+            _calificacionNuevaDirecta =
+                value;
+
+            OnPropertyChanged();
+        }
+    }
+
+    public string EstadoDirecto
+    {
+        get => _estadoDirecto;
+
+        set
+        {
+            if (_estadoDirecto == value)
+                return;
+
+            _estadoDirecto =
+                value;
+
+            OnPropertyChanged();
+        }
+    }
+
+    public string NombreAlumnoDirecto
+    {
+        get => _nombreAlumnoDirecto;
+
+        set
+        {
+            if (_nombreAlumnoDirecto == value)
+                return;
+
+            _nombreAlumnoDirecto =
+                value;
+
+            OnPropertyChanged();
+        }
+    }
+
+    public string MatriculaAlumnoDirecto
+    {
+        get => _matriculaAlumnoDirecto;
+
+        set
+        {
+            if (_matriculaAlumnoDirecto == value)
+                return;
+
+            _matriculaAlumnoDirecto =
+                value;
+
+            OnPropertyChanged();
+        }
+    }
+
+    public string GrupoAlumnoDirecto
+    {
+        get => _grupoAlumnoDirecto;
+
+        set
+        {
+            if (_grupoAlumnoDirecto == value)
+                return;
+
+            _grupoAlumnoDirecto =
+                value;
+
+            OnPropertyChanged();
+        }
+    }
+
+    public string CalificacionActualDirecta
+    {
+        get => _calificacionActualDirecta;
+
+        set
+        {
+            if (_calificacionActualDirecta == value)
+                return;
+
+            _calificacionActualDirecta =
+                value;
+
+            OnPropertyChanged();
+        }
+    }
+
+    // ============================================================
+    // CONSTRUCTOR
+    // ============================================================
+
+    public ConfiguracionParcialesWindow(
+        MainViewModel mainVm)
+    {
+        InitializeComponent();
+
+        _mainVm =
+            mainVm
+            ?? throw new ArgumentNullException(
+                nameof(mainVm));
+
+        _configuracionService =
+            new ConfiguracionParcialesService();
+
+        _parserService =
+            new CapParserService();
+
+        _writerService =
+            new CapWriterService();
+
+        _scannerService =
+            new FileScannerService();
+
+        DataContext =
+            this;
+
+        CargarProfesores();
+
+        CargarMateriasDisponibles();
+
+        VerificarSiCapEsExtra();
+
+        CargarEvaluacionesGlobales();
+
+        CargarEstadoGlobal();
+
+        SuscribirCambiosDeSeleccionCaps();
+
+        ActualizarProfesorDesdeCapsSeleccionados();
+
+        if (MateriasDisponibles.Any())
+        {
+            _cargandoDatos = true;
+
+            try
+            {
+                MateriaSeleccionadaDirecta =
+                    MateriasDisponibles.FirstOrDefault();
+            }
+            finally
+            {
+                _cargandoDatos = false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(
+                    MateriaSeleccionadaDirecta))
+            {
+                CargarMateriaDirecta();
+            }
+        }
+    }
+
+    // ============================================================
+    // PROFESORES DESDE BIN
+    // ============================================================
+
+    private void CargarProfesores()
+    {
+        _profesores.Clear();
+
+        try
+        {
+            using var lite =
+                new LiteDbService();
+
+            foreach (var profesor
+                     in lite.GetProfesores())
+            {
+                _profesores.Add(
+                    profesor);
+            }
+
+            EstadoCorreo =
+                _profesores.Count > 0
+                    ? $"{_profesores.Count} profesores disponibles."
+                    : "No se encontraron profesores en configuracion.bin.";
+        }
+        catch (Exception ex)
+        {
+            EstadoCorreo =
+                $"No se pudieron cargar los profesores: {ex.Message}";
         }
 
-        // ============================================================
-        // CARGAR ESTADO GLOBAL
-        // ============================================================
+        OnPropertyChanged(
+            nameof(Profesores));
+    }
 
-        private void CargarEstadoGlobal()
+    // ============================================================
+    // DETECTAR CLAVE PROFESOR EN CAP
+    // ============================================================
+
+    private string ObtenerClaveProfesorDesdeCap(
+        string filePath)
+    {
+        if (!File.Exists(
+                filePath))
         {
-            var rutaGlobal =
+            return string.Empty;
+        }
+
+        try
+        {
+            Encoding.RegisterProvider(
+                CodePagesEncodingProvider.Instance);
+
+            var encoding =
+                Encoding.GetEncoding(
+                    "iso-8859-1");
+
+            foreach (var linea
+                     in File.ReadAllLines(
+                         filePath,
+                         encoding))
+            {
+                string l =
+                    linea.Trim();
+
+                if (!l.Contains('='))
+                    continue;
+
+                var partes =
+                    l.Split(
+                        '=',
+                        2);
+
+                if (partes.Length != 2)
+                    continue;
+
+                if (string.Equals(
+                        partes[0].Trim(),
+                        "CLAVEPROFESOR",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return
+                        partes[1].Trim();
+                }
+            }
+        }
+        catch
+        {
+        }
+
+        return string.Empty;
+    }
+
+    // ============================================================
+    // DETECTAR PROFESOR DE CAP SELECCIONADOS
+    // ============================================================
+
+    private void ActualizarProfesorDesdeCapsSeleccionados()
+    {
+        var seleccionados =
+            CapFiles
+                .Where(c => c.IsSelected)
+                .ToList();
+
+        var primero =
+            seleccionados.FirstOrDefault();
+
+        if (primero == null)
+        {
+            ClaveProfesorCap =
+                string.Empty;
+
+            ProfesorSeleccionado =
+                null;
+
+            EstadoCorreo =
+                "Selecciona al menos un CAP.";
+
+            return;
+        }
+
+        string clave =
+            primero.ClaveProfesor;
+
+        if (string.IsNullOrWhiteSpace(clave))
+        {
+            clave =
+                ObtenerClaveProfesorDesdeCap(
+                    primero.FilePath);
+        }
+
+        ClaveProfesorCap =
+            clave;
+
+        SeleccionarProfesorDetectado();
+
+        // --------------------------------------------------------
+        // Comprobación cuando se seleccionan varios CAP
+        // --------------------------------------------------------
+
+        var claves =
+            seleccionados
+                .Select(
+                    c =>
+                    {
+                        string k =
+                            c.ClaveProfesor;
+
+                        if (string.IsNullOrWhiteSpace(k))
+                        {
+                            k =
+                                ObtenerClaveProfesorDesdeCap(
+                                    c.FilePath);
+                        }
+
+                        return k.Trim();
+                    })
+                .Where(
+                    k =>
+                        !string.IsNullOrWhiteSpace(k))
+                .Distinct(
+                    StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+        if (claves.Count > 1)
+        {
+            EstadoCorreo =
+                "Los CAP seleccionados pertenecen a diferentes profesores. Se utilizará el profesor del primer CAP seleccionado.";
+        }
+        else if (ProfesorSeleccionado != null)
+        {
+            EstadoCorreo =
+                $"Profesor detectado: {ProfesorSeleccionado.NOMBREPROFESOR}";
+        }
+        else if (!string.IsNullOrWhiteSpace(
+                     clave))
+        {
+            EstadoCorreo =
+                $"Se detectó CLAVEPROFESOR {clave}, pero no existe en configuracion.bin.";
+        }
+        else
+        {
+            EstadoCorreo =
+                "El CAP no contiene CLAVEPROFESOR.";
+        }
+    }
+
+    // ============================================================
+    // SELECCIONAR PROFESOR DETECTADO
+    // ============================================================
+
+    private void SeleccionarProfesorDetectado()
+    {
+        if (string.IsNullOrWhiteSpace(
+                ClaveProfesorCap))
+        {
+            ProfesorSeleccionado =
+                null;
+
+            return;
+        }
+
+        var profesor =
+            _profesores.FirstOrDefault(
+                p =>
+                    string.Equals(
+                        p.CLAVEPROFESOR?.Trim(),
+                        ClaveProfesorCap.Trim(),
+                        StringComparison.OrdinalIgnoreCase));
+
+        ProfesorSeleccionado =
+            profesor;
+    }
+
+    // ============================================================
+    // CAMBIOS CHECKBOX CAP
+    // ============================================================
+
+    private void SuscribirCambiosDeSeleccionCaps()
+    {
+        foreach (var cap in CapFiles)
+        {
+            cap.PropertyChanged -=
+                Cap_PropertyChanged;
+
+            cap.PropertyChanged +=
+                Cap_PropertyChanged;
+        }
+    }
+
+    private void Cap_PropertyChanged(
+        object? sender,
+        PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName ==
+            nameof(CapFileItem.IsSelected))
+        {
+            ActualizarProfesorDesdeCapsSeleccionados();
+        }
+    }
+
+    // ============================================================
+    // ENVIAR CALIFICACIONES
+    // ============================================================
+
+    private async void EnviarCalificaciones_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (EnviandoCorreo)
+            return;
+
+        var seleccionados =
+            CapFiles
+                .Where(c => c.IsSelected)
+                .ToList();
+
+        if (seleccionados.Count == 0)
+        {
+            MessageBox.Show(
+                "Selecciona al menos un CAP.",
+                "Enviar calificaciones",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+
+            return;
+        }
+
+        ActualizarProfesorDesdeCapsSeleccionados();
+
+        string destinatario =
+            CorreoDestino.Trim();
+
+        if (string.IsNullOrWhiteSpace(
+                destinatario))
+        {
+            MessageBox.Show(
+                "No existe un correo destinatario válido.",
+                "Enviar calificaciones",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+
+            return;
+        }
+
+        if (UsarProfesorDelCap &&
+            ProfesorSeleccionado == null &&
+            !EnviarAOtroCorreo)
+        {
+            MessageBox.Show(
+                "No se pudo localizar en configuracion.bin al profesor indicado por CLAVEPROFESOR.",
+                "Enviar calificaciones",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+
+            return;
+        }
+
+        EnviandoCorreo =
+            true;
+
+        EstadoCorreo =
+            "Generando el reporte PDF...";
+
+        string? archivoTemporal =
+            null;
+
+        try
+        {
+            // ====================================================
+            // GENERAR PDF COMBINADO
+            // ====================================================
+
+            var documento =
+                new PdfDocument();
+
+            foreach (var cap
+                     in seleccionados)
+            {
+                if (!File.Exists(
+                        cap.FilePath))
+                {
+                    continue;
+                }
+
+                var servicioPdf =
+                    new ReporteCalificacionesPdfService(
+                        cap.FilePath);
+
+                byte[] bytes =
+                    servicioPdf.GenerarDiseno();
+
+                using var ms =
+                    new MemoryStream(
+                        bytes);
+
+                using var entrada =
+                    PdfReader.Open(
+                        ms,
+                        PdfDocumentOpenMode.Import);
+
+                for (
+                    int i = 0;
+                    i < entrada.PageCount;
+                    i++)
+                {
+                    documento.AddPage(
+                        entrada.Pages[i]);
+                }
+            }
+
+            if (documento.PageCount == 0)
+            {
+                throw new InvalidOperationException(
+                    "No se pudo generar ninguna página del reporte.");
+            }
+
+            // ====================================================
+            // ARCHIVO TEMPORAL
+            // ====================================================
+
+            string carpetaTemporal =
                 Path.Combine(
-                    AppDomain.CurrentDomain.BaseDirectory,
-                    "configuracion_global.json");
+                    Path.GetTempPath(),
+                    "CEIM");
 
-            bool existeConfiguracion = false;
+            Directory.CreateDirectory(
+                carpetaTemporal);
 
-            if (File.Exists(rutaGlobal))
+            string nombreArchivo =
+                ConstruirNombrePdfCorreo(
+                    seleccionados);
+
+            archivoTemporal =
+                Path.Combine(
+                    carpetaTemporal,
+                    nombreArchivo);
+
+            documento.Save(
+                archivoTemporal);
+
+            ArchivoPdfActual =
+                archivoTemporal;
+
+            EstadoCorreo =
+                "Enviando correo...";
+
+            // ====================================================
+            // ASUNTO
+            // ====================================================
+
+            string nombreProfesor =
+                !string.IsNullOrWhiteSpace(
+                    NombreProfesorSeleccionado)
+                    ? NombreProfesorSeleccionado
+                    : "Docente";
+
+            string asunto =
+                $"Reporte de calificaciones - {nombreProfesor}";
+
+            // ====================================================
+            // CUERPO
+            // ====================================================
+
+            string cuerpo =
+                $"Buen día, {nombreProfesor}.\r\n\r\n" +
+                "Se adjunta el reporte de calificaciones correspondiente.\r\n\r\n" +
+                "Este correo fue enviado automáticamente desde CEIM.";
+
+            // ====================================================
+            // SMTP
+            // ====================================================
+
+            using var lite =
+                new LiteDbService();
+
+            await lite.EnviarCorreoAsync(
+                destinatario,
+                asunto,
+                cuerpo,
+                archivoTemporal);
+
+            EstadoCorreo =
+                $"Reporte enviado correctamente a {destinatario}.";
+
+            MessageBox.Show(
+                $"El reporte fue enviado correctamente a:\n\n{destinatario}",
+                "Correo enviado",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            EstadoCorreo =
+                "No se pudo enviar el reporte.";
+
+            MessageBox.Show(
+                $"No se pudo enviar el reporte.\n\n{ex.Message}",
+                "Error al enviar",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+        finally
+        {
+            EnviandoCorreo =
+                false;
+
+            // ----------------------------------------------------
+            // Limpiar archivo temporal.
+            // El Attachment ya fue liberado al terminar SendMailAsync.
+            // ----------------------------------------------------
+
+            if (!string.IsNullOrWhiteSpace(
+                    archivoTemporal))
             {
                 try
                 {
-                    var json =
-                        File.ReadAllText(rutaGlobal);
-
-                    var data =
-                        JsonSerializer.Deserialize<
-                            Dictionary<string, string>>(json);
-
-                    if (data != null &&
-                        data.TryGetValue(
-                            "EvaluacionGlobal",
-                            out var eval) &&
-                        !string.IsNullOrWhiteSpace(eval))
+                    if (File.Exists(
+                            archivoTemporal))
                     {
-                        _evaluacionGlobalSeleccionada =
-                            eval;
-
-                        existeConfiguracion = true;
+                        File.Delete(
+                            archivoTemporal);
                     }
                 }
                 catch
                 {
-                    // Configuración nueva.
+                    // No interrumpir por limpieza.
                 }
             }
 
-            if (!existeConfiguracion)
-            {
-                _evaluacionGlobalSeleccionada = "P1";
-
-                try
-                {
-                    var data =
-                        new Dictionary<string, string>
-                        {
-                            ["EvaluacionGlobal"] = "P1"
-                        };
-
-                    var json =
-                        JsonSerializer.Serialize(data);
-
-                    File.WriteAllText(
-                        rutaGlobal,
-                        json);
-                }
-                catch
-                {
-                    // No impedir la apertura.
-                }
-            }
-
-            if (string.Equals(
-                _evaluacionGlobalSeleccionada,
-                "EXTRA",
-                StringComparison.OrdinalIgnoreCase))
-            {
-                _evaluacionGlobalSeleccionada = "P1";
-            }
-
-            AplicarConfiguracionGlobal();
-
-            OnPropertyChanged(
-                nameof(EvaluacionGlobalSeleccionada));
+            ArchivoPdfActual =
+                string.Empty;
         }
+    }
 
-        // ============================================================
-        // APLICAR CONFIGURACIÓN GLOBAL
-        // ============================================================
-
-        private void AplicarConfiguracionGlobal()
+    private string ConstruirNombrePdfCorreo(
+        List<CapFileItem> caps)
+    {
+        if (caps.Count == 1)
         {
+            string baseNombre =
+                Path.GetFileNameWithoutExtension(
+                    caps[0].FilePath);
+
             if (string.IsNullOrWhiteSpace(
-                    EvaluacionGlobalSeleccionada))
+                    baseNombre))
             {
-                return;
+                baseNombre =
+                    "Reporte_Calificaciones";
             }
 
-            var configGlobal =
-                new ConfiguracionParciales
-                {
-                    Parcial1Habilitado =
-                        string.Equals(
-                            EvaluacionGlobalSeleccionada,
-                            "P1",
-                            StringComparison.OrdinalIgnoreCase),
-
-                    Parcial2Habilitado =
-                        string.Equals(
-                            EvaluacionGlobalSeleccionada,
-                            "P2",
-                            StringComparison.OrdinalIgnoreCase),
-
-                    Parcial3Habilitado =
-                        string.Equals(
-                            EvaluacionGlobalSeleccionada,
-                            "P3",
-                            StringComparison.OrdinalIgnoreCase),
-
-                    SemestralHabilitado =
-                        string.Equals(
-                            EvaluacionGlobalSeleccionada,
-                            "SEM",
-                            StringComparison.OrdinalIgnoreCase),
-
-                    PreExtraordinarioHabilitado =
-                        string.Equals(
-                            EvaluacionGlobalSeleccionada,
-                            "PREEXTRAORDINARIO",
-                            StringComparison.OrdinalIgnoreCase),
-
-                    ExtraHabilitado = false,
-
-                    CapturaDirectaHabilitada = true
-                };
-
-            var service =
-                new ConfiguracionParcialesService();
-
-            foreach (var kvp in _mapaArchivos)
-            {
-                string claveMateria =
-                    ObtenerClaveMateriaDesdeRuta(
-                        kvp.Value);
-
-                if (!string.IsNullOrWhiteSpace(
-                    claveMateria))
-                {
-                    service.GuardarConfiguracion(
-                        claveMateria,
-                        configGlobal);
-                }
-            }
-
-            _mainVm.RecargarConfiguracionYArchivoActual();
+            return
+                $"{LimpiarNombreArchivo(baseNombre)}_Reporte.pdf";
         }
 
-        // ============================================================
-        // GUARDAR CONFIGURACIÓN GLOBAL
-        // ============================================================
+        return
+            $"Reporte_Calificaciones_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+    }
 
-        private void GuardarConfiguracionGlobal()
+    private static string LimpiarNombreArchivo(
+        string nombre)
+    {
+        foreach (
+            char caracter
+            in Path.GetInvalidFileNameChars())
         {
-            if (!IsGlobalComboEnabled)
-                return;
+            nombre =
+                nombre.Replace(
+                    caracter,
+                    '_');
+        }
+
+        return nombre;
+    }
+
+    // ============================================================
+    // VERIFICAR EXTRA
+    // ============================================================
+
+    private void VerificarSiCapEsExtra()
+    {
+        IsGlobalComboEnabled =
+            true;
+
+        if (!string.IsNullOrWhiteSpace(
+                _mainVm.ArchivoCompletoActual) &&
+            File.Exists(
+                _mainVm.ArchivoCompletoActual))
+        {
+            var resultado =
+                _parserService
+                    .ProcesarArchivoCompleto(
+                        _mainVm.ArchivoCompletoActual);
+
+            bool soloExtra =
+                resultado.EvaluacionesDisponibles != null &&
+                resultado.EvaluacionesDisponibles.Count == 1 &&
+                string.Equals(
+                    resultado.EvaluacionesDisponibles.First(),
+                    "EXTRA",
+                    StringComparison.OrdinalIgnoreCase);
+
+            if (soloExtra)
+            {
+                IsGlobalComboEnabled =
+                    false;
+            }
+        }
+    }
+
+    // ============================================================
+    // EVALUACIONES GLOBALES
+    // ============================================================
+
+    private void CargarEvaluacionesGlobales()
+    {
+        if (_evaluacionesGlobalesDisponibles.Count > 0)
+            return;
+
+        _evaluacionesGlobalesDisponibles.Clear();
+
+        _evaluacionesGlobalesDisponibles.Add(
+            "P1");
+
+        _evaluacionesGlobalesDisponibles.Add(
+            "P2");
+
+        _evaluacionesGlobalesDisponibles.Add(
+            "P3");
+
+        _evaluacionesGlobalesDisponibles.Add(
+            "SEM");
+
+        _evaluacionesGlobalesDisponibles.Add(
+            "PREEXTRAORDINARIO");
+    }
+
+    // ============================================================
+    // CARGAR ESTADO GLOBAL
+    // ============================================================
+
+    private void CargarEstadoGlobal()
+    {
+        var rutaGlobal =
+            Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "configuracion_global.json");
+
+        bool existeConfiguracion =
+            false;
+
+        if (File.Exists(
+                rutaGlobal))
+        {
+            try
+            {
+                var json =
+                    File.ReadAllText(
+                        rutaGlobal);
+
+                var data =
+                    JsonSerializer.Deserialize<
+                        Dictionary<string, string>>(
+                        json);
+
+                if (data != null &&
+                    data.TryGetValue(
+                        "EvaluacionGlobal",
+                        out var eval) &&
+                    !string.IsNullOrWhiteSpace(
+                        eval))
+                {
+                    _evaluacionGlobalSeleccionada =
+                        eval;
+
+                    existeConfiguracion =
+                        true;
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        if (!existeConfiguracion)
+        {
+            _evaluacionGlobalSeleccionada =
+                "P1";
 
             try
             {
@@ -548,471 +1336,659 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                     new Dictionary<string, string>
                     {
                         ["EvaluacionGlobal"] =
-                            EvaluacionGlobalSeleccionada ?? "P1"
+                            "P1"
                     };
 
                 var json =
-                    JsonSerializer.Serialize(data);
-
-                var rutaGlobal =
-                    Path.Combine(
-                        AppDomain.CurrentDomain.BaseDirectory,
-                        "configuracion_global.json");
+                    JsonSerializer.Serialize(
+                        data);
 
                 File.WriteAllText(
                     rutaGlobal,
                     json);
-
-                AplicarConfiguracionGlobal();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    $"Error al guardar configuración global: {ex.Message}",
-                    "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-        }
-
-        // ============================================================
-        // CARGAR MATERIAS
-        // ============================================================
-
-        private void CargarMateriasDisponibles()
-        {
-            MateriasDisponibles.Clear();
-            _mapaArchivos.Clear();
-
-            try
-            {
-                var archivos =
-                    _scannerService.ObtenerArchivosCap(
-                        _mainVm.RutaUsb);
-
-                foreach (var archivo in archivos)
-                {
-                    string nombreVisual =
-                        _parserService.ObtenerNombreVisualArchivo(
-                            archivo);
-
-                    _mapaArchivos[nombreVisual] =
-                        archivo;
-
-                    MateriasDisponibles.Add(
-                        nombreVisual);
-                }
             }
             catch
             {
-                EstadoDirecto =
-                    "No se pudieron cargar las materias desde el USB.";
             }
         }
 
-        // ============================================================
-        // VERIFICAR EVALUACIÓN
-        // ============================================================
-
-        private bool EvaluacionEstaHabilitada(
-            string evaluacion)
+        if (string.Equals(
+                _evaluacionGlobalSeleccionada,
+                "EXTRA",
+                StringComparison.OrdinalIgnoreCase))
         {
-            if (string.IsNullOrWhiteSpace(evaluacion))
-                return false;
-
-            return string.Equals(
-                evaluacion.Trim(),
-                EvaluacionGlobalSeleccionada,
-                StringComparison.OrdinalIgnoreCase);
+            _evaluacionGlobalSeleccionada =
+                "P1";
         }
 
-        // ============================================================
-        // CARGAR MATERIA DIRECTA
-        // ============================================================
+        AplicarConfiguracionGlobal();
 
-        private void CargarMateriaDirecta()
+        OnPropertyChanged(
+            nameof(EvaluacionGlobalSeleccionada));
+    }
+
+    // ============================================================
+    // APLICAR GLOBAL
+    // ============================================================
+
+    private void AplicarConfiguracionGlobal()
+    {
+        if (string.IsNullOrWhiteSpace(
+                EvaluacionGlobalSeleccionada))
         {
-            AlumnosDirectos.Clear();
-            EvaluacionesDisponiblesDirecta.Clear();
-            _evaluacionIdPorNombreDirecta.Clear();
+            return;
+        }
 
-            if (string.IsNullOrWhiteSpace(
-                    MateriaSeleccionadaDirecta))
+        var configGlobal =
+            new ConfiguracionParciales
             {
-                EstadoDirecto =
-                    "Selecciona una materia.";
+                Parcial1Habilitado =
+                    string.Equals(
+                        EvaluacionGlobalSeleccionada,
+                        "P1",
+                        StringComparison.OrdinalIgnoreCase),
 
-                EvaluacionSeleccionadaDirecta =
-                    null;
+                Parcial2Habilitado =
+                    string.Equals(
+                        EvaluacionGlobalSeleccionada,
+                        "P2",
+                        StringComparison.OrdinalIgnoreCase),
 
-                AlumnoSeleccionadoDirecto =
-                    null;
+                Parcial3Habilitado =
+                    string.Equals(
+                        EvaluacionGlobalSeleccionada,
+                        "P3",
+                        StringComparison.OrdinalIgnoreCase),
 
-                return;
+                SemestralHabilitado =
+                    string.Equals(
+                        EvaluacionGlobalSeleccionada,
+                        "SEM",
+                        StringComparison.OrdinalIgnoreCase),
+
+                PreExtraordinarioHabilitado =
+                    string.Equals(
+                        EvaluacionGlobalSeleccionada,
+                        "PREEXTRAORDINARIO",
+                        StringComparison.OrdinalIgnoreCase),
+
+                ExtraHabilitado =
+                    false,
+
+                CapturaDirectaHabilitada =
+                    true
+            };
+
+        var service =
+            new ConfiguracionParcialesService();
+
+        foreach (var kvp
+                 in _mapaArchivos)
+        {
+            string claveMateria =
+                ObtenerClaveMateriaDesdeRuta(
+                    kvp.Value);
+
+            if (!string.IsNullOrWhiteSpace(
+                    claveMateria))
+            {
+                service.GuardarConfiguracion(
+                    claveMateria,
+                    configGlobal);
+            }
+        }
+
+        _mainVm
+            .RecargarConfiguracionYArchivoActual();
+    }
+
+    // ============================================================
+    // GUARDAR GLOBAL
+    // ============================================================
+
+    private void GuardarConfiguracionGlobal()
+    {
+        if (!IsGlobalComboEnabled)
+            return;
+
+        try
+        {
+            var data =
+                new Dictionary<string, string>
+                {
+                    ["EvaluacionGlobal"] =
+                        EvaluacionGlobalSeleccionada
+                        ?? "P1"
+                };
+
+            var json =
+                JsonSerializer.Serialize(
+                    data);
+
+            var rutaGlobal =
+                Path.Combine(
+                    AppDomain.CurrentDomain.BaseDirectory,
+                    "configuracion_global.json");
+
+            File.WriteAllText(
+                rutaGlobal,
+                json);
+
+            AplicarConfiguracionGlobal();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Error al guardar configuración global: {ex.Message}",
+                "Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
+    // ============================================================
+    // CARGAR MATERIAS Y CAPS
+    // ============================================================
+
+    private void CargarMateriasDisponibles()
+    {
+        MateriasDisponibles.Clear();
+
+        _mapaArchivos.Clear();
+
+        CapFiles.Clear();
+
+        try
+        {
+            var archivos =
+                _scannerService
+                    .ObtenerArchivosCap(
+                        _mainVm.RutaUsb);
+
+            foreach (var archivo in archivos)
+            {
+                string nombreVisual =
+                    _parserService
+                        .ObtenerNombreVisualArchivo(
+                            archivo);
+
+                _mapaArchivos[
+                    nombreVisual] =
+                    archivo;
+
+                MateriasDisponibles.Add(
+                    nombreVisual);
+
+                try
+                {
+                    var info =
+                        _parserService
+                            .ObtenerInfoParaCombo(
+                                archivo);
+
+                    string display =
+                        string.IsNullOrWhiteSpace(
+                            info.GrupoCap)
+                            ? info.NombreBase
+                            : $"{info.NombreBase} {info.GrupoCap}";
+
+                    string claveProfesor =
+                        ObtenerClaveProfesorDesdeCap(
+                            archivo);
+
+                    CapFiles.Add(
+                        new CapFileItem
+                        {
+                            DisplayName =
+                                display,
+
+                            FilePath =
+                                archivo,
+
+                            IsSelected =
+                                true,
+
+                            NombreProfesor =
+                                info.NombreProfesor
+                                ?? string.Empty,
+
+                            ClaveProfesor =
+                                claveProfesor,
+
+                            IsExtra =
+                                info.IsExtra
+                        });
+                }
+                catch
+                {
+                }
+            }
+        }
+        catch
+        {
+            EstadoDirecto =
+                "No se pudieron cargar las materias desde el USB.";
+        }
+    }
+
+    // ============================================================
+    // CARGAR MATERIA DIRECTA
+    // ============================================================
+
+    private void CargarMateriaDirecta()
+    {
+        AlumnosDirectos.Clear();
+
+        EvaluacionesDisponiblesDirecta.Clear();
+
+        _evaluacionIdPorNombreDirecta.Clear();
+
+        if (string.IsNullOrWhiteSpace(
+                MateriaSeleccionadaDirecta))
+        {
+            EstadoDirecto =
+                "Selecciona una materia.";
+
+            EvaluacionSeleccionadaDirecta =
+                null;
+
+            AlumnoSeleccionadoDirecto =
+                null;
+
+            return;
+        }
+
+        if (!_mapaArchivos.TryGetValue(
+                MateriaSeleccionadaDirecta,
+                out string? rutaCompleta))
+        {
+            EstadoDirecto =
+                "No se encontró el archivo de la materia seleccionada.";
+
+            var cap =
+                CapFiles.FirstOrDefault(
+                    c =>
+                        c.DisplayName ==
+                        MateriaSeleccionadaDirecta);
+
+            if (cap != null)
+            {
+                rutaCompleta =
+                    cap.FilePath;
             }
 
-            if (!_mapaArchivos.TryGetValue(
-                    MateriaSeleccionadaDirecta,
-                    out string? rutaCompleta))
-            {
-                EstadoDirecto =
-                    "No se encontró el archivo de la materia seleccionada.";
+            EvaluacionSeleccionadaDirecta =
+                null;
 
-                EvaluacionSeleccionadaDirecta =
-                    null;
+            AlumnoSeleccionadoDirecto =
+                null;
 
-                AlumnoSeleccionadoDirecto =
-                    null;
+            return;
+        }
 
-                return;
-            }
+        if (!File.Exists(
+                rutaCompleta))
+        {
+            EstadoDirecto =
+                "El archivo CAP ya no existe.";
 
-            if (!File.Exists(rutaCompleta))
-            {
-                EstadoDirecto =
-                    "El archivo CAP ya no existe.";
+            EvaluacionSeleccionadaDirecta =
+                null;
 
-                EvaluacionSeleccionadaDirecta =
-                    null;
+            AlumnoSeleccionadoDirecto =
+                null;
 
-                AlumnoSeleccionadoDirecto =
-                    null;
+            return;
+        }
 
-                return;
-            }
+        try
+        {
+            _cargandoDatos =
+                true;
 
-            try
-            {
-                _cargandoDatos = true;
-
-                var resultado =
-                    _parserService.ProcesarArchivoCompleto(
+            var resultado =
+                _parserService
+                    .ProcesarArchivoCompleto(
                         rutaCompleta);
 
-                foreach (var kvp in resultado.EvaluacionIdPorNombre)
+            foreach (
+                var kvp
+                in resultado.EvaluacionIdPorNombre)
+            {
+                _evaluacionIdPorNombreDirecta[
+                    kvp.Key] =
+                    kvp.Value;
+            }
+
+            bool soloExtra =
+                resultado.EvaluacionesDisponibles != null &&
+                resultado.EvaluacionesDisponibles.Count == 1 &&
+                string.Equals(
+                    resultado.EvaluacionesDisponibles.First(),
+                    "EXTRA",
+                    StringComparison.OrdinalIgnoreCase);
+
+            var cfgService =
+                new ConfiguracionParcialesService();
+
+            string claveMateria =
+                ObtenerClaveMateriaDesdeRuta(
+                    rutaCompleta);
+
+            var cfgPorCap =
+                cfgService.ObtenerConfiguracion(
+                    claveMateria);
+
+            bool tieneCfgPorCap =
+                cfgPorCap != null &&
+                (
+                    cfgPorCap.Parcial1Habilitado ||
+                    cfgPorCap.Parcial2Habilitado ||
+                    cfgPorCap.Parcial3Habilitado ||
+                    cfgPorCap.SemestralHabilitado ||
+                    cfgPorCap.ExtraHabilitado
+                );
+
+            foreach (
+                var eval
+                in resultado.EvaluacionesDisponibles)
+            {
+                if (soloExtra)
                 {
-                    _evaluacionIdPorNombreDirecta[kvp.Key] =
-                        kvp.Value;
+                    EvaluacionesDisponiblesDirecta.Add(
+                        eval);
+
+                    continue;
                 }
 
-                bool soloExtra =
-                    resultado.EvaluacionesDisponibles != null &&
-                    resultado.EvaluacionesDisponibles.Count == 1 &&
-                    string.Equals(
-                        resultado.EvaluacionesDisponibles.First(),
-                        "EXTRA",
-                        StringComparison.OrdinalIgnoreCase);
+                bool habilitadoPorCap =
+                    false;
 
-                var cfgService =
-                    new ConfiguracionParcialesService();
-
-                string claveMateria =
-                    ObtenerClaveMateriaDesdeRuta(
-                        rutaCompleta);
-
-                var cfgPorCap =
-                    cfgService.ObtenerConfiguracion(
-                        claveMateria);
-
-                bool tieneCfgPorCap =
-                    cfgPorCap != null &&
-                    (
-                        cfgPorCap.Parcial1Habilitado ||
-                        cfgPorCap.Parcial2Habilitado ||
-                        cfgPorCap.Parcial3Habilitado ||
-                        cfgPorCap.SemestralHabilitado ||
-                        cfgPorCap.ExtraHabilitado
-                    );
-
-                foreach (var eval in
-                         resultado.EvaluacionesDisponibles)
+                if (tieneCfgPorCap)
                 {
-                    if (soloExtra)
-                    {
-                        EvaluacionesDisponiblesDirecta.Add(
-                            eval);
-
-                        continue;
-                    }
-
-                    bool habilitadoPorCap = false;
-
-                    if (tieneCfgPorCap)
-                    {
-                        if (string.Equals(
+                    if (string.Equals(
                             eval,
                             "P1",
                             StringComparison.OrdinalIgnoreCase))
-                        {
-                            habilitadoPorCap =
-                                cfgPorCap!.Parcial1Habilitado;
-                        }
-                        else if (string.Equals(
-                            eval,
-                            "P2",
-                            StringComparison.OrdinalIgnoreCase))
-                        {
-                            habilitadoPorCap =
-                                cfgPorCap!.Parcial2Habilitado;
-                        }
-                        else if (string.Equals(
-                            eval,
-                            "P3",
-                            StringComparison.OrdinalIgnoreCase))
-                        {
-                            habilitadoPorCap =
-                                cfgPorCap!.Parcial3Habilitado;
-                        }
-                        else if (string.Equals(
-                            eval,
-                            "SEM",
-                            StringComparison.OrdinalIgnoreCase))
-                        {
-                            habilitadoPorCap =
-                                cfgPorCap!.SemestralHabilitado;
-                        }
-                        else if (string.Equals(
-                            eval,
-                            "PREEXTRAORDINARIO",
-                            StringComparison.OrdinalIgnoreCase))
-                        {
-                            habilitadoPorCap =
-                                cfgPorCap!.PreExtraordinarioHabilitado;
-                        }
-                        else if (string.Equals(
-                            eval,
-                            "EXTRA",
-                            StringComparison.OrdinalIgnoreCase))
-                        {
-                            habilitadoPorCap =
-                                cfgPorCap!.ExtraHabilitado;
-                        }
-                    }
-
-                    if (tieneCfgPorCap)
                     {
-                        if (habilitadoPorCap)
-                        {
-                            EvaluacionesDisponiblesDirecta.Add(
-                                eval);
-                        }
+                        habilitadoPorCap =
+                            cfgPorCap!.Parcial1Habilitado;
                     }
-                    else
+                    else if (string.Equals(
+                                 eval,
+                                 "P2",
+                                 StringComparison.OrdinalIgnoreCase))
                     {
-                        if (EvaluacionEstaHabilitada(eval))
-                        {
-                            EvaluacionesDisponiblesDirecta.Add(
-                                eval);
-                        }
+                        habilitadoPorCap =
+                            cfgPorCap!.Parcial2Habilitado;
+                    }
+                    else if (string.Equals(
+                                 eval,
+                                 "P3",
+                                 StringComparison.OrdinalIgnoreCase))
+                    {
+                        habilitadoPorCap =
+                            cfgPorCap!.Parcial3Habilitado;
+                    }
+                    else if (string.Equals(
+                                 eval,
+                                 "SEM",
+                                 StringComparison.OrdinalIgnoreCase))
+                    {
+                        habilitadoPorCap =
+                            cfgPorCap!.SemestralHabilitado;
+                    }
+                    else if (string.Equals(
+                                 eval,
+                                 "PREEXTRAORDINARIO",
+                                 StringComparison.OrdinalIgnoreCase))
+                    {
+                        habilitadoPorCap =
+                            cfgPorCap!.PreExtraordinarioHabilitado;
+                    }
+                    else if (string.Equals(
+                                 eval,
+                                 "EXTRA",
+                                 StringComparison.OrdinalIgnoreCase))
+                    {
+                        habilitadoPorCap =
+                            cfgPorCap!.ExtraHabilitado;
                     }
                 }
 
-                foreach (var alumno in
-                         resultado.Alumnos)
+                if (tieneCfgPorCap)
                 {
-                    AlumnosDirectos.Add(
-                        alumno);
-                }
-
-                if (EvaluacionesDisponiblesDirecta.Any())
-                {
-                    EvaluacionSeleccionadaDirecta =
-                        EvaluacionesDisponiblesDirecta.First();
-
-                    if (soloExtra)
+                    if (habilitadoPorCap)
                     {
-                        EstadoDirecto =
-                            "Este CAP contiene sólo EVALUACIÓN EXTRA. No puede cambiar parciales aquí.";
+                        EvaluacionesDisponiblesDirecta.Add(
+                            eval);
                     }
                 }
                 else
                 {
-                    EvaluacionSeleccionadaDirecta =
-                        null;
-                }
-
-                AlumnoSeleccionadoDirecto =
-                    AlumnosDirectos.FirstOrDefault();
-
-                EstadoDirecto =
-                    $"Materia cargada: {MateriaSeleccionadaDirecta}";
-            }
-            finally
-            {
-                _cargandoDatos = false;
-
-                RefrescarAlumnosParaEvaluacion();
-                RefrescarDatosAlumnoSeleccionado();
-            }
-        }
-
-        // ============================================================
-        // REFRESCAR ALUMNOS
-        // ============================================================
-
-        private void RefrescarAlumnosParaEvaluacion()
-        {
-            if (string.IsNullOrWhiteSpace(
-                    EvaluacionSeleccionadaDirecta))
-            {
-                foreach (var alumno in AlumnosDirectos)
-                {
-                    alumno.ActualizarSeleccion(
-                        string.Empty);
-                }
-
-                CalificacionActualDirecta =
-                    string.Empty;
-
-                CalificacionNuevaDirecta =
-                    string.Empty;
-
-                return;
-            }
-
-            foreach (var alumno in AlumnosDirectos)
-            {
-                alumno.ActualizarSeleccion(
-                    EvaluacionSeleccionadaDirecta);
-            }
-
-            RefrescarDatosAlumnoSeleccionado();
-        }
-
-        // ============================================================
-        // REFRESCAR DATOS ALUMNO
-        // ============================================================
-
-        private void RefrescarDatosAlumnoSeleccionado()
-        {
-            if (AlumnoSeleccionadoDirecto == null)
-            {
-                NombreAlumnoDirecto = string.Empty;
-                MatriculaAlumnoDirecto = string.Empty;
-                GrupoAlumnoDirecto = string.Empty;
-                CalificacionActualDirecta = string.Empty;
-                CalificacionNuevaDirecta = string.Empty;
-
-                return;
-            }
-
-            NombreAlumnoDirecto =
-                AlumnoSeleccionadoDirecto.Nombre;
-
-            MatriculaAlumnoDirecto =
-                AlumnoSeleccionadoDirecto.Matricula;
-
-            GrupoAlumnoDirecto =
-                AlumnoSeleccionadoDirecto.Grupo;
-
-            CalificacionActualDirecta =
-                AlumnoSeleccionadoDirecto.ValorSeleccionado;
-
-            CalificacionNuevaDirecta =
-                AlumnoSeleccionadoDirecto.ValorSeleccionado;
-        }
-
-        // ============================================================
-        // GUARDAR CALIFICACIÓN DIRECTA
-        // ============================================================
-
-        private void GuardarDirecta_Click(
-            object sender,
-            RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(
-                    MateriaSeleccionadaDirecta) ||
-                string.IsNullOrWhiteSpace(
-                    EvaluacionSeleccionadaDirecta) ||
-                AlumnoSeleccionadoDirecto == null)
-            {
-                MessageBox.Show(
-                    "Asegúrate de seleccionar materia, evaluación y alumno.",
-                    "Aviso",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-
-                return;
-            }
-
-            if (!_mapaArchivos.TryGetValue(
-                    MateriaSeleccionadaDirecta,
-                    out string? rutaCompleta) ||
-                !_evaluacionIdPorNombreDirecta.TryGetValue(
-                    EvaluacionSeleccionadaDirecta,
-                    out string? idEval))
-            {
-                MessageBox.Show(
-                    "Error al localizar datos del CAP para guardar.",
-                    "Aviso",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-
-                return;
-            }
-
-            string valorNormalizado;
-
-            // ========================================================
-            // PREEXTRAORDINARIO
-            // ========================================================
-
-            if (string.Equals(
-                    EvaluacionSeleccionadaDirecta,
-                    "PREEXTRAORDINARIO",
-                    StringComparison.OrdinalIgnoreCase))
-            {
-                string texto =
-                    (CalificacionNuevaDirecta ?? string.Empty)
-                    .Trim()
-                    .ToUpperInvariant();
-
-                // NP
-                if (texto == "NP")
-                {
-                    valorNormalizado = "NP";
-                }
-                else
-                {
-                    // La variable queda declarada e inicializada
-                    // correctamente para evitar CS0165.
-                    if (!int.TryParse(
-                            texto,
-                            out int iv))
+                    if (EvaluacionEstaHabilitada(
+                            eval))
                     {
-                        MessageBox.Show(
-                            "Para PREEXTRAORDINARIO solo se permiten enteros de 0 a 6 o NP.",
-                            "Aviso",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Warning);
-
-                        return;
+                        EvaluacionesDisponiblesDirecta.Add(
+                            eval);
                     }
+                }
+            }
 
-                    if (iv < 0 || iv > 6)
-                    {
-                        MessageBox.Show(
-                            "Para PREEXTRAORDINARIO solo se permiten enteros de 0 a 6 o NP.",
-                            "Aviso",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Warning);
+            foreach (
+                var alumno
+                in resultado.Alumnos)
+            {
+                AlumnosDirectos.Add(
+                    alumno);
+            }
 
-                        return;
-                    }
+            if (EvaluacionesDisponiblesDirecta.Any())
+            {
+                EvaluacionSeleccionadaDirecta =
+                    EvaluacionesDisponiblesDirecta.First();
 
-                    valorNormalizado =
-                        iv.ToString(
-                            CultureInfo.InvariantCulture);
+                if (soloExtra)
+                {
+                    EstadoDirecto =
+                        "Este CAP contiene sólo EVALUACIÓN EXTRA. No puede cambiar parciales aquí.";
                 }
             }
             else
             {
-                if (!TryNormalizarCalificacion(
-                        CalificacionNuevaDirecta,
-                        out string valorNormalizadoLocal))
+                EvaluacionSeleccionadaDirecta =
+                    null;
+            }
+
+            AlumnoSeleccionadoDirecto =
+                AlumnosDirectos.FirstOrDefault();
+
+            EstadoDirecto =
+                $"Materia cargada: {MateriaSeleccionadaDirecta}";
+        }
+        finally
+        {
+            _cargandoDatos =
+                false;
+
+            RefrescarAlumnosParaEvaluacion();
+
+            RefrescarDatosAlumnoSeleccionado();
+        }
+    }
+
+    // ============================================================
+    // EVALUACIÓN HABILITADA
+    // ============================================================
+
+    private bool EvaluacionEstaHabilitada(
+        string evaluacion)
+    {
+        if (string.IsNullOrWhiteSpace(
+                evaluacion))
+        {
+            return false;
+        }
+
+        return string.Equals(
+            evaluacion.Trim(),
+            EvaluacionGlobalSeleccionada,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    // ============================================================
+    // ALUMNOS
+    // ============================================================
+
+    private void RefrescarAlumnosParaEvaluacion()
+    {
+        if (string.IsNullOrWhiteSpace(
+                EvaluacionSeleccionadaDirecta))
+        {
+            foreach (var alumno
+                     in AlumnosDirectos)
+            {
+                alumno.ActualizarSeleccion(
+                    string.Empty);
+            }
+
+            CalificacionActualDirecta =
+                string.Empty;
+
+            CalificacionNuevaDirecta =
+                string.Empty;
+
+            return;
+        }
+
+        foreach (var alumno
+                 in AlumnosDirectos)
+        {
+            alumno.ActualizarSeleccion(
+                EvaluacionSeleccionadaDirecta);
+        }
+
+        RefrescarDatosAlumnoSeleccionado();
+    }
+
+    private void RefrescarDatosAlumnoSeleccionado()
+    {
+        if (AlumnoSeleccionadoDirecto == null)
+        {
+            NombreAlumnoDirecto =
+                string.Empty;
+
+            MatriculaAlumnoDirecto =
+                string.Empty;
+
+            GrupoAlumnoDirecto =
+                string.Empty;
+
+            CalificacionActualDirecta =
+                string.Empty;
+
+            CalificacionNuevaDirecta =
+                string.Empty;
+
+            return;
+        }
+
+        NombreAlumnoDirecto =
+            AlumnoSeleccionadoDirecto.Nombre;
+
+        MatriculaAlumnoDirecto =
+            AlumnoSeleccionadoDirecto.Matricula;
+
+        GrupoAlumnoDirecto =
+            AlumnoSeleccionadoDirecto.Grupo;
+
+        CalificacionActualDirecta =
+            AlumnoSeleccionadoDirecto
+                .ValorSeleccionado;
+
+        CalificacionNuevaDirecta =
+            AlumnoSeleccionadoDirecto
+                .ValorSeleccionado;
+    }
+
+    // ============================================================
+    // GUARDAR DIRECTA
+    // ============================================================
+
+    private void GuardarDirecta_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (
+            string.IsNullOrWhiteSpace(
+                MateriaSeleccionadaDirecta) ||
+            string.IsNullOrWhiteSpace(
+                EvaluacionSeleccionadaDirecta) ||
+            AlumnoSeleccionadoDirecto == null)
+        {
+            MessageBox.Show(
+                "Asegúrate de seleccionar materia, evaluación y alumno.",
+                "Aviso",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+
+            return;
+        }
+
+        if (!_mapaArchivos.TryGetValue(
+                MateriaSeleccionadaDirecta,
+                out string? rutaCompleta) ||
+            !_evaluacionIdPorNombreDirecta.TryGetValue(
+                EvaluacionSeleccionadaDirecta,
+                out string? idEval))
+        {
+            MessageBox.Show(
+                "Error al localizar datos del CAP para guardar.",
+                "Aviso",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+
+            return;
+        }
+
+        string valorNormalizado;
+
+        if (string.Equals(
+                EvaluacionSeleccionadaDirecta,
+                "PREEXTRAORDINARIO",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            string texto =
+                (CalificacionNuevaDirecta ??
+                 string.Empty)
+                .Trim()
+                .ToUpperInvariant();
+
+            if (texto == "NP")
+            {
+                valorNormalizado =
+                    "NP";
+            }
+            else
+            {
+                if (!int.TryParse(
+                        texto,
+                        out int iv))
                 {
                     MessageBox.Show(
-                        "La calificación debe ser un número entre 0 y 10.",
+                        "Para PREEXTRAORDINARIO solo se permiten enteros de 0 a 6 o NP.",
+                        "Aviso",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+
+                    return;
+                }
+
+                if (iv < 0 ||
+                    iv > 6)
+                {
+                    MessageBox.Show(
+                        "Para PREEXTRAORDINARIO solo se permiten enteros de 0 a 6 o NP.",
                         "Aviso",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
@@ -1021,323 +1997,366 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 }
 
                 valorNormalizado =
-                    valorNormalizadoLocal;
+                    iv.ToString(
+                        CultureInfo.InvariantCulture);
+            }
+        }
+        else
+        {
+            if (!TryNormalizarCalificacion(
+                    CalificacionNuevaDirecta,
+                    out string valorNormalizadoLocal))
+            {
+                MessageBox.Show(
+                    "La calificación debe ser un número entre 0 y 10.",
+                    "Aviso",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+
+                return;
             }
 
-            // ========================================================
-            // ACTUALIZAR ALUMNO
-            // ========================================================
-
-            AlumnoSeleccionadoDirecto.ValorSeleccionado =
-                valorNormalizado;
-
-            AlumnoSeleccionadoDirecto.Calificación[
-                EvaluacionSeleccionadaDirecta] =
-                valorNormalizado;
-
-            // ========================================================
-            // SINCRONIZAR MAIN VM
-            // ========================================================
-
-            SincronizarConMainVm(
-                EvaluacionSeleccionadaDirecta,
-                AlumnoSeleccionadoDirecto.Matricula,
-                valorNormalizado);
-
-            // ========================================================
-            // GUARDAR EN CAP
-            // ========================================================
-
-            _writerService.GuardarEvaluacion(
-                rutaCompleta,
-                AlumnosDirectos.ToList(),
-                EvaluacionSeleccionadaDirecta,
-                idEval);
-
-            CalificacionActualDirecta =
-                valorNormalizado;
-
-            CalificacionNuevaDirecta =
-                valorNormalizado;
-
-            EstadoDirecto =
-                "Calificación guardada en el CAP.";
+            valorNormalizado =
+                valorNormalizadoLocal;
         }
 
-        // ============================================================
-        // SINCRONIZAR CON MAIN VM
-        // ============================================================
+        AlumnoSeleccionadoDirecto
+            .ValorSeleccionado =
+            valorNormalizado;
 
-        private void SincronizarConMainVm(
-            string evaluacion,
-            string matricula,
-            string valor)
+        AlumnoSeleccionadoDirecto
+            .Calificación[
+                EvaluacionSeleccionadaDirecta] =
+            valorNormalizado;
+
+        SincronizarConMainVm(
+            EvaluacionSeleccionadaDirecta,
+            AlumnoSeleccionadoDirecto.Matricula,
+            valorNormalizado);
+
+        _writerService.GuardarEvaluacion(
+            rutaCompleta,
+            AlumnosDirectos.ToList(),
+            EvaluacionSeleccionadaDirecta,
+            idEval);
+
+        CalificacionActualDirecta =
+            valorNormalizado;
+
+        CalificacionNuevaDirecta =
+            valorNormalizado;
+
+        EstadoDirecto =
+            "Calificación guardada en el CAP.";
+    }
+
+    // ============================================================
+    // SINCRONIZAR MAIN VM
+    // ============================================================
+
+    private void SincronizarConMainVm(
+        string evaluacion,
+        string matricula,
+        string valor)
+    {
+        if (!_mapaArchivos.TryGetValue(
+                MateriaSeleccionadaDirecta
+                    ?? string.Empty,
+                out var ruta))
         {
-            if (!_mapaArchivos.TryGetValue(
-                    MateriaSeleccionadaDirecta ?? string.Empty,
-                    out var ruta))
-            {
-                return;
-            }
+            return;
+        }
 
-            if (!string.Equals(
-                    _mainVm.ArchivoCompletoActual,
-                    ruta,
-                    StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
+        if (!string.Equals(
+                _mainVm.ArchivoCompletoActual,
+                ruta,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
 
-            var alumnoMain =
-                _mainVm.Alumnos.FirstOrDefault(
-                    a => string.Equals(
+        var alumnoMain =
+            _mainVm.Alumnos.FirstOrDefault(
+                a =>
+                    string.Equals(
                         a.Matricula,
                         matricula,
                         StringComparison.OrdinalIgnoreCase));
 
-            if (alumnoMain == null)
-                return;
+        if (alumnoMain == null)
+            return;
 
-            alumnoMain.Calificación[evaluacion] =
-                valor;
+        alumnoMain.Calificación[
+            evaluacion] =
+            valor;
 
-            if (string.Equals(
-                    _mainVm.EvaluacionSeleccionada,
-                    evaluacion,
-                    StringComparison.OrdinalIgnoreCase))
-            {
-                alumnoMain.ActualizarSeleccion(
-                    evaluacion);
-            }
+        if (string.Equals(
+                _mainVm.EvaluacionSeleccionada,
+                evaluacion,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            alumnoMain.ActualizarSeleccion(
+                evaluacion);
+        }
+    }
+
+    // ============================================================
+    // NORMALIZAR CALIFICACIÓN
+    // ============================================================
+
+    private static bool TryNormalizarCalificacion(
+        string texto,
+        out string valorNormalizado)
+    {
+        valorNormalizado =
+            string.Empty;
+
+        if (string.IsNullOrWhiteSpace(
+                texto))
+        {
+            return false;
         }
 
-        // ============================================================
-        // NORMALIZAR CALIFICACIÓN
-        // ============================================================
+        string limpio =
+            texto.Trim()
+                .Replace(
+                    ',',
+                    '.');
 
-        private static bool TryNormalizarCalificacion(
-            string texto,
-            out string valorNormalizado)
+        if (!double.TryParse(
+                limpio,
+                NumberStyles.Any,
+                CultureInfo.InvariantCulture,
+                out double valor) ||
+            valor < 0 ||
+            valor > 10)
         {
-            valorNormalizado = string.Empty;
-
-            if (string.IsNullOrWhiteSpace(texto))
-                return false;
-
-            string limpio =
-                texto.Trim()
-                    .Replace(',', '.');
-
-            if (!double.TryParse(
-                    limpio,
-                    NumberStyles.Any,
-                    CultureInfo.InvariantCulture,
-                    out double valor) ||
-                valor < 0 ||
-                valor > 10)
-            {
-                return false;
-            }
-
-            valorNormalizado =
-                valor.ToString(
-                    "0.##",
-                    CultureInfo.InvariantCulture);
-
-            return true;
+            return false;
         }
 
-        // ============================================================
-        // EXPORTAR PDF
-        // ============================================================
+        valorNormalizado =
+            valor.ToString(
+                "0.##",
+                CultureInfo.InvariantCulture);
 
-        private void ExportarPdf_Click(
-            object sender,
-            RoutedEventArgs e)
+        return true;
+    }
+
+    // ============================================================
+    // SELECCIONAR TODO
+    // ============================================================
+
+    private void SeleccionarTodoCaps_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        foreach (var cap
+                 in CapFiles)
         {
-            try
-            {
-                // ----------------------------------------------------
-                // OBTENER CAP DE LA MATERIA SELECCIONADA
-                // ----------------------------------------------------
-
-                if (string.IsNullOrWhiteSpace(
-                        MateriaSeleccionadaDirecta))
-                {
-                    MessageBox.Show(
-                        "Selecciona una materia antes de exportar el PDF.",
-                        "Aviso",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-
-                    return;
-                }
-
-                if (!_mapaArchivos.TryGetValue(
-                        MateriaSeleccionadaDirecta,
-                        out string? rutaCap) ||
-                    string.IsNullOrWhiteSpace(
-                        rutaCap))
-                {
-                    MessageBox.Show(
-                        "No se encontró el archivo CAP de la materia seleccionada.",
-                        "Aviso",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-
-                    return;
-                }
-
-                if (!File.Exists(rutaCap))
-                {
-                    MessageBox.Show(
-                        "El archivo CAP seleccionado ya no existe.",
-                        "Aviso",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-
-                    return;
-                }
-
-                // ----------------------------------------------------
-                // CREAR SERVICIO CON CAP REAL
-                // ----------------------------------------------------
-
-                _reportePdfService =
-                    new ReporteCalificacionesPdfService(
-                        rutaCap);
-
-                // ----------------------------------------------------
-                // GENERAR PDF
-                // ----------------------------------------------------
-
-                byte[] pdfBytes =
-                    _reportePdfService.GenerarDiseno();
-
-                // ----------------------------------------------------
-                // GUARDAR ARCHIVO
-                // ----------------------------------------------------
-
-                var dialog =
-                    new SaveFileDialog
-                    {
-                        Title =
-                            "Guardar reporte PDF",
-
-                        Filter =
-                            "Archivo PDF (*.pdf)|*.pdf",
-
-                        FileName =
-                            $"{Path.GetFileNameWithoutExtension(rutaCap)}_Reporte.pdf",
-
-                        DefaultExt =
-                            ".pdf",
-
-                        AddExtension =
-                            true
-                    };
-
-                if (dialog.ShowDialog() != true)
-                    return;
-
-                File.WriteAllBytes(
-                    dialog.FileName,
-                    pdfBytes);
-
-                MessageBox.Show(
-                    "El PDF se exportó correctamente.",
-                    "Exportación completada",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    $"No se pudo exportar el PDF:\n\n{ex.Message}",
-                    "Error de exportación",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
+            cap.IsSelected =
+                true;
         }
 
-        // ============================================================
-        // CERRAR
-        // ============================================================
+        ActualizarProfesorDesdeCapsSeleccionados();
+    }
 
-        private void Cerrar_Click(
-            object sender,
-            RoutedEventArgs e)
+    // ============================================================
+    // DESELECCIONAR TODO
+    // ============================================================
+
+    private void DeseleccionarTodoCaps_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        foreach (var cap
+                 in CapFiles)
         {
-            Close();
+            cap.IsSelected =
+                false;
         }
 
-        // ============================================================
-        // PROPERTY CHANGED
-        // ============================================================
+        ActualizarProfesorDesdeCapsSeleccionados();
+    }
 
-        private void OnPropertyChanged(
-            [CallerMemberName]
-            string? nombrePropiedad = null)
-        {
-            PropertyChanged?.Invoke(
-                this,
-                new PropertyChangedEventArgs(
-                    nombrePropiedad));
-        }
+    // ============================================================
+    // CERRAR
+    // ============================================================
 
-        // ============================================================
-        // PREVIEW TEXT INPUT
-        // ============================================================
+    private void Cerrar_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        Close();
+    }
 
-        private void Calificacion_PreviewTextInput(
-            object sender,
-            TextCompositionEventArgs e)
-        {
-            TextBox tb =
-                (TextBox)sender;
+    // ============================================================
+    // BROWSE FOR FOLDER
+    // ============================================================
 
-            string textoResultante =
-                tb.Text.Insert(
-                    tb.CaretIndex,
-                    e.Text);
+    [System.Runtime.InteropServices.StructLayout(
+        System.Runtime.InteropServices.LayoutKind.Sequential,
+        CharSet =
+            System.Runtime.InteropServices.CharSet.Auto)]
+    private struct BROWSEINFO
+    {
+        public IntPtr hwndOwner;
+        public IntPtr pidlRoot;
+        public IntPtr pszDisplayName;
 
-            int indicePunto =
-                textoResultante.IndexOf('.');
+        [System.Runtime.InteropServices.MarshalAs(
+            System.Runtime.InteropServices.UnmanagedType.LPTStr)]
+        public string lpszTitle;
 
-            if (indicePunto != -1 &&
-                indicePunto != 1)
+        public uint ulFlags;
+        public IntPtr lpfn;
+        public IntPtr lParam;
+        public int iImage;
+    }
+
+    [System.Runtime.InteropServices.DllImport(
+        "shell32.dll",
+        CharSet =
+            System.Runtime.InteropServices.CharSet.Auto)]
+    private static extern IntPtr
+        SHBrowseForFolder(
+            ref BROWSEINFO lpbi);
+
+    [System.Runtime.InteropServices.DllImport(
+        "shell32.dll",
+        CharSet =
+            System.Runtime.InteropServices.CharSet.Auto)]
+    private static extern bool
+        SHGetPathFromIDList(
+            IntPtr pidl,
+            StringBuilder pszPath);
+
+    [System.Runtime.InteropServices.DllImport(
+        "ole32.dll")]
+    private static extern void
+        CoTaskMemFree(
+            IntPtr pv);
+
+    private static string? BrowseForFolder(
+        string title)
+    {
+        var bi =
+            new BROWSEINFO
             {
-                e.Handled = true;
-                return;
-            }
+                hwndOwner =
+                    IntPtr.Zero,
 
+                pidlRoot =
+                    IntPtr.Zero,
+
+                lpszTitle =
+                    title,
+
+                ulFlags =
+                    0x0001 |
+                    0x0002
+            };
+
+        IntPtr pidl =
+            SHBrowseForFolder(
+                ref bi);
+
+        if (pidl == IntPtr.Zero)
+            return null;
+
+        try
+        {
+            var sb =
+                new StringBuilder(
+                    260);
+
+            if (SHGetPathFromIDList(
+                    pidl,
+                    sb))
+            {
+                return sb.ToString();
+            }
+        }
+        finally
+        {
+            CoTaskMemFree(
+                pidl);
+        }
+
+        return null;
+    }
+
+    // ============================================================
+    // PREVIEW CALIFICACIÓN
+    // ============================================================
+
+    private void Calificacion_PreviewTextInput(
+        object sender,
+        TextCompositionEventArgs e)
+    {
+        TextBox tb =
+            (TextBox)sender;
+
+        string textoResultante =
+            tb.Text.Insert(
+                tb.CaretIndex,
+                e.Text);
+
+        int indicePunto =
+            textoResultante.IndexOf(
+                '.');
+
+        if (indicePunto != -1 &&
+            indicePunto != 1)
+        {
             e.Handled =
-                !Regex.IsMatch(
-                    textoResultante,
-                    @"^([0-9](\.[0-9]?)?|10?)$");
+                true;
+
+            return;
         }
 
-        // ============================================================
-        // OBTENER CLAVE DE MATERIA
-        // ============================================================
+        e.Handled =
+            !Regex.IsMatch(
+                textoResultante,
+                @"^([0-9](\.[0-9]?)?|10?)$");
+    }
 
-        private string ObtenerClaveMateriaDesdeRuta(
-            string rutaCompleta)
+    // ============================================================
+    // CLAVE MATERIA
+    // ============================================================
+
+    private string ObtenerClaveMateriaDesdeRuta(
+        string rutaCompleta)
+    {
+        if (string.IsNullOrWhiteSpace(
+                rutaCompleta))
         {
-            if (string.IsNullOrWhiteSpace(
-                    rutaCompleta))
-            {
-                return string.Empty;
-            }
-
-            string nombre =
-                Path.GetFileNameWithoutExtension(
-                    rutaCompleta);
-
-            return string.IsNullOrWhiteSpace(nombre)
-                ? string.Empty
-                : nombre.Trim()
-                    .Replace(' ', '_');
+            return string.Empty;
         }
+
+        string nombre =
+            Path.GetFileNameWithoutExtension(
+                rutaCompleta);
+
+        return string.IsNullOrWhiteSpace(
+                nombre)
+            ? string.Empty
+            : nombre.Trim()
+                .Replace(
+                    ' ',
+                    '_');
+    }
+
+    // ============================================================
+    // PROPERTY CHANGED
+    // ============================================================
+
+    private void OnPropertyChanged(
+        [CallerMemberName]
+        string? nombrePropiedad = null)
+    {
+        PropertyChanged?.Invoke(
+            this,
+            new PropertyChangedEventArgs(
+                nombrePropiedad));
     }
 }
