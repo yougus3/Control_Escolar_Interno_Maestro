@@ -16,10 +16,11 @@
 
     <Window.Resources>
 
-        <converters:InverseBooleanConverter x:Key="InverseBoolConverter" />
+        <converters:InverseBooleanConverter
+                x:Key="InverseBoolConverter" />
 
         <!-- ========================================================= -->
-        <!-- SVG / GEOMETRÍAS                                          -->
+        <!-- GEOMETRÍAS                                                 -->
         <!-- ========================================================= -->
 
         <Geometry x:Key="SettingsGeometry">
@@ -49,7 +50,7 @@
             l1.92,3.32
             c0.12,0.22 0.37,0.29 0.59,0.22
             l2.39,-0.96
-            c0.5,0.38 1.03,0.7 1.62,0.94
+            c0.5,-0.38 1.03,-0.7 1.62,-0.94
             l0.36,2.54
             c0.04,0.24 0.24,0.41 0.48,0.41
             h3.84
@@ -66,6 +67,18 @@
             s1.62,-3.6 3.6,-3.6
             s3.6,1.62 3.6,3.6
             s-1.62,3.6 -3.6,3.6z
+        </Geometry>
+
+        <!-- SVG % -->
+        <Geometry x:Key="PercentageGeometry">
+            M7,5
+            A2,2 0 1,1 3,5
+            A2,2 0 1,1 7,5
+            M21,19
+            A2,2 0 1,1 17,19
+            A2,2 0 1,1 21,19
+            M5,21
+            L19,3
         </Geometry>
 
         <Geometry x:Key="MinimizeGeometry">
@@ -309,6 +322,95 @@
         </Style>
 
         <!-- ========================================================= -->
+        <!-- BOTÓN PORCENTAJES                                         -->
+        <!-- ========================================================= -->
+
+        <Style x:Key="PercentageButtonStyle"
+               TargetType="Button">
+
+            <Setter Property="Background"
+                    Value="White" />
+
+            <Setter Property="BorderBrush"
+                    Value="#CBD5E1" />
+
+            <Setter Property="BorderThickness"
+                    Value="1" />
+
+            <Setter Property="Width"
+                    Value="30" />
+
+            <Setter Property="Height"
+                    Value="30" />
+
+            <Setter Property="Padding"
+                    Value="0" />
+
+            <Setter Property="Cursor"
+                    Value="Hand" />
+
+            <Setter Property="Focusable"
+                    Value="False" />
+
+            <Setter Property="Template">
+
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="Button">
+
+                        <Border
+                                x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+
+                            <ContentPresenter
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center" />
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger
+                                    Property="IsMouseOver"
+                                    Value="True">
+
+                                <Setter
+                                        TargetName="Root"
+                                        Property="Background"
+                                        Value="{StaticResource AppRedSoft}" />
+
+                                <Setter
+                                        TargetName="Root"
+                                        Property="BorderBrush"
+                                        Value="#FCA5A5" />
+
+                            </Trigger>
+
+                            <Trigger
+                                    Property="IsPressed"
+                                    Value="True">
+
+                                <Setter
+                                        TargetName="Root"
+                                        Property="Opacity"
+                                        Value="0.8" />
+
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+
+            </Setter>
+
+        </Style>
+
+        <!-- ========================================================= -->
         <!-- TEXTBOX REDONDEADO                                        -->
         <!-- ========================================================= -->
 
@@ -480,6 +582,7 @@
                                     <Grid.ColumnDefinitions>
 
                                         <ColumnDefinition Width="*" />
+
                                         <ColumnDefinition Width="30" />
 
                                     </Grid.ColumnDefinitions>
@@ -604,6 +707,7 @@
         <Grid.RowDefinitions>
 
             <RowDefinition Height="56" />
+
             <RowDefinition Height="*" />
 
         </Grid.RowDefinitions>
@@ -625,15 +729,23 @@
                 <Grid.ColumnDefinitions>
 
                     <ColumnDefinition Width="Auto" />
+
                     <ColumnDefinition Width="500" />
+
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="150" />
+
+                    <!-- CONTENEDOR DE EVAL + % -->
+                    <ColumnDefinition Width="215" />
+
                     <ColumnDefinition Width="Auto" />
+
                     <ColumnDefinition Width="Auto" />
 
                 </Grid.ColumnDefinitions>
 
-                <!-- ARCHIVO -->
+                <!-- ================================================= -->
+                <!-- ARCHIVO                                            -->
+                <!-- ================================================= -->
 
                 <TextBlock
                         Grid.Column="0"
@@ -653,7 +765,9 @@
                         MaxWidth="600"
                         VerticalContentAlignment="Center" />
 
-                <!-- EVALUACIÓN -->
+                <!-- ================================================= -->
+                <!-- EVALUACIÓN                                         -->
+                <!-- ================================================= -->
 
                 <TextBlock
                         Grid.Column="2"
@@ -663,18 +777,60 @@
                         Foreground="White"
                         Margin="15,0,6,0" />
 
-                <ComboBox
-                        Grid.Column="3"
-                        Style="{StaticResource RoundedComboStyle}"
-                        ItemsSource="{Binding EvaluacionesDisponibles}"
-                        SelectedValue="{Binding EvaluacionSeleccionada}"
-                        SelectedValuePath="Id"
-                        DisplayMemberPath="Nombre"
-                        Height="30"
-                        Width="150"
-                        VerticalContentAlignment="Center" />
+                <!-- ================================================= -->
+                <!-- TEXTBOX + BOTÓN %                                 -->
+                <!-- ================================================= -->
 
-                <!-- BOTÓN GUARDAR CAMBIOS -->
+                <Grid
+                        Grid.Column="3"
+                        VerticalAlignment="Center">
+
+                    <Grid.ColumnDefinitions>
+
+                        <ColumnDefinition Width="*" />
+
+                        <ColumnDefinition Width="30" />
+
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox
+                            Grid.Column="0"
+                            Style="{StaticResource RoundedTextBoxStyle}"
+                            Text="{Binding EvaluacionSeleccionada}"
+                            Height="30"
+                            Margin="0,0,6,0"
+                            IsReadOnly="True"
+                            VerticalContentAlignment="Center" />
+
+                    <Button
+                            Grid.Column="1"
+                            Style="{StaticResource PercentageButtonStyle}"
+                            ToolTip="Ver resumen de porcentajes"
+                            Click="Porcentajes_Click">
+
+                        <Viewbox
+                                Width="17"
+                                Height="17">
+
+                            <Path
+                                    Data="{StaticResource PercentageGeometry}"
+                                    Stroke="{StaticResource AppRed}"
+                                    StrokeThickness="2.2"
+                                    StrokeStartLineCap="Round"
+                                    StrokeEndLineCap="Round"
+                                    StrokeLineJoin="Round"
+                                    Fill="Transparent"
+                                    Stretch="Uniform" />
+
+                        </Viewbox>
+
+                    </Button>
+
+                </Grid>
+
+                <!-- ================================================= -->
+                <!-- BOTÓN GUARDAR                                      -->
+                <!-- ================================================= -->
 
                 <Button
                         Grid.Column="4"

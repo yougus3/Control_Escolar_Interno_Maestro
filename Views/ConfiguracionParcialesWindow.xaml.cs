@@ -729,6 +729,9 @@ public partial class ConfiguracionParcialesWindow :
 
         ActualizarProfesorDesdeCapsSeleccionados();
 
+        //MostrarDiagnosticoProfesor();
+
+
         VerificarSiCapEsExtra();
 
         CargarEvaluacionesGlobales();
@@ -2494,5 +2497,76 @@ public partial class ConfiguracionParcialesWindow :
             this,
             new PropertyChangedEventArgs(
                 nombrePropiedad));
+    }
+    private void MostrarDiagnosticoProfesor()
+    {
+        try
+        {
+            var primero =
+                CapFiles
+                    .FirstOrDefault(c => c.IsSelected);
+
+            string nombreCap =
+                primero?.NombreProfesor?.Trim()
+                ?? string.Empty;
+
+            string claveCap =
+                ClaveProfesorCap?.Trim()
+                ?? string.Empty;
+
+            string claveBin =
+                ProfesorSeleccionado?
+                    .CLAVEPROFESOR?
+                    .Trim()
+                ?? string.Empty;
+
+            string emailBin =
+                ProfesorSeleccionado?
+                    .EMAIL?
+                    .Trim()
+                ?? string.Empty;
+
+            string nombreBin =
+                ProfesorSeleccionado?
+                    .NOMBREPROFESOR?
+                    .Trim()
+                ?? string.Empty;
+
+            string valorTextbox =
+                CorreoProfesorSeleccionado?.Trim()
+                ?? string.Empty;
+
+            string mensaje =
+                "RASTREO DEL PROFESOR\n\n" +
+
+                "CAP\n" +
+                "────────────────────────────\n" +
+                $"CLAVEPROFESOR: {claveCap}\n" +
+                $"NOMBREPROFESOR: {nombreCap}\n\n" +
+
+                "CONFIGURACIÓN.BIN\n" +
+                "────────────────────────────\n" +
+                $"CLAVEPROFESOR: {claveBin}\n" +
+                $"EMAIL: {emailBin}\n" +
+                $"NOMBREPROFESOR: {nombreBin}\n\n" +
+
+                "VALOR DEL BINDING\n" +
+                "────────────────────────────\n" +
+                $"CorreoProfesorSeleccionado:\n{valorTextbox}";
+
+            MessageBox.Show(
+                mensaje,
+                "Diagnóstico del profesor",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"No se pudo realizar el diagnóstico.\n\n{ex.Message}",
+                "Diagnóstico del profesor",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
     }
 }

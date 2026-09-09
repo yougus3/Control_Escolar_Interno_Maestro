@@ -11,14 +11,19 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 public sealed class PreOperacionResultado
 {
     public bool Exito { get; init; }
-    public string Mensaje { get; init; } = string.Empty;
+
+    public string Mensaje { get; init; } =
+        string.Empty;
 }
 
 public sealed class PreEstado
 {
     public bool TienePRE { get; init; }
+
     public int? Calificacion { get; init; }
-    public string Estado { get; init; } = string.Empty;
+
+    public string Estado { get; init; } =
+        string.Empty;
 
     public bool Aprobado =>
         string.Equals(
@@ -35,33 +40,58 @@ public sealed class PreEstado
 
 public sealed class PreAlumnoData
 {
-    public string Matricula { get; set; } = string.Empty;
-    public string Nombre { get; set; } = string.Empty;
-    public string Grupo { get; set; } = string.Empty;
+    public string Matricula { get; set; } =
+        string.Empty;
 
-    public string P1 { get; set; } = string.Empty;
-    public string P2 { get; set; } = string.Empty;
-    public string P3 { get; set; } = string.Empty;
-    public string Promedio { get; set; } = string.Empty;
+    public string Nombre { get; set; } =
+        string.Empty;
 
-    public string Pre { get; set; } = string.Empty;
-    public string Estado { get; set; } = string.Empty;
+    public string Grupo { get; set; } =
+        string.Empty;
+
+    public string P1 { get; set; } =
+        string.Empty;
+
+    public string P2 { get; set; } =
+        string.Empty;
+
+    public string P3 { get; set; } =
+        string.Empty;
+
+    public string Promedio { get; set; } =
+        string.Empty;
+
+    public string Pre { get; set; } =
+        string.Empty;
+
+    public string Estado { get; set; } =
+        string.Empty;
 }
 
 public class PreExtraordinarioService
 {
-    private const string PreHizo = "__PRE_HIZO__";
-    private const string PreCalificacion = "__PRE_CALIFICACION__";
-    private const string PreEstado = "__PRE_ESTADO__";
+    private const string PreHizo =
+        "__PRE_HIZO__";
 
-    private const string PreSemOriginal = "__PRE_SEM_ORIGINAL__";
-    private const string PreSemOriginalValido = "__PRE_SEM_ORIGINAL_VALIDO__";
+    private const string PreCalificacion =
+        "__PRE_CALIFICACION__";
 
-    private readonly ParcialJsonService _parcialJsonService;
+    private const string PreEstado =
+        "__PRE_ESTADO__";
+
+    private const string PreSemOriginal =
+        "__PRE_SEM_ORIGINAL__";
+
+    private const string PreSemOriginalValido =
+        "__PRE_SEM_ORIGINAL_VALIDO__";
+
+    private readonly ParcialJsonService
+        _parcialJsonService;
 
     public PreExtraordinarioService()
     {
-        _parcialJsonService = new ParcialJsonService();
+        _parcialJsonService =
+            new ParcialJsonService();
     }
 
     // =========================================================================
@@ -72,92 +102,91 @@ public class PreExtraordinarioService
         string claveMateriaBase,
         IEnumerable<Alumno> alumnos)
     {
-        var lista = new List<PreAlumnoData>();
+        var lista =
+            new List<PreAlumnoData>();
 
-        if (string.IsNullOrWhiteSpace(claveMateriaBase))
+        if (string.IsNullOrWhiteSpace(
+                claveMateriaBase))
+        {
             return lista;
+        }
 
-        foreach (var alumno in alumnos ?? Enumerable.Empty<Alumno>())
+        foreach (var alumno in
+                 alumnos ??
+                 Enumerable.Empty<Alumno>())
         {
             if (alumno == null)
                 continue;
 
             string matricula =
-                alumno.Matricula?.Trim() ?? string.Empty;
+                alumno.Matricula?.Trim()
+                ?? string.Empty;
 
-            if (string.IsNullOrWhiteSpace(matricula))
+            if (string.IsNullOrWhiteSpace(
+                    matricula))
+            {
                 continue;
+            }
+
+            // =========================================================
+            // IMPORTANTE:
+            //
+            // AQUÍ YA NO FILTRAMOS POR SEM.
+            //
+            // La autorización para presentar PRE se decide
+            // exclusivamente en PreextraordinarioView mediante:
+            //
+            // configuracion.bin -> PRE
+            //
+            // Esto permite que un alumno autorizado siga apareciendo
+            // aunque actualmente su SEM no esté reprobada.
+            // =========================================================
 
             var estado =
                 ObtenerEstadoPre(
                     claveMateriaBase,
                     matricula);
 
-            bool p1Valido =
-                TryObtenerDouble(
-                    alumno.Calificación["P1"],
-                    out _);
-
-            bool p2Valido =
-                TryObtenerDouble(
-                    alumno.Calificación["P2"],
-                    out _);
-
-            bool p3Valido =
-                TryObtenerDouble(
-                    alumno.Calificación["P3"],
-                    out _);
-
-            bool semValido =
-                TryObtenerDouble(
-                    alumno.Calificación["SEM"],
-                    out double sem);
-
-            bool tieneCalificacionesBase =
-                p1Valido &&
-                p2Valido &&
-                p3Valido &&
-                semValido;
-
-            bool elegiblePorSem =
-                tieneCalificacionesBase &&
-                sem >= 0.0 &&
-                sem <= 5.99;
-
-            /*
-             * Si ya tiene PRE registrado, debe seguir apareciendo
-             * aunque después de PA su SEM sea 6.
-             */
-            if (!elegiblePorSem && !estado.TienePRE)
-                continue;
-
             lista.Add(
                 new PreAlumnoData
                 {
-                    Matricula = matricula,
-                    Nombre = alumno.Nombre ?? string.Empty,
-                    Grupo = alumno.Grupo ?? string.Empty,
+                    Matricula =
+                        matricula,
 
-                    P1 = NormalizarVisual(
-                        alumno.Calificación["P1"]),
+                    Nombre =
+                        alumno.Nombre
+                        ?? string.Empty,
 
-                    P2 = NormalizarVisual(
-                        alumno.Calificación["P2"]),
+                    Grupo =
+                        alumno.Grupo
+                        ?? string.Empty,
 
-                    P3 = NormalizarVisual(
-                        alumno.Calificación["P3"]),
+                    P1 =
+                        NormalizarVisual(
+                            alumno.Calificación["P1"]),
 
-                    Promedio = CalcularPromedio(
-                        alumno.Calificación["P1"],
-                        alumno.Calificación["P2"],
-                        alumno.Calificación["P3"]),
+                    P2 =
+                        NormalizarVisual(
+                            alumno.Calificación["P2"]),
 
-                    Pre = estado.Calificacion.HasValue
-                        ? estado.Calificacion.Value.ToString(
-                            CultureInfo.InvariantCulture)
-                        : string.Empty,
+                    P3 =
+                        NormalizarVisual(
+                            alumno.Calificación["P3"]),
 
-                    Estado = estado.Estado
+                    Promedio =
+                        CalcularPromedio(
+                            alumno.Calificación["P1"],
+                            alumno.Calificación["P2"],
+                            alumno.Calificación["P3"]),
+
+                    Pre =
+                        estado.Calificacion.HasValue
+                            ? estado.Calificacion.Value.ToString(
+                                CultureInfo.InvariantCulture)
+                            : string.Empty,
+
+                    Estado =
+                        estado.Estado
                 });
         }
 
@@ -172,8 +201,10 @@ public class PreExtraordinarioService
         string claveMateriaBase,
         string matricula)
     {
-        if (string.IsNullOrWhiteSpace(claveMateriaBase) ||
-            string.IsNullOrWhiteSpace(matricula))
+        if (string.IsNullOrWhiteSpace(
+                claveMateriaBase) ||
+            string.IsNullOrWhiteSpace(
+                matricula))
         {
             return new PreEstado();
         }
@@ -216,7 +247,8 @@ public class PreExtraordinarioService
                         MidpointRounding.AwayFromZero);
             }
 
-            string estado = string.Empty;
+            string estado =
+                string.Empty;
 
             if (registro.TryGetValue(
                     PreEstado,
@@ -230,9 +262,14 @@ public class PreExtraordinarioService
 
             return new PreEstado
             {
-                TienePRE = true,
-                Calificacion = calificacion,
-                Estado = estado
+                TienePRE =
+                    true,
+
+                Calificacion =
+                    calificacion,
+
+                Estado =
+                    estado
             };
         }
         catch
@@ -251,25 +288,30 @@ public class PreExtraordinarioService
         int resultado,
         IEnumerable<Alumno> alumnos)
     {
-        if (string.IsNullOrWhiteSpace(claveMateriaBase))
+        if (string.IsNullOrWhiteSpace(
+                claveMateriaBase))
         {
             return new PreOperacionResultado
             {
                 Exito = false,
-                Mensaje = "No se pudo determinar la materia."
+                Mensaje =
+                    "No se pudo determinar la materia."
             };
         }
 
-        if (string.IsNullOrWhiteSpace(matricula))
+        if (string.IsNullOrWhiteSpace(
+                matricula))
         {
             return new PreOperacionResultado
             {
                 Exito = false,
-                Mensaje = "No se pudo determinar la matrícula."
+                Mensaje =
+                    "No se pudo determinar la matrícula."
             };
         }
 
-        if (resultado < 0 || resultado > 6)
+        if (resultado < 0 ||
+            resultado > 6)
         {
             return new PreOperacionResultado
             {
@@ -281,18 +323,20 @@ public class PreExtraordinarioService
 
         var alumno =
             alumnos?.FirstOrDefault(
-                a => a != null &&
-                     string.Equals(
-                         a.Matricula,
-                         matricula,
-                         StringComparison.OrdinalIgnoreCase));
+                a =>
+                    a != null &&
+                    string.Equals(
+                        a.Matricula,
+                        matricula,
+                        StringComparison.OrdinalIgnoreCase));
 
         if (alumno == null)
         {
             return new PreOperacionResultado
             {
                 Exito = false,
-                Mensaje = "No se encontró el alumno."
+                Mensaje =
+                    "No se encontró el alumno."
             };
         }
 
@@ -333,15 +377,6 @@ public class PreExtraordinarioService
 
             // -------------------------------------------------------------
             // PRE REPROBADO: 0 A 5
-            //
-            // NO toca P2
-            // NO toca P3
-            // NO toca SEM
-            //
-            // Sólo registra:
-            // PRE = true
-            // PRE_CALIFICACION = valor
-            // PRE_ESTADO = PR
             // -------------------------------------------------------------
 
             if (resultado < 6)
@@ -397,7 +432,8 @@ public class PreExtraordinarioService
                 _parcialJsonService.ObtenerMateria(
                     $"{claveMateriaBase}_P3");
 
-            if (m2 == null || m3 == null)
+            if (m2 == null ||
+                m3 == null)
             {
                 return new PreOperacionResultado
                 {
@@ -433,7 +469,8 @@ public class PreExtraordinarioService
                 new Dictionary<string, PreOriginalData>(
                     StringComparer.OrdinalIgnoreCase);
 
-            if (!m2.PreOriginals.ContainsKey(claveAlumno))
+            if (!m2.PreOriginals.ContainsKey(
+                    claveAlumno))
             {
                 m2.PreOriginals[claveAlumno] =
                     new PreOriginalData
@@ -445,7 +482,8 @@ public class PreExtraordinarioService
                     };
             }
 
-            if (!m3.PreOriginals.ContainsKey(claveAlumno))
+            if (!m3.PreOriginals.ContainsKey(
+                    claveAlumno))
             {
                 m3.PreOriginals[claveAlumno] =
                     new PreOriginalData
@@ -467,66 +505,107 @@ public class PreExtraordinarioService
                 alumno.Calificación["SEM"]);
 
             // -------------------------------------------------------------
-            // PRE APROBADO: simplificar comportamiento
+            // FIJAR P1, P2 Y P3 EN 6.0
             // -------------------------------------------------------------
-            // En lugar de ajustar actividades para alcanzar una calificación
-            // objetivo, se fijan las tres calificaciones parciales a 6.0 y el
-            // semestral a 6. Las demás reglas (respaldo y registro de PRE)
-            // se mantienen.
 
-            // Ajustar las capturas internas de P2 y P3 para reflejar 6.0
-            // Guardamos 60% del puntaje máximo en cada actividad activa
-            // de forma que el cálculo desde actividades dé 6.0.
-            foreach (var materia in new[] { m1, m2, m3 })
+            foreach (var materia in
+                     new[] { m1, m2, m3 })
             {
+                if (materia == null)
+                    continue;
+
                 materia.Calificaciones ??=
-                    new Dictionary<string, Dictionary<string, double>>(StringComparer.OrdinalIgnoreCase);
+                    new Dictionary<string, Dictionary<string, double>>(
+                        StringComparer.OrdinalIgnoreCase);
 
-                if (!materia.Calificaciones.TryGetValue(claveAlumno, out var captura) || captura == null)
+                if (!materia.Calificaciones.TryGetValue(
+                        claveAlumno,
+                        out var captura) ||
+                    captura == null)
                 {
-                    captura = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
-                    materia.Calificaciones[claveAlumno] = captura;
+                    captura =
+                        new Dictionary<string, double>(
+                            StringComparer.OrdinalIgnoreCase);
+
+                    materia.Calificaciones[
+                        claveAlumno] =
+                        captura;
                 }
 
-                var actividadesActivas = materia.Actividades?
-                    .Where(a => a != null && a.Activa && a.PuntajeMaximo > 0)
-                    .Take(4)
-                    .ToList() ?? new List<ActividadParcial>();
+                var actividadesActivas =
+                    materia.Actividades?
+                        .Where(
+                            a =>
+                                a != null &&
+                                a.Activa &&
+                                a.PuntajeMaximo > 0)
+                        .Take(4)
+                        .ToList()
+                    ?? new List<ActividadParcial>();
 
-                foreach (var actividad in actividadesActivas)
+                foreach (var actividad
+                         in actividadesActivas)
                 {
-                    string nombre = actividad.Nombre?.Trim() ?? string.Empty;
-                    double valor = actividad.PuntajeMaximo * 0.6; // 60% del máximo -> contribuye a 6.0
-                    captura[nombre] = valor;
+                    string nombre =
+                        actividad.Nombre?.Trim()
+                        ?? string.Empty;
+
+                    if (string.IsNullOrWhiteSpace(
+                            nombre))
+                    {
+                        continue;
+                    }
+
+                    double valor =
+                        actividad.PuntajeMaximo *
+                        0.6;
+
+                    captura[nombre] =
+                        valor;
                 }
 
-                // Marcar PRE en la captura
-                MarcarPreEnCaptura(materia, claveAlumno);
+                MarcarPreEnCaptura(
+                    materia,
+                    claveAlumno);
 
-                // Guardar materia en LiteDB
-                _parcialJsonService.GuardarMateria($"{claveMateriaBase}_{(materia == m2 ? "P2" : "P3")}", materia);
+                string sufijo =
+                    ReferenceEquals(
+                        materia,
+                        m2)
+                        ? "P2"
+                        : "P3";
+
+                _parcialJsonService.GuardarMateria(
+                    $"{claveMateriaBase}_{sufijo}",
+                    materia);
             }
 
             // -------------------------------------------------------------
-            // ACTUALIZAR MAINVIEWMODEL: fijar P1,P2,P3 a 6.0 y SEM a 6
+            // ACTUALIZAR MAINVIEWMODEL
             // -------------------------------------------------------------
 
-            if (alumno != null)
-            {
-                alumno.Calificación["P1"] = "6.0";
-                alumno.Calificación["P2"] = "6.0";
-                alumno.Calificación["P3"] = "6.0";
-                alumno.Calificación["SEM"] = "6";
-            }
+            alumno.Calificación["P1"] =
+                "6.0";
 
-            // Registrar PRE aprobado
+            alumno.Calificación["P2"] =
+                "6.0";
+
+            alumno.Calificación["P3"] =
+                "6.0";
+
+            alumno.Calificación["SEM"] =
+                "6";
+
+            // -------------------------------------------------------------
+            // REGISTRAR PRE APROBADO
+            // -------------------------------------------------------------
+
             RegistrarEstadoPre(
                 materiaPre,
                 claveAlumno,
                 6,
                 aprobado: true);
 
-            // Guardar registro PRE en LiteDB
             _parcialJsonService.GuardarMateria(
                 $"{claveMateriaBase}_PRE",
                 materiaPre);
@@ -558,21 +637,25 @@ public class PreExtraordinarioService
         string matricula,
         IEnumerable<Alumno>? alumnos = null)
     {
-        if (string.IsNullOrWhiteSpace(claveMateriaBase))
+        if (string.IsNullOrWhiteSpace(
+                claveMateriaBase))
         {
             return new PreOperacionResultado
             {
                 Exito = false,
-                Mensaje = "No se pudo determinar la materia."
+                Mensaje =
+                    "No se pudo determinar la materia."
             };
         }
 
-        if (string.IsNullOrWhiteSpace(matricula))
+        if (string.IsNullOrWhiteSpace(
+                matricula))
         {
             return new PreOperacionResultado
             {
                 Exito = false,
-                Mensaje = "No se pudo determinar la matrícula."
+                Mensaje =
+                    "No se pudo determinar la matrícula."
             };
         }
 
@@ -583,11 +666,12 @@ public class PreExtraordinarioService
 
             var alumno =
                 alumnos?.FirstOrDefault(
-                    a => a != null &&
-                         string.Equals(
-                             a.Matricula,
-                             claveAlumno,
-                             StringComparison.OrdinalIgnoreCase));
+                    a =>
+                        a != null &&
+                        string.Equals(
+                            a.Matricula,
+                            claveAlumno,
+                            StringComparison.OrdinalIgnoreCase));
 
             var resultado =
                 RestaurarOriginalesDePre(
@@ -601,10 +685,6 @@ public class PreExtraordinarioService
 
             if (alumno != null)
             {
-                // ---------------------------------------------------------
-                // LEER P2 RESTAURADO
-                // ---------------------------------------------------------
-
                 var m2 =
                     _parcialJsonService.ObtenerMateria(
                         $"{claveMateriaBase}_P2");
@@ -618,10 +698,6 @@ public class PreExtraordinarioService
                                 claveAlumno));
                 }
 
-                // ---------------------------------------------------------
-                // LEER P3 RESTAURADO
-                // ---------------------------------------------------------
-
                 var m3 =
                     _parcialJsonService.ObtenerMateria(
                         $"{claveMateriaBase}_P3");
@@ -634,11 +710,6 @@ public class PreExtraordinarioService
                                 m3,
                                 claveAlumno));
                 }
-
-                /*
-                 * RestaurarOriginalesDePre ya actualizó
-                 * alumno.Calificación["SEM"] con el valor original.
-                 */
             }
 
             return new PreOperacionResultado
@@ -674,10 +745,6 @@ public class PreExtraordinarioService
             string semOriginal =
                 string.Empty;
 
-            // -------------------------------------------------------------
-            // RECUPERAR SEM ORIGINAL
-            // -------------------------------------------------------------
-
             if (materiaPre?.Calificaciones != null &&
                 materiaPre.Calificaciones.TryGetValue(
                     matricula,
@@ -698,10 +765,6 @@ public class PreExtraordinarioService
                 }
             }
 
-            // -------------------------------------------------------------
-            // RESTAURAR P2
-            // -------------------------------------------------------------
-
             var m2 =
                 _parcialJsonService.ObtenerMateria(
                     $"{claveMateriaBase}_P2");
@@ -721,16 +784,13 @@ public class PreExtraordinarioService
                     matricula);
 
                 if (m2.PreOriginals.Count == 0)
-                    m2.PreOriginals = null;
+                    m2.PreOriginals =
+                        null;
 
                 _parcialJsonService.GuardarMateria(
                     $"{claveMateriaBase}_P2",
                     m2);
             }
-
-            // -------------------------------------------------------------
-            // RESTAURAR P3
-            // -------------------------------------------------------------
 
             var m3 =
                 _parcialJsonService.ObtenerMateria(
@@ -751,16 +811,13 @@ public class PreExtraordinarioService
                     matricula);
 
                 if (m3.PreOriginals.Count == 0)
-                    m3.PreOriginals = null;
+                    m3.PreOriginals =
+                        null;
 
                 _parcialJsonService.GuardarMateria(
                     $"{claveMateriaBase}_P3",
                     m3);
             }
-
-            // -------------------------------------------------------------
-            // RESTAURAR SEM EN MAINVIEWMODEL
-            // -------------------------------------------------------------
 
             if (alumno != null &&
                 !string.IsNullOrWhiteSpace(
@@ -769,10 +826,6 @@ public class PreExtraordinarioService
                 alumno.Calificación["SEM"] =
                     semOriginal;
             }
-
-            // -------------------------------------------------------------
-            // ELIMINAR REGISTRO PRE
-            // -------------------------------------------------------------
 
             if (eliminarRegistroPre &&
                 materiaPre?.Calificaciones != null)
@@ -826,14 +879,21 @@ public class PreExtraordinarioService
                 new Dictionary<string, double>(
                     StringComparer.OrdinalIgnoreCase);
 
-            materiaPre.Calificaciones[matricula] =
+            materiaPre.Calificaciones[
+                matricula] =
                 registro;
         }
 
-        registro[PreHizo] = 1.0;
-        registro[PreCalificacion] = resultado;
+        registro[PreHizo] =
+            1.0;
+
+        registro[PreCalificacion] =
+            resultado;
+
         registro[PreEstado] =
-            aprobado ? 1.0 : 0.0;
+            aprobado
+                ? 1.0
+                : 0.0;
     }
 
     private void GuardarSemOriginalEnRegistroPre(
@@ -854,7 +914,8 @@ public class PreExtraordinarioService
                 new Dictionary<string, double>(
                     StringComparer.OrdinalIgnoreCase);
 
-            materiaPre.Calificaciones[matricula] =
+            materiaPre.Calificaciones[
+                matricula] =
                 registro;
         }
 
@@ -862,13 +923,23 @@ public class PreExtraordinarioService
                 semOriginal,
                 out double sem))
         {
-            registro[PreSemOriginal] = sem;
-            registro[PreSemOriginalValido] = 1.0;
+            registro[
+                PreSemOriginal] =
+                sem;
+
+            registro[
+                PreSemOriginalValido] =
+                1.0;
         }
         else
         {
-            registro[PreSemOriginal] = 0.0;
-            registro[PreSemOriginalValido] = 0.0;
+            registro[
+                PreSemOriginal] =
+                0.0;
+
+            registro[
+                PreSemOriginalValido] =
+                0.0;
         }
     }
 
@@ -889,11 +960,13 @@ public class PreExtraordinarioService
                 new Dictionary<string, double>(
                     StringComparer.OrdinalIgnoreCase);
 
-            materia.Calificaciones[matricula] =
+            materia.Calificaciones[
+                matricula] =
                 captura;
         }
 
-        captura["pre"] = 1.0;
+        captura["pre"] =
+            1.0;
     }
 
     // =========================================================================
@@ -937,27 +1010,16 @@ public class PreExtraordinarioService
                 new Dictionary<string, double>(
                     StringComparer.OrdinalIgnoreCase);
 
-            materia.Calificaciones[matricula] =
+            materia.Calificaciones[
+                matricula] =
                 capturas;
         }
 
-        /*
-         * El algoritmo real de ParcialesViewModel es:
-         *
-         * (obtenido / maximo) * porcentaje
-         *
-         * y después normaliza los porcentajes.
-         *
-         * Si todas las actividades tienen la proporción:
-         *
-         * objetivo / 10
-         *
-         * todas producen exactamente el objetivo.
-         */
         double proporcion =
             calificacionObjetivo / 10.0;
 
-        foreach (var actividad in actividadesActivas)
+        foreach (var actividad in
+                 actividadesActivas)
         {
             double nuevoPuntaje =
                 actividad.PuntajeMaximo *
@@ -1013,9 +1075,11 @@ public class PreExtraordinarioService
         if (actividades.Count == 0)
             return 0.0;
 
-        decimal sumaPorcentajes = 0m;
+        decimal sumaPorcentajes =
+            0m;
 
-        foreach (var actividad in actividades)
+        foreach (var actividad in
+                 actividades)
         {
             if (!capturas.TryGetValue(
                     actividad.Nombre.Trim(),
@@ -1038,11 +1102,14 @@ public class PreExtraordinarioService
             return 0.0;
 
         decimal escala =
-            100m / sumaPorcentajes;
+            100m /
+            sumaPorcentajes;
 
-        decimal acumulado = 0m;
+        decimal acumulado =
+            0m;
 
-        foreach (var actividad in actividades)
+        foreach (var actividad in
+                 actividades)
         {
             double obtenido =
                 capturas[
@@ -1058,10 +1125,10 @@ public class PreExtraordinarioService
                 porcentajeNormalizado;
         }
 
-        decimal calificacion = acumulado / 10m;
+        decimal calificacion =
+            acumulado /
+            10m;
 
-        // Devolvemos la calificación con la máxima precisión posible aquí.
-        // La presentación (UI / PDF) debe truncar a 1 decimal cuando se requiera.
         return (double)calificacion;
     }
 
@@ -1084,16 +1151,13 @@ public class PreExtraordinarioService
             new Dictionary<string, Dictionary<string, double>>(
                 StringComparer.OrdinalIgnoreCase);
 
-        materia.Calificaciones[matricula] =
+        materia.Calificaciones[
+            matricula] =
             new Dictionary<string, double>(
                 original.CapturasOriginal,
                 StringComparer.OrdinalIgnoreCase);
     }
 
-    /*
-     * Este overload corrige las llamadas que restauran desde
-     * PreOriginals automáticamente.
-     */
     private void RestaurarMateriaParcial(
         MateriaParcial materia,
         string matricula)
@@ -1118,9 +1182,10 @@ public class PreExtraordinarioService
             original);
     }
 
-    private Dictionary<string, double> ObtenerCapturasOriginales(
-        MateriaParcial materia,
-        string matricula)
+    private Dictionary<string, double>
+        ObtenerCapturasOriginales(
+            MateriaParcial materia,
+            string matricula)
     {
         if (materia.Calificaciones.TryGetValue(
                 matricula,
@@ -1168,7 +1233,8 @@ public class PreExtraordinarioService
                                 StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
-            foreach (var matricula in matriculas)
+            foreach (var matricula
+                     in matriculas)
             {
                 RevertirPrePorAlumno(
                     claveMateriaBase,
@@ -1187,7 +1253,7 @@ public class PreExtraordinarioService
     }
 
     // =========================================================================
-    // COMPATIBILIDAD CON CÓDIGO ANTERIOR
+    // COMPATIBILIDAD
     // =========================================================================
 
     public void AplicarAjusteParciales(
@@ -1199,7 +1265,9 @@ public class PreExtraordinarioService
         if (!marcarPre)
             return;
 
-        foreach (var alumno in alumnos ?? Enumerable.Empty<Alumno>())
+        foreach (var alumno in
+                 alumnos ??
+                 Enumerable.Empty<Alumno>())
         {
             if (alumno == null)
                 continue;
@@ -1222,13 +1290,16 @@ public class PreExtraordinarioService
     // LISTADO DE ELEGIBLES
     // =========================================================================
 
-    public List<(string Matricula, string Grupo)> GenerarListadoElegibles(
-        IEnumerable<Alumno> alumnos)
+    public List<(string Matricula, string Grupo)>
+        GenerarListadoElegibles(
+            IEnumerable<Alumno> alumnos)
     {
         var lista =
             new List<(string Matricula, string Grupo)>();
 
-        foreach (var alumno in alumnos ?? Enumerable.Empty<Alumno>())
+        foreach (var alumno in
+                 alumnos ??
+                 Enumerable.Empty<Alumno>())
         {
             if (alumno == null)
                 continue;
@@ -1257,8 +1328,11 @@ public class PreExtraordinarioService
             {
                 lista.Add(
                     (
-                        alumno.Matricula ?? string.Empty,
-                        alumno.Grupo ?? string.Empty
+                        alumno.Matricula
+                        ?? string.Empty,
+
+                        alumno.Grupo
+                        ?? string.Empty
                     ));
             }
         }
@@ -1277,8 +1351,11 @@ public class PreExtraordinarioService
                     x =>
                         new[]
                         {
-                            x.Matricula ?? string.Empty,
-                            x.Grupo ?? string.Empty
+                            x.Matricula
+                                ?? string.Empty,
+
+                            x.Grupo
+                                ?? string.Empty
                         })
                 .ToArray();
 
@@ -1324,13 +1401,21 @@ public class PreExtraordinarioService
         string? texto,
         out double valor)
     {
-        valor = 0.0;
+        valor =
+            0.0;
 
-        if (string.IsNullOrWhiteSpace(texto))
+        if (string.IsNullOrWhiteSpace(
+                texto))
+        {
             return false;
+        }
 
         string limpio =
-            texto.Trim().Replace(',', '.');
+            texto
+                .Trim()
+                .Replace(
+                    ',',
+                    '.');
 
         return double.TryParse(
             limpio,
@@ -1342,8 +1427,11 @@ public class PreExtraordinarioService
     private static string NormalizarVisual(
         string? valor)
     {
-        if (string.IsNullOrWhiteSpace(valor))
+        if (string.IsNullOrWhiteSpace(
+                valor))
+        {
             return string.Empty;
+        }
 
         if (!TryObtenerDouble(
                 valor,
@@ -1391,7 +1479,10 @@ public class PreExtraordinarioService
         }
 
         double promedio =
-            (p1 + p2 + p3) / 3.0;
+            (p1 +
+             p2 +
+             p3) /
+            3.0;
 
         promedio =
             Math.Truncate(

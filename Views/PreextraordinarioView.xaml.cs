@@ -27,11 +27,14 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
         {
             InitializeComponent();
 
-            _preService = new PreExtraordinarioService();
+            _preService =
+                new PreExtraordinarioService();
 
-            DataContext = this;
+            DataContext =
+                this;
 
-            Loaded += PreextraordinarioView_Loaded;
+            Loaded +=
+                PreextraordinarioView_Loaded;
         }
 
         private void PreextraordinarioView_Loaded(
@@ -39,7 +42,8 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             RoutedEventArgs e)
         {
             if (_mainVm == null)
-                _mainVm = FindMainViewModel();
+                _mainVm =
+                    FindMainViewModel();
 
             if (_mainVm == null)
                 return;
@@ -55,7 +59,8 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 return mainVm;
             }
 
-            DependencyObject? actual = this;
+            DependencyObject? actual =
+                this;
 
             while (actual != null)
             {
@@ -76,13 +81,18 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
         public void Recargar()
         {
             if (_mainVm == null)
-                _mainVm = FindMainViewModel();
+                _mainVm =
+                    FindMainViewModel();
 
             if (_mainVm == null)
                 return;
 
             CargarAlumnos();
         }
+
+        // ============================================================
+        // CARGAR ALUMNOS
+        // ============================================================
 
         private void CargarAlumnos()
         {
@@ -91,41 +101,81 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
 
             try
             {
-                _cargando = true;
+                _cargando =
+                    true;
 
                 AlumnosPre.Clear();
 
-                string claveMateria =
+                // ====================================================
+                // USAR CLAVEASIGNATURA REAL DEL CAP
+                // ====================================================
+
+                string claveAsignatura =
                     ObtenerClaveMateria();
 
                 if (string.IsNullOrWhiteSpace(
-                        claveMateria))
+                        claveAsignatura))
                 {
+                    System.Diagnostics.Debug.WriteLine(
+                        "[PRE] No se pudo obtener CLAVEASIGNATURA del CAP.");
+
                     return;
                 }
 
+                System.Diagnostics.Debug.WriteLine(
+                    $"[PRE] CLAVEASIGNATURA usada para PRE = '{claveAsignatura}'");
+
+                // ====================================================
+                // OBTENER ALUMNOS BASE
+                //
+                // El servicio YA NO decide quién tiene derecho.
+                // Aquí solamente prepara los datos de los alumnos.
+                // ====================================================
+
                 var alumnos =
                     _preService.ObtenerAlumnosParaPre(
-                        claveMateria,
+                        claveAsignatura,
                         _mainVm.Alumnos);
+
+                // ====================================================
+                // FILTRO REAL:
+                // configuracion.bin -> PRE
+                // ====================================================
+
+                int candidatos =
+                    alumnos.Count;
+
+                int autorizados =
+                    0;
 
                 foreach (var alumno in alumnos)
                 {
                     if (alumno == null)
                         continue;
 
-                    // ====================================================
-                    // FILTRO DE AUTORIZACIÓN
-                    //
-                    // PREEXTRAORDINARIO usa la lista PRE de
-                    // configuracion.bin
-                    // ====================================================
+                    string matricula =
+                        alumno.Matricula?.Trim()
+                        ?? string.Empty;
 
-                    if (!_mainVm.AlumnoTieneDerechoPre(
-                            alumno.Matricula))
+                    if (string.IsNullOrWhiteSpace(
+                            matricula))
                     {
                         continue;
                     }
+
+                    bool tieneDerecho =
+                        _mainVm.AlumnoTieneDerechoPre(
+                            matricula);
+
+                    System.Diagnostics.Debug.WriteLine(
+                        $"[PRE] Alumno {matricula} -> derecho={tieneDerecho}");
+
+                    if (!tieneDerecho)
+                    {
+                        continue;
+                    }
+
+                    autorizados++;
 
                     AlumnosPre.Add(
                         new AlumnoPreItem(
@@ -139,89 +189,43 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                             alumno.Pre,
                             alumno.Estado));
                 }
+
+                System.Diagnostics.Debug.WriteLine(
+                    $"[PRE] Candidatos = {candidatos}");
+
+                System.Diagnostics.Debug.WriteLine(
+                    $"[PRE] Autorizados mostrados = {autorizados}");
             }
             finally
             {
-                _cargando = false;
+                _cargando =
+                    false;
             }
         }
+
+        // ============================================================
+        // CLAVEASIGNATURA DESDE CAP
+        // ============================================================
 
         private string ObtenerClaveMateria()
         {
             if (_mainVm == null)
                 return string.Empty;
 
-            if (!string.IsNullOrWhiteSpace(
+            if (string.IsNullOrWhiteSpace(
                     _mainVm.ArchivoCompletoActual))
             {
-                return ObtenerClaveMateriaDesdeRuta(
+                return string.Empty;
+            }
+
+            return
+                MainViewModel.ObtenerClaveAsignaturaDesdeCap(
                     _mainVm.ArchivoCompletoActual);
-            }
-
-            return ObtenerClaveMateriaDesdeNombreVisual(
-                _mainVm.ArchivoSeleccionado);
         }
 
-        private static string ObtenerClaveMateriaDesdeRuta(
-            string ruta)
-        {
-            try
-            {
-                string nombre =
-                    System.IO.Path.GetFileNameWithoutExtension(
-                        ruta);
-
-                return string.IsNullOrWhiteSpace(nombre)
-                    ? string.Empty
-                    : nombre.Trim().Replace(' ', '_');
-            }
-            catch
-            {
-                return string.Empty;
-            }
-        }
-
-        private static string ObtenerClaveMateriaDesdeNombreVisual(
-            string? nombreVisual)
-        {
-            if (string.IsNullOrWhiteSpace(
-                    nombreVisual))
-            {
-                return string.Empty;
-            }
-
-            string texto =
-                nombreVisual.Trim();
-
-            int indexGrupo =
-                texto.IndexOf(
-                    " - Grupo:",
-                    StringComparison.OrdinalIgnoreCase);
-
-            if (indexGrupo > 0)
-            {
-                texto =
-                    texto.Substring(
-                        0,
-                        indexGrupo).Trim();
-            }
-
-            int primerEspacio =
-                texto.IndexOf(' ');
-
-            if (primerEspacio <= 0)
-                return texto.Replace(' ', '_');
-
-            string clave =
-                texto[..primerEspacio].Trim();
-
-            string nombre =
-                texto[(primerEspacio + 1)..].Trim();
-
-            return string.IsNullOrWhiteSpace(nombre)
-                ? clave
-                : $"{clave}_{nombre}";
-        }
+        // ============================================================
+        // PRE: VALIDACIÓN DE CAPTURA
+        // ============================================================
 
         private void PreTextBox_PreviewTextInput(
             object sender,
@@ -285,8 +289,10 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             }
 
             if (sender is TextBox textBox)
+            {
                 GuardarDesdeTextBox(
                     textBox);
+            }
         }
 
         private void PreTextBox_Pasting(
@@ -344,6 +350,10 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                    despues;
         }
 
+        // ============================================================
+        // GUARDAR DESDE TEXTBOX
+        // ============================================================
+
         private void GuardarDesdeTextBox(
             TextBox textBox)
         {
@@ -362,19 +372,21 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             string valor =
                 (textBox.Text ?? string.Empty).Trim();
 
-            /*
-             * Vacío = revertir PRE.
-             */
-            if (string.IsNullOrWhiteSpace(valor))
+            if (string.IsNullOrWhiteSpace(
+                    valor))
             {
                 if (string.IsNullOrWhiteSpace(
                         item.PreAnterior))
                 {
-                    item.Estado = string.Empty;
+                    item.Estado =
+                        string.Empty;
+
                     return;
                 }
 
-                RevertirPre(item);
+                RevertirPre(
+                    item);
+
                 return;
             }
 
@@ -397,6 +409,10 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 resultado);
         }
 
+        // ============================================================
+        // GUARDAR PRE
+        // ============================================================
+
         private void GuardarPre(
             AlumnoPreItem item,
             int resultado)
@@ -415,7 +431,8 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
 
             try
             {
-                _guardando = true;
+                _guardando =
+                    true;
 
                 var respuesta =
                     _preService.GuardarResultadoPre(
@@ -445,18 +462,9 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 item.Pre =
                     item.PreAnterior;
 
-                /*
-                 * Sin volver a cargar el CAP.
-                 *
-                 * Ya tenemos los nuevos valores en
-                 * MainViewModel.Alumnos.
-                 */
                 ActualizarItemDesdeAlumno(
                     item);
 
-                /*
-                 * Sólo PA necesita escribir P2/P3/SEM.
-                 */
                 if (resultado == 6)
                 {
                     bool guardado =
@@ -487,9 +495,14 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             }
             finally
             {
-                _guardando = false;
+                _guardando =
+                    false;
             }
         }
+
+        // ============================================================
+        // REVERTIR PRE
+        // ============================================================
 
         private void RevertirPre(
             AlumnoPreItem item)
@@ -514,7 +527,8 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);
 
-            if (confirmar != MessageBoxResult.Yes)
+            if (confirmar !=
+                MessageBoxResult.Yes)
             {
                 item.Pre =
                     item.PreAnterior;
@@ -524,7 +538,8 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
 
             try
             {
-                _guardando = true;
+                _guardando =
+                    true;
 
                 var respuesta =
                     _preService.RevertirPrePorAlumno(
@@ -546,13 +561,15 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                     return;
                 }
 
-                item.Pre = string.Empty;
-                item.PreAnterior = string.Empty;
-                item.Estado = string.Empty;
+                item.Pre =
+                    string.Empty;
 
-                /*
-                 * Restauramos los datos restaurados al CAP.
-                 */
+                item.PreAnterior =
+                    string.Empty;
+
+                item.Estado =
+                    string.Empty;
+
                 bool guardado =
                     _mainVm.GuardarResultadosPreEnCap();
 
@@ -580,16 +597,22 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             }
             finally
             {
-                _guardando = false;
+                _guardando =
+                    false;
             }
         }
+
+        // ============================================================
+        // ACTUALIZAR DATOS
+        // ============================================================
 
         private void ActualizarTodosDesdeMainVm()
         {
             if (_mainVm == null)
                 return;
 
-            foreach (var item in AlumnosPre)
+            foreach (var item
+                     in AlumnosPre)
             {
                 ActualizarItemDesdeAlumno(
                     item);
@@ -604,10 +627,11 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
 
             var alumno =
                 _mainVm.Alumnos.FirstOrDefault(
-                    a => string.Equals(
-                        a.Matricula,
-                        item.Matricula,
-                        StringComparison.OrdinalIgnoreCase));
+                    a =>
+                        string.Equals(
+                            a.Matricula,
+                            item.Matricula,
+                            StringComparison.OrdinalIgnoreCase));
 
             if (alumno == null)
                 return;
@@ -705,6 +729,10 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 CultureInfo.InvariantCulture);
         }
 
+        // ============================================================
+        // INFO ALUMNO
+        // ============================================================
+
         private void InfoAlumnoButton_Click(
             object sender,
             RoutedEventArgs e)
@@ -741,6 +769,10 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                     FocusNavigationDirection.Next));
         }
 
+        // ============================================================
+        // ITEM PRE
+        // ============================================================
+
         public sealed class AlumnoPreItem : INotifyPropertyChanged
         {
             private string _p1 = string.Empty;
@@ -752,18 +784,22 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             private string _estado = string.Empty;
 
             public string Matricula { get; }
+
             public string Nombre { get; }
+
             public string Grupo { get; }
 
             public string P1
             {
                 get => _p1;
+
                 set
                 {
                     if (_p1 == value)
                         return;
 
-                    _p1 = value;
+                    _p1 =
+                        value;
 
                     OnPropertyChanged(
                         nameof(P1));
@@ -776,12 +812,14 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             public string P2
             {
                 get => _p2;
+
                 set
                 {
                     if (_p2 == value)
                         return;
 
-                    _p2 = value;
+                    _p2 =
+                        value;
 
                     OnPropertyChanged(
                         nameof(P2));
@@ -794,12 +832,14 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             public string P3
             {
                 get => _p3;
+
                 set
                 {
                     if (_p3 == value)
                         return;
 
-                    _p3 = value;
+                    _p3 =
+                        value;
 
                     OnPropertyChanged(
                         nameof(P3));
@@ -812,12 +852,14 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             public string Promedio
             {
                 get => _promedio;
+
                 set
                 {
                     if (_promedio == value)
                         return;
 
-                    _promedio = value;
+                    _promedio =
+                        value;
 
                     OnPropertyChanged(
                         nameof(Promedio));
@@ -836,7 +878,8 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                     if (_pre == value)
                         return;
 
-                    _pre = value;
+                    _pre =
+                        value;
 
                     OnPropertyChanged(
                         nameof(Pre));
@@ -849,7 +892,10 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             public string PreAnterior
             {
                 get => _preAnterior;
-                set => _preAnterior = value;
+
+                set =>
+                    _preAnterior =
+                        value;
             }
 
             public string Estado
@@ -861,7 +907,8 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                     if (_estado == value)
                         return;
 
-                    _estado = value;
+                    _estado =
+                        value;
 
                     OnPropertyChanged(
                         nameof(Estado));
@@ -872,16 +919,20 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             }
 
             public Brush P1Foreground =>
-                ObtenerColorCalificacion(P1);
+                ObtenerColorCalificacion(
+                    P1);
 
             public Brush P2Foreground =>
-                ObtenerColorCalificacion(P2);
+                ObtenerColorCalificacion(
+                    P2);
 
             public Brush P3Foreground =>
-                ObtenerColorCalificacion(P3);
+                ObtenerColorCalificacion(
+                    P3);
 
             public Brush PromedioForeground =>
-                ObtenerColorCalificacion(Promedio);
+                ObtenerColorCalificacion(
+                    Promedio);
 
             public Brush PreForeground
             {
