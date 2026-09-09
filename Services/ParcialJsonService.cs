@@ -14,7 +14,7 @@ public class ParcialJsonService
     public Dictionary<string, MateriaParcial> CargarTodo()
     {
         var dict = new Dictionary<string, MateriaParcial>(StringComparer.OrdinalIgnoreCase);
-        using var lite = new LiteDbService();
+        using var lite = new SqliteService();
         foreach (var (key, val) in lite.GetAllParciales())
         {
             dict[key] = val ?? new MateriaParcial();
@@ -24,7 +24,7 @@ public class ParcialJsonService
 
     public void GuardarTodo(Dictionary<string, MateriaParcial> datos)
     {
-        using var lite = new LiteDbService();
+        using var lite = new SqliteService();
         if (datos == null) return;
         foreach (var kv in datos)
         {
@@ -34,13 +34,13 @@ public class ParcialJsonService
 
     public MateriaParcial ObtenerMateria(string claveMateria)
     {
-        using var lite = new LiteDbService();
+        using var lite = new SqliteService();
         return lite.GetMateria(claveMateria) ?? new MateriaParcial();
     }
 
     public void GuardarMateria(string claveMateria, MateriaParcial materia)
     {
-        using var lite = new LiteDbService();
+        using var lite = new SqliteService();
         lite.SaveMateria(claveMateria, materia ?? new MateriaParcial());
     }
 }

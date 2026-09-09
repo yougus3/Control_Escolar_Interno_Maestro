@@ -44,14 +44,14 @@ public partial class MainViewModel : ObservableObject
     // PROFESORES / CORREO
     // ============================================================
 
-    private readonly List<LiteDbService.ProfesorConfigurado>
+    private readonly List<SqliteService.ProfesorConfigurado>
         _profesoresCache = new();
 
     [ObservableProperty]
     private string _claveProfesorActual = string.Empty;
 
     [ObservableProperty]
-    private LiteDbService.ProfesorConfigurado?
+    private SqliteService.ProfesorConfigurado?
         _profesorSeleccionado;
 
     [ObservableProperty]
@@ -69,7 +69,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _estadoCorreo = string.Empty;
 
-    public ObservableCollection<LiteDbService.ProfesorConfigurado>
+    public ObservableCollection<SqliteService.ProfesorConfigurado>
         Profesores { get; } = new();
 
     public bool ProfesorComboHabilitado =>
@@ -203,6 +203,12 @@ public partial class MainViewModel : ObservableObject
     private readonly List<Alumno> _subscribedAlumnos =
         new();
 
+    // Proxy para mostrar el texto de evaluados en la barra superior
+    public string TextoEvaluados => ParcialesVm?.TextoEvaluados ?? string.Empty;
+
+    // Proxy para visibilidad del icono de advertencia
+    public bool ParcialesFaltan => ParcialesVm?.FaltanPorEvaluar ?? false;
+
     public bool EsExtraSeleccionado =>
         string.Equals(
             EvaluacionSeleccionada,
@@ -246,6 +252,12 @@ public partial class MainViewModel : ObservableObject
         ParcialesVm =
             new ParcialesViewModel(this);
 
+        // Suscribirse a cambios en ParcialesVm para exponer propiedades útiles en la barra superior
+        if (ParcialesVm != null)
+        {
+            ParcialesVm.PropertyChanged += ParcialesVm_PropertyChangedHandler;
+        }
+
         try
         {
             var carpetaData =
@@ -285,6 +297,18 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    private void ParcialesVm_PropertyChangedHandler(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ParcialesViewModel.TextoEvaluados))
+        {
+            OnPropertyChanged(nameof(TextoEvaluados));
+        }
+        else if (e.PropertyName == nameof(ParcialesViewModel.FaltanPorEvaluar))
+        {
+            OnPropertyChanged(nameof(ParcialesFaltan));
+        }
+    }
+
     // ============================================================
     // CARGAR PROFESORES
     // ============================================================
@@ -297,7 +321,7 @@ public partial class MainViewModel : ObservableObject
         try
         {
             using var lite =
-                new LiteDbService();
+                new SqliteService();
 
             var profesores =
                 lite.GetProfesores();
@@ -363,7 +387,7 @@ public partial class MainViewModel : ObservableObject
     // ============================================================
 
     partial void OnProfesorSeleccionadoChanged(
-        LiteDbService.ProfesorConfigurado? value)
+        SqliteService.ProfesorConfigurado? value)
     {
         OnPropertyChanged(
             nameof(CorreoProfesorSeleccionado));
@@ -609,7 +633,7 @@ public partial class MainViewModel : ObservableObject
                 "Este mensaje fue enviado automáticamente desde CEIM.";
 
             using var lite =
-                new LiteDbService();
+                new SqliteService();
 
             await lite.EnviarCorreoAsync(
                 destinatario,
@@ -811,8 +835,8 @@ public partial class MainViewModel : ObservableObject
             "P2" => "PARCIAL 2",
             "P3" => "PARCIAL 3",
             "SEM" => "SEMESTRAL",
-            "PREEXTRAORDINARIO" => "PREEXTRAORDINARIO",
-            "EXTRA" => "EXTRAORDINARIO/INTER",
+            "PREEXTRAORDINARIO" => "PREEXTRA",
+            "EXTRA" => "EXTRA",
             _ => eval
         };
     }

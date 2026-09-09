@@ -1,0 +1,104 @@
+<Window x:Class="Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals.PorcentajesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Resumen de porcentajes" 
+        Height="400" 
+        Width="520" 
+        WindowStartupLocation="CenterOwner" 
+        ResizeMode="NoResize" 
+        Background="#F1F5F9">
+
+    <Window.Resources>
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="#1B365D"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Resumen de porcentajes por parcial" 
+                   FontSize="16" FontWeight="Bold" Foreground="#1B365D" Margin="0,0,0,10"/>
+
+        <Border Grid.Row="1" Background="White" BorderBrush="#D7DEE8" BorderThickness="1" CornerRadius="8" Padding="20">
+            <StackPanel>
+                <Grid Margin="0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="Parcial" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="1" Text="% Actividades" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="2" Text="Puntaje máximo (suma)" FontWeight="SemiBold" />
+                </Grid>
+
+                <Grid Margin="0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="P1" />
+                    <TextBlock Grid.Column="1" x:Name="TbP1Porc" Text="0%" />
+                    <TextBlock Grid.Column="2" x:Name="TbP1Max" Text="0" />
+                </Grid>
+
+                <Grid Margin="0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="P2" />
+                    <TextBlock Grid.Column="1" x:Name="TbP2Porc" Text="0%" />
+                    <TextBlock Grid.Column="2" x:Name="TbP2Max" Text="0" />
+                </Grid>
+
+                <Grid Margin="0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="P3" />
+                    <TextBlock Grid.Column="1" x:Name="TbP3Porc" Text="0%" />
+                    <TextBlock Grid.Column="2" x:Name="TbP3Max" Text="0" />
+                </Grid>
+
+                <Separator Margin="0,10" />
+
+                <StackPanel Orientation="Horizontal" Margin="0,6">
+                    <TextBlock Text="Porcentaje total (P1+P2+P3):" FontWeight="SemiBold" Width="340"/>
+                    <TextBlock x:Name="TbTotalPorc" Text="0%" FontWeight="Bold"/>
+                </StackPanel>
+
+                <TextBlock Margin="0,12,0,0" Foreground="#64748B">
+                    Se muestra individualmente la suma de porcentajes y la suma de puntajes máximos para cada parcial.
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Content="Cerrar" Width="100" Height="36" Style="{StaticResource PrimaryButtonStyle}" Click="Cerrar_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

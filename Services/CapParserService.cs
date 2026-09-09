@@ -30,7 +30,7 @@ public class CapParserService
     {
         try
         {
-            using var lite = new LiteDbService();
+            using var lite = new SqliteService();
 
             return lite.GetGrupos();
         }
@@ -62,7 +62,7 @@ public class CapParserService
     {
         try
         {
-            using var lite = new LiteDbService();
+            using var lite = new SqliteService();
 
             lite.SaveGrupos(
                 grupos ??

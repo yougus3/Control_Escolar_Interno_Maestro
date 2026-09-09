@@ -1748,7 +1748,7 @@ public partial class ParcialesViewModel : ObservableObject
         try
         {
             using var lite =
-                new LiteDbService();
+                new SqliteService();
 
             var grupos =
                 lite.GetGrupos();

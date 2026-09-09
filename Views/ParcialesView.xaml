@@ -13,7 +13,12 @@
 
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
 
-        <converters:CalificacionColorConverter x:Key="ColorCalifConverter" />
+        <converters:CalificacionColorConverter
+                x:Key="ColorCalifConverter" />
+
+        <!-- ========================================================= -->
+        <!-- PALETA                                                     -->
+        <!-- ========================================================= -->
 
         <SolidColorBrush x:Key="AppBlue"
                          Color="#1B365D" />
@@ -42,11 +47,17 @@
         <SolidColorBrush x:Key="AppTextSecondary"
                          Color="#64748B" />
 
-        <SolidColorBrush x:Key="ActivityGreen"
-                         Color="#16A34A" />
+        <SolidColorBrush x:Key="AppRed"
+                         Color="#DC2626" />
 
-        <SolidColorBrush x:Key="ActivityGreenSoft"
-                         Color="#ECFDF5" />
+        <SolidColorBrush x:Key="AppRedSoft"
+                         Color="#FEF2F2" />
+
+        <SolidColorBrush x:Key="AppGray"
+                         Color="#6B7280" />
+
+        <SolidColorBrush x:Key="AppGraySoft"
+                         Color="#F3F4F6" />
 
         <!-- ========================================================= -->
         <!-- CHECKBOX                                                   -->
@@ -64,7 +75,7 @@
                     Value="#1E293B" />
 
             <Setter Property="FontSize"
-                    Value="11" />
+                    Value="12" />
 
             <Setter Property="FontWeight"
                     Value="SemiBold" />
@@ -72,7 +83,7 @@
         </Style>
 
         <!-- ========================================================= -->
-        <!-- BOTÓN AZUL                                                  -->
+        <!-- BOTÓN AZUL                                                 -->
         <!-- ========================================================= -->
 
         <Style x:Key="BlueButtonStyle"
@@ -108,42 +119,49 @@
 
                     <ControlTemplate TargetType="Button">
 
-                        <Border x:Name="Root"
+                        <Border
+                                x:Name="Root"
                                 Background="{TemplateBinding Background}"
                                 CornerRadius="8"
                                 SnapsToDevicePixels="True">
 
                             <ContentPresenter
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                RecognizesAccessKey="True" />
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    RecognizesAccessKey="True" />
 
                         </Border>
 
                         <ControlTemplate.Triggers>
 
-                            <Trigger Property="IsMouseOver"
-                                     Value="True">
+                            <Trigger
+                                    Property="IsMouseOver"
+                                    Value="True">
 
-                                <Setter TargetName="Root"
+                                <Setter
+                                        TargetName="Root"
                                         Property="Background"
                                         Value="{StaticResource AppBlueDark}" />
 
                             </Trigger>
 
-                            <Trigger Property="IsPressed"
-                                     Value="True">
+                            <Trigger
+                                    Property="IsPressed"
+                                    Value="True">
 
-                                <Setter TargetName="Root"
+                                <Setter
+                                        TargetName="Root"
                                         Property="Opacity"
                                         Value="0.88" />
 
                             </Trigger>
 
-                            <Trigger Property="IsEnabled"
-                                     Value="False">
+                            <Trigger
+                                    Property="IsEnabled"
+                                    Value="False">
 
-                                <Setter TargetName="Root"
+                                <Setter
+                                        TargetName="Root"
                                         Property="Opacity"
                                         Value="0.55" />
 
@@ -160,7 +178,7 @@
         </Style>
 
         <!-- ========================================================= -->
-        <!-- BOTÓN ICONO                                                 -->
+        <!-- BOTÓN ICONO                                                -->
         <!-- ========================================================= -->
 
         <Style x:Key="IconButtonStyle"
@@ -196,31 +214,36 @@
 
                     <ControlTemplate TargetType="Button">
 
-                        <Border x:Name="Root"
+                        <Border
+                                x:Name="Root"
                                 Background="{TemplateBinding Background}"
                                 CornerRadius="8">
 
                             <ContentPresenter
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center" />
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center" />
 
                         </Border>
 
                         <ControlTemplate.Triggers>
 
-                            <Trigger Property="IsMouseOver"
-                                     Value="True">
+                            <Trigger
+                                    Property="IsMouseOver"
+                                    Value="True">
 
-                                <Setter TargetName="Root"
+                                <Setter
+                                        TargetName="Root"
                                         Property="Background"
-                                        Value="#EAF0F8" />
+                                        Value="{StaticResource AppBlueSoft}" />
 
                             </Trigger>
 
-                            <Trigger Property="IsPressed"
-                                     Value="True">
+                            <Trigger
+                                    Property="IsPressed"
+                                    Value="True">
 
-                                <Setter TargetName="Root"
+                                <Setter
+                                        TargetName="Root"
                                         Property="Opacity"
                                         Value="0.85" />
 
@@ -237,7 +260,7 @@
         </Style>
 
         <!-- ========================================================= -->
-        <!-- TEXTBOX REDONDEADO                                          -->
+        <!-- TEXTBOX REDONDEADO                                         -->
         <!-- ========================================================= -->
 
         <Style x:Key="RoundedTextBoxStyle"
@@ -262,7 +285,7 @@
                     Value="Center" />
 
             <Setter Property="FontSize"
-                    Value="11" />
+                    Value="12" />
 
             <Setter Property="Template">
 
@@ -270,7 +293,8 @@
 
                     <ControlTemplate TargetType="TextBox">
 
-                        <Border x:Name="Bd"
+                        <Border
+                                x:Name="Bd"
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
@@ -278,48 +302,57 @@
                                 SnapsToDevicePixels="True">
 
                             <ScrollViewer
-                                x:Name="PART_ContentHost"
-                                Margin="0"
-                                VerticalAlignment="Center" />
+                                    x:Name="PART_ContentHost"
+                                    Margin="0"
+                                    VerticalAlignment="Center" />
 
                         </Border>
 
                         <ControlTemplate.Triggers>
 
-                            <Trigger Property="IsMouseOver"
-                                     Value="True">
+                            <Trigger
+                                    Property="IsMouseOver"
+                                    Value="True">
 
-                                <Setter TargetName="Bd"
+                                <Setter
+                                        TargetName="Bd"
                                         Property="BorderBrush"
                                         Value="#93C5FD" />
 
                             </Trigger>
 
-                            <Trigger Property="IsKeyboardFocused"
-                                     Value="True">
+                            <Trigger
+                                    Property="IsKeyboardFocused"
+                                    Value="True">
 
-                                <Setter TargetName="Bd"
+                                <Setter
+                                        TargetName="Bd"
                                         Property="BorderBrush"
                                         Value="{StaticResource AppBlue}" />
 
-                                <Setter TargetName="Bd"
+                                <Setter
+                                        TargetName="Bd"
                                         Property="BorderThickness"
                                         Value="1.5" />
 
                             </Trigger>
 
-                            <Trigger Property="IsEnabled"
-                                     Value="False">
+                            <Trigger
+                                    Property="IsEnabled"
+                                    Value="False">
 
-                                <Setter TargetName="Bd"
+                                <Setter
+                                        TargetName="Bd"
                                         Property="Background"
-                                        Value="#F3F4F6" />
+                                        Value="{StaticResource AppGraySoft}" />
 
-                                <Setter TargetName="Bd"
+                                <Setter
+                                        TargetName="Bd"
                                         Property="BorderBrush"
                                         Value="#CBD5E1" />
 
-                                <Setter Property="Foreground"
+                                <Setter
+                                        Property="Foreground"
                                         Value="#94A3B8" />
 
                             </Trigger>
@@ -335,7 +368,7 @@
         </Style>
 
         <!-- ========================================================= -->
-        <!-- TEXTBOX PARA NOMBRE DE ACTIVIDAD CON PLACEHOLDER            -->
+        <!-- NOMBRE ACTIVIDAD                                           -->
         <!-- ========================================================= -->
 
         <Style x:Key="ActividadNombreTextBoxStyle"
@@ -348,7 +381,8 @@
 
                     <ControlTemplate TargetType="TextBox">
 
-                        <Border x:Name="Bd"
+                        <Border
+                                x:Name="Bd"
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
@@ -358,19 +392,19 @@
                             <Grid>
 
                                 <ScrollViewer
-                                    x:Name="PART_ContentHost"
-                                    Margin="0"
-                                    VerticalAlignment="Center" />
+                                        x:Name="PART_ContentHost"
+                                        Margin="0"
+                                        VerticalAlignment="Center" />
 
                                 <TextBlock
-                                    x:Name="Placeholder"
-                                    Text="EJEMPLO: TAREAS"
-                                    Foreground="#94A3B8"
-                                    FontSize="11"
-                                    VerticalAlignment="Center"
-                                    Margin="8,0,8,0"
-                                    IsHitTestVisible="False"
-                                    Visibility="Collapsed" />
+                                        x:Name="Placeholder"
+                                        Text="EJEMPLO: TAREAS"
+                                        Foreground="#94A3B8"
+                                        FontSize="12"
+                                        VerticalAlignment="Center"
+                                        Margin="8,0,8,0"
+                                        IsHitTestVisible="False"
+                                        Visibility="Collapsed" />
 
                             </Grid>
 
@@ -378,132 +412,153 @@
 
                         <ControlTemplate.Triggers>
 
-                            <!-- ACTIVIDAD 1 -->
                             <MultiDataTrigger>
 
                                 <MultiDataTrigger.Conditions>
 
-                                    <Condition Binding="{Binding EsActividad1}"
-                                               Value="True" />
+                                    <Condition
+                                            Binding="{Binding EsActividad1}"
+                                            Value="True" />
 
-                                    <Condition Binding="{Binding Nombre}"
-                                               Value="" />
+                                    <Condition
+                                            Binding="{Binding Nombre}"
+                                            Value="" />
 
                                 </MultiDataTrigger.Conditions>
 
-                                <Setter TargetName="Placeholder"
+                                <Setter
+                                        TargetName="Placeholder"
                                         Property="Text"
                                         Value="EJEMPLO: TAREAS" />
 
-                                <Setter TargetName="Placeholder"
+                                <Setter
+                                        TargetName="Placeholder"
                                         Property="Visibility"
                                         Value="Visible" />
 
                             </MultiDataTrigger>
 
-                            <!-- ACTIVIDAD 2 -->
                             <MultiDataTrigger>
 
                                 <MultiDataTrigger.Conditions>
 
-                                    <Condition Binding="{Binding NumeroActividad}"
-                                               Value="2" />
+                                    <Condition
+                                            Binding="{Binding NumeroActividad}"
+                                            Value="2" />
 
-                                    <Condition Binding="{Binding Nombre}"
-                                               Value="" />
+                                    <Condition
+                                            Binding="{Binding Nombre}"
+                                            Value="" />
 
                                 </MultiDataTrigger.Conditions>
 
-                                <Setter TargetName="Placeholder"
+                                <Setter
+                                        TargetName="Placeholder"
                                         Property="Text"
                                         Value="EJEMPLO: EXAMEN" />
 
-                                <Setter TargetName="Placeholder"
+                                <Setter
+                                        TargetName="Placeholder"
                                         Property="Visibility"
                                         Value="Visible" />
 
                             </MultiDataTrigger>
 
-                            <!-- ACTIVIDAD 3 -->
                             <MultiDataTrigger>
 
                                 <MultiDataTrigger.Conditions>
 
-                                    <Condition Binding="{Binding NumeroActividad}"
-                                               Value="3" />
+                                    <Condition
+                                            Binding="{Binding NumeroActividad}"
+                                            Value="3" />
 
-                                    <Condition Binding="{Binding Nombre}"
-                                               Value="" />
+                                    <Condition
+                                            Binding="{Binding Nombre}"
+                                            Value="" />
 
                                 </MultiDataTrigger.Conditions>
 
-                                <Setter TargetName="Placeholder"
+                                <Setter
+                                        TargetName="Placeholder"
                                         Property="Text"
                                         Value="EJEMPLO: PROYECTO" />
 
-                                <Setter TargetName="Placeholder"
+                                <Setter
+                                        TargetName="Placeholder"
                                         Property="Visibility"
                                         Value="Visible" />
 
                             </MultiDataTrigger>
 
-                            <!-- ACTIVIDAD 4 -->
                             <MultiDataTrigger>
 
                                 <MultiDataTrigger.Conditions>
 
-                                    <Condition Binding="{Binding NumeroActividad}"
-                                               Value="4" />
+                                    <Condition
+                                            Binding="{Binding NumeroActividad}"
+                                            Value="4" />
 
-                                    <Condition Binding="{Binding Nombre}"
-                                               Value="" />
+                                    <Condition
+                                            Binding="{Binding Nombre}"
+                                            Value="" />
 
                                 </MultiDataTrigger.Conditions>
 
-                                <Setter TargetName="Placeholder"
+                                <Setter
+                                        TargetName="Placeholder"
                                         Property="Text"
                                         Value="EJEMPLO: EXPOSICIÓN" />
 
-                                <Setter TargetName="Placeholder"
+                                <Setter
+                                        TargetName="Placeholder"
                                         Property="Visibility"
                                         Value="Visible" />
 
                             </MultiDataTrigger>
 
-                            <Trigger Property="IsMouseOver"
-                                     Value="True">
+                            <Trigger
+                                    Property="IsMouseOver"
+                                    Value="True">
 
-                                <Setter TargetName="Bd"
+                                <Setter
+                                        TargetName="Bd"
                                         Property="BorderBrush"
                                         Value="#93C5FD" />
 
                             </Trigger>
 
-                            <Trigger Property="IsKeyboardFocused"
-                                     Value="True">
+                            <Trigger
+                                    Property="IsKeyboardFocused"
+                                    Value="True">
 
-                                <Setter TargetName="Bd"
+                                <Setter
+                                        TargetName="Bd"
                                         Property="BorderBrush"
                                         Value="{StaticResource AppBlue}" />
 
-                                <Setter TargetName="Bd"
+                                <Setter
+                                        TargetName="Bd"
                                         Property="BorderThickness"
                                         Value="1.5" />
 
                             </Trigger>
 
-                            <Trigger Property="IsEnabled"
-                                     Value="False">
+                            <Trigger
+                                    Property="IsEnabled"
+                                    Value="False">
 
-                                <Setter TargetName="Bd"
+                                <Setter
+                                        TargetName="Bd"
                                         Property="Background"
-                                        Value="#F3F4F6" />
+                                        Value="{StaticResource AppGraySoft}" />
 
-                                <Setter TargetName="Bd"
+                                <Setter
+                                        TargetName="Bd"
                                         Property="BorderBrush"
                                         Value="#CBD5E1" />
 
-                                <Setter Property="Foreground"
+                                <Setter
+                                        Property="Foreground"
                                         Value="#94A3B8" />
 
                             </Trigger>
@@ -519,7 +574,7 @@
         </Style>
 
         <!-- ========================================================= -->
-        <!-- GROUPBOX                                                    -->
+        <!-- GROUPBOX                                                   -->
         <!-- ========================================================= -->
 
         <Style x:Key="CardGroupBoxStyle"
@@ -545,7 +600,8 @@
 
                         <Grid Margin="0,10,0,0">
 
-                            <Border Background="White"
+                            <Border
+                                    Background="White"
                                     BorderBrush="{StaticResource AppLine}"
                                     BorderThickness="1"
                                     CornerRadius="12"
@@ -554,29 +610,31 @@
                                 <Grid>
 
                                     <Grid.RowDefinitions>
+
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="*" />
+
                                     </Grid.RowDefinitions>
 
                                     <Border
-                                        Background="{StaticResource AppBlue}"
-                                        CornerRadius="11"
-                                        Padding="10,6"
-                                        Margin="10,-14,10,0"
-                                        HorizontalAlignment="Left"
-                                        TextElement.Foreground="White"
-                                        TextElement.FontWeight="Bold"
-                                        TextElement.FontSize="13">
+                                            Background="{StaticResource AppBlue}"
+                                            CornerRadius="12"
+                                            Padding="10,6"
+                                            Margin="10,-14,10,0"
+                                            HorizontalAlignment="Left"
+                                            TextElement.Foreground="White"
+                                            TextElement.FontWeight="Bold"
+                                            TextElement.FontSize="13">
 
                                         <ContentPresenter
-                                            ContentSource="Header"
-                                            RecognizesAccessKey="True" />
+                                                ContentSource="Header"
+                                                RecognizesAccessKey="True" />
 
                                     </Border>
 
                                     <ContentPresenter
-                                        Grid.Row="1"
-                                        Margin="12,12,12,12" />
+                                            Grid.Row="1"
+                                            Margin="12,12,12,12" />
 
                                 </Grid>
 
@@ -593,7 +651,7 @@
         </Style>
 
         <!-- ========================================================= -->
-        <!-- ACTIVIDAD                                                   -->
+        <!-- ACTIVIDAD                                                  -->
         <!-- ========================================================= -->
 
         <Style x:Key="ActividadBorderStyle"
@@ -620,7 +678,7 @@
         </Style>
 
         <!-- ========================================================= -->
-        <!-- SUMA                                                        -->
+        <!-- SUMA                                                       -->
         <!-- ========================================================= -->
 
         <Style x:Key="SumaPorcText"
@@ -633,12 +691,12 @@
                     Value="Bold" />
 
             <Setter Property="Foreground"
-                    Value="#1B365D" />
+                    Value="{StaticResource AppBlue}" />
 
         </Style>
 
         <!-- ========================================================= -->
-        <!-- CALIFICACIÓN                                                -->
+        <!-- CALIFICACIÓN                                               -->
         <!-- ========================================================= -->
 
         <Style x:Key="BlueGradeBlock"
@@ -668,37 +726,45 @@
         </Style>
 
         <!-- ========================================================= -->
-        <!-- ALUMNO                                                      -->
+        <!-- ALUMNO                                                     -->
         <!-- ========================================================= -->
 
         <Style x:Key="AlumnoListBoxItemStyle"
                TargetType="ListBoxItem">
 
-            <Setter Property="HorizontalContentAlignment"
+            <Setter
+                    Property="HorizontalContentAlignment"
                     Value="Stretch" />
 
-            <Setter Property="Padding"
+            <Setter
+                    Property="Padding"
                     Value="0" />
 
-            <Setter Property="Margin"
-                    Value="0,0,0,3" />
+            <Setter
+                    Property="Margin"
+                    Value="0,0,0,1" />
 
-            <Setter Property="Background"
+            <Setter
+                    Property="Background"
                     Value="Transparent" />
 
-            <Setter Property="BorderThickness"
+            <Setter
+                    Property="BorderThickness"
                     Value="0" />
 
-            <Setter Property="FocusVisualStyle"
+            <Setter
+                    Property="FocusVisualStyle"
                     Value="{x:Null}" />
 
-            <Setter Property="Template">
+            <Setter
+                    Property="Template">
 
                 <Setter.Value>
 
                     <ControlTemplate TargetType="ListBoxItem">
 
-                        <Border x:Name="Root"
+                        <Border
+                                x:Name="Root"
                                 Background="Transparent"
                                 BorderBrush="Transparent"
                                 BorderThickness="1"
@@ -711,23 +777,30 @@
 
                         <ControlTemplate.Triggers>
 
-                            <Trigger Property="IsSelected"
-                                     Value="True">
+                            <!-- SELECCIONADO = AZUL -->
+                            <Trigger
+                                    Property="IsSelected"
+                                    Value="True">
 
-                                <Setter TargetName="Root"
+                                <Setter
+                                        TargetName="Root"
                                         Property="Background"
-                                        Value="#ECFDF5" />
+                                        Value="{StaticResource AppBlueSoft}" />
 
-                                <Setter TargetName="Root"
+                                <Setter
+                                        TargetName="Root"
                                         Property="BorderBrush"
-                                        Value="#16A34A" />
+                                        Value="{StaticResource AppBlue}" />
 
                             </Trigger>
 
-                            <Trigger Property="IsMouseOver"
-                                     Value="True">
+                            <!-- HOVER = GRIS MUY CLARO -->
+                            <Trigger
+                                    Property="IsMouseOver"
+                                    Value="True">
 
-                                <Setter TargetName="Root"
+                                <Setter
+                                        TargetName="Root"
                                         Property="Background"
                                         Value="#F8FAFC" />
 
@@ -747,24 +820,28 @@
 
     <Grid Background="#F1F5F9">
 
-        <Border Background="White"
+        <!-- Se eliminó el Padding="8" del Border exterior -->
+        <Border
+                Background="White"
                 BorderBrush="#D7DEE8"
                 BorderThickness="1"
-                CornerRadius="12"
-                Padding="8">
+                CornerRadius="12">
 
             <Grid>
 
                 <Grid.RowDefinitions>
+
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
+
                 </Grid.RowDefinitions>
 
                 <!-- ================================================= -->
                 <!-- ENCABEZADO                                          -->
                 <!-- ================================================= -->
 
-                <Border Background="#1B365D"
+                <Border
+                        Background="#1B365D"
                         CornerRadius="10"
                         Padding="12,10"
                         Margin="0,0,0,8">
@@ -774,91 +851,91 @@
                         <StackPanel>
 
                             <TextBlock
-                                Text="Calificaciones Parciales"
-                                Foreground="White"
-                                FontSize="16"
-                                FontWeight="Bold" />
+                                    Text="Calificaciones Parciales"
+                                    Foreground="White"
+                                    FontSize="16"
+                                    FontWeight="Bold" />
 
                             <StackPanel
-                                Orientation="Horizontal"
-                                Margin="0,2,0,0">
-
-                                <TextBlock
-                                    Text="Asignatura: "
-                                    Foreground="#D6E4FF"
-                                    FontSize="12"
-                                    FontWeight="SemiBold" />
-
-                                <TextBlock
-                                    Text="{Binding NombreMateria}"
-                                    Foreground="White"
-                                    FontSize="12"
-                                    FontWeight="SemiBold" />
-
-                                <TextBlock
-                                    Text="  Evaluación: "
-                                    Foreground="#D6E4FF"
-                                    FontSize="12"
-                                    FontWeight="SemiBold"
-                                    Margin="15,0,0,0" />
-
-                                <TextBlock
-                                    Text="{Binding NombreEvaluacion}"
-                                    Foreground="White"
-                                    FontSize="12"
-                                    FontWeight="SemiBold" />
-
-                                <StackPanel
                                     Orientation="Horizontal"
-                                    Margin="15,0,0,0"
-                                    Visibility="{Binding MostrarGrupo, Converter={StaticResource BoolToVis}}">
+                                    Margin="0,2,0,0">
 
-                                    <TextBlock
-                                        Text="  Grupo: "
+                                <TextBlock
+                                        Text="Asignatura: "
                                         Foreground="#D6E4FF"
                                         FontSize="12"
                                         FontWeight="SemiBold" />
 
-                                    <TextBlock
-                                        Text="{Binding GrupoAlumno}"
+                                <TextBlock
+                                        Text="{Binding NombreMateria}"
                                         Foreground="White"
                                         FontSize="12"
                                         FontWeight="SemiBold" />
+
+                                <TextBlock
+                                        Text="  Evaluación: "
+                                        Foreground="#D6E4FF"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Margin="15,0,0,0" />
+
+                                <TextBlock
+                                        Text="{Binding NombreEvaluacion}"
+                                        Foreground="White"
+                                        FontSize="12"
+                                        FontWeight="SemiBold" />
+
+                                <StackPanel
+                                        Orientation="Horizontal"
+                                        Margin="15,0,0,0"
+                                        Visibility="{Binding MostrarGrupo, Converter={StaticResource BoolToVis}}">
+
+                                    <TextBlock
+                                            Text="  Grupo: "
+                                            Foreground="#D6E4FF"
+                                            FontSize="12"
+                                            FontWeight="SemiBold" />
+
+                                    <TextBlock
+                                            Text="{Binding GrupoAlumno}"
+                                            Foreground="White"
+                                            FontSize="12"
+                                            FontWeight="SemiBold" />
 
                                 </StackPanel>
 
                                 <StackPanel
-                                    Orientation="Horizontal"
-                                    Margin="15,0,0,0">
+                                        Orientation="Horizontal"
+                                        Margin="15,0,0,0">
 
                                     <TextBlock
-                                        Text="  Alumnos evaluados: "
-                                        Foreground="#D6E4FF"
-                                        FontSize="12"
-                                        FontWeight="SemiBold" />
+                                            Text="  Alumnos evaluados: "
+                                            Foreground="#D6E4FF"
+                                            FontSize="12"
+                                            FontWeight="SemiBold" />
 
                                     <TextBlock
-                                        Text="{Binding TextoEvaluados}"
-                                        Foreground="White"
-                                        FontSize="12"
-                                        FontWeight="SemiBold" />
+                                            Text="{Binding TextoEvaluados}"
+                                            Foreground="White"
+                                            FontSize="12"
+                                            FontWeight="SemiBold" />
 
                                     <Button
-                                        Margin="8,0,0,0"
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        Cursor="Hand"
-                                        Visibility="{Binding FaltanPorEvaluar, Converter={StaticResource BoolToVis}}"
-                                        Click="WarningNoEvaluados_Click"
-                                        ToolTip="Ver lista de alumnos pendientes">
+                                            Margin="8,0,0,0"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            Visibility="{Binding FaltanPorEvaluar, Converter={StaticResource BoolToVis}}"
+                                            Click="WarningNoEvaluados_Click"
+                                            ToolTip="Ver lista de alumnos pendientes">
 
                                         <Viewbox
-                                            Width="17"
-                                            Height="17">
+                                                Width="17"
+                                                Height="17">
 
                                             <Path
-                                                Fill="#FACC15"
-                                                Data="M12,2L1,21H23M12,6L19.53,19H4.47M11,10V14H13V10M11,16V18H13V16" />
+                                                    Fill="#FACC15"
+                                                    Data="M12,2L1,21H23M12,6L19.53,19H4.47M11,10V14H13V10M11,16V18H13V16" />
 
                                         </Viewbox>
 
@@ -878,107 +955,112 @@
                 <!-- CONTENIDO                                           -->
                 <!-- ================================================= -->
 
-                <Grid Grid.Row="1">
+                <Grid
+                        Grid.Row="1">
 
                     <Grid.ColumnDefinitions>
+
                         <ColumnDefinition Width="1.6*" />
                         <ColumnDefinition Width="1.4*" />
+
                     </Grid.ColumnDefinitions>
 
                     <!-- ================================================= -->
-                    <!-- ACTIVIDADES                                         -->
+                    <!-- COLUMNA IZQUIERDA                                -->
                     <!-- ================================================= -->
 
-                    <Grid Grid.Column="0"
-                          Margin="0,0,10,0">
+                    <!-- Se redujo el margen derecho de 10 a 5 -->
+                    <Grid
+                            Grid.Column="0"
+                            Margin="0,0,5,0">
 
                         <Grid.RowDefinitions>
+
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
+
                         </Grid.RowDefinitions>
 
+                        <!-- ================================================= -->
+                        <!-- ACTIVIDADES                                      -->
+                        <!-- ================================================= -->
+
                         <GroupBox
-                            Header="Propiedades de Actividades"
-                            Style="{StaticResource CardGroupBoxStyle}">
+                                Header="Propiedades de Actividades"
+                                Style="{StaticResource CardGroupBoxStyle}">
 
                             <GroupBox.Resources>
 
-                                <DataTemplate x:Key="ActividadTemplate">
+                                <DataTemplate
+                                        x:Key="ActividadTemplate">
 
-                                    <Border x:Name="ActividadBorder">
+                                    <Border
+                                            x:Name="ActividadBorder">
 
                                         <StackPanel>
 
-                                            <!-- ============================================= -->
-                                            <!-- ACTIVIDAD 1 / 2 / 3 / 4 -->
-                                            <!-- ============================================= -->
-
                                             <CheckBox
-                                                Content="{Binding TextoActividad}"
-                                                IsChecked="{Binding Activa, Mode=TwoWay}"
-                                                IsEnabled="True"
-                                                VerticalAlignment="Center"
-                                                Margin="0,1,0,1"
-                                                Click="ActividadActiva_Click" />
+                                                    Content="{Binding TextoActividad}"
+                                                    IsChecked="{Binding Activa, Mode=TwoWay}"
+                                                    IsEnabled="True"
+                                                    VerticalAlignment="Center"
+                                                    Margin="0,1,0,1"
+                                                    Click="ActividadActiva_Click" />
 
-                                            <!-- ============================================= -->
-                                            <!-- NOMBRE -->
-                                            <!-- ============================================= -->
-
-                                            <Grid Margin="0,2,0,0">
+                                            <Grid
+                                                    Margin="0,2,0,0">
 
                                                 <Grid.ColumnDefinitions>
+
                                                     <ColumnDefinition Width="48" />
                                                     <ColumnDefinition Width="*" />
+
                                                 </Grid.ColumnDefinitions>
 
                                                 <TextBlock
-                                                    Text="Nombre:"
-                                                    VerticalAlignment="Center"
-                                                    FontSize="12"
-                                                    Foreground="#334155" />
+                                                        Text="Nombre:"
+                                                        VerticalAlignment="Center"
+                                                        FontSize="12"
+                                                        Foreground="#334155" />
 
                                                 <TextBox
-                                                    Grid.Column="1"
-                                                    Text="{Binding Nombre, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                    Height="24"
-                                                    FontSize="11"
-                                                    VerticalContentAlignment="Center"
-                                                    IsEnabled="True"
-                                                    CharacterCasing="Upper"
-                                                    Style="{StaticResource ActividadNombreTextBoxStyle}"
-                                                    TextChanged="ActividadProp_TextChanged" />
+                                                        Grid.Column="1"
+                                                        Text="{Binding Nombre, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                        Height="24"
+                                                        FontSize="12"
+                                                        VerticalContentAlignment="Center"
+                                                        IsEnabled="True"
+                                                        CharacterCasing="Upper"
+                                                        Style="{StaticResource ActividadNombreTextBoxStyle}"
+                                                        TextChanged="ActividadProp_TextChanged" />
 
                                             </Grid>
 
-                                            <!-- ============================================= -->
-                                            <!-- DESACTIVADA -->
-                                            <!-- ============================================= -->
-
                                             <TextBlock
-                                                Text="Actividad desactivada"
-                                                FontSize="12"
-                                                Foreground="#6B7280"
-                                                Margin="0,3,0,0">
+                                                    Text="Actividad desactivada"
+                                                    FontSize="12"
+                                                    Foreground="#6B7280"
+                                                    Margin="0,3,0,0">
 
                                                 <TextBlock.Style>
 
-                                                    <Style TargetType="TextBlock">
+                                                    <Style
+                                                            TargetType="TextBlock">
 
                                                         <Setter
-                                                            Property="Visibility"
-                                                            Value="Collapsed" />
+                                                                Property="Visibility"
+                                                                Value="Collapsed" />
 
                                                         <Style.Triggers>
 
                                                             <DataTrigger
-                                                                Binding="{Binding Activa}"
-                                                                Value="False">
+                                                                    Binding="{Binding Activa}"
+                                                                    Value="False">
 
                                                                 <Setter
-                                                                    Property="Visibility"
-                                                                    Value="Visible" />
+                                                                        Property="Visibility"
+                                                                        Value="Visible" />
 
                                                             </DataTrigger>
 
@@ -990,159 +1072,145 @@
 
                                             </TextBlock>
 
-                                            <!-- ============================================= -->
-                                            <!-- PORCENTAJE / PUNTAJE MÁXIMO -->
-                                            <!-- ============================================= -->
-
-                                            <Grid Margin="0,2,0,0">
+                                            <Grid
+                                                    Margin="0,2,0,0">
 
                                                 <Grid.ColumnDefinitions>
+
                                                     <ColumnDefinition Width="Auto" />
                                                     <ColumnDefinition Width="42" />
                                                     <ColumnDefinition Width="Auto" />
                                                     <ColumnDefinition Width="Auto" />
                                                     <ColumnDefinition Width="42" />
+
                                                 </Grid.ColumnDefinitions>
 
                                                 <TextBlock
-                                                    Text="Porcentaje:"
-                                                    VerticalAlignment="Center"
-                                                    Margin="0,0,4,0"
-                                                    FontSize="11"
-                                                    Foreground="#334155" />
+                                                        Text="Porcentaje:"
+                                                        VerticalAlignment="Center"
+                                                        Margin="0,0,4,0"
+                                                        FontSize="12"
+                                                        Foreground="#334155" />
 
                                                 <TextBox
-                                                    x:Name="PorcBox"
-                                                    Grid.Column="1"
-                                                    Style="{StaticResource RoundedTextBoxStyle}"
-                                                    Text="{Binding Porcentaje, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                    Height="24"
-                                                    FontSize="11"
-                                                    HorizontalContentAlignment="Center"
-                                                    VerticalContentAlignment="Center"
-                                                    IsEnabled="True"
-                                                    MaxLength="3"
-                                                    PreviewTextInput="Numeros_PreviewTextInput"
-                                                    DataObject.Pasting="Numeros_Pasting"
-                                                    TextChanged="ActividadProp_TextChanged" />
+                                                        x:Name="PorcBox"
+                                                        Grid.Column="1"
+                                                        Style="{StaticResource RoundedTextBoxStyle}"
+                                                        Text="{Binding Porcentaje, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                        Height="24"
+                                                        FontSize="12"
+                                                        HorizontalContentAlignment="Center"
+                                                        VerticalContentAlignment="Center"
+                                                        IsEnabled="True"
+                                                        MaxLength="3"
+                                                        PreviewTextInput="Numeros_PreviewTextInput"
+                                                        DataObject.Pasting="Numeros_Pasting"
+                                                        TextChanged="ActividadProp_TextChanged" />
 
                                                 <TextBlock
-                                                    Grid.Column="2"
-                                                    Text="%"
-                                                    VerticalAlignment="Center"
-                                                    Margin="2,0,8,0"
-                                                    FontSize="11"
-                                                    Foreground="#334155" />
+                                                        Grid.Column="2"
+                                                        Text="%"
+                                                        VerticalAlignment="Center"
+                                                        Margin="2,0,8,0"
+                                                        FontSize="12"
+                                                        Foreground="#334155" />
 
                                                 <TextBlock
-                                                    Grid.Column="3"
-                                                    Text="Puntaje Máx:"
-                                                    VerticalAlignment="Center"
-                                                    Margin="0,0,4,0"
-                                                    FontSize="11"
-                                                    Foreground="#334155" />
+                                                        Grid.Column="3"
+                                                        Text="Puntaje Máx:"
+                                                        VerticalAlignment="Center"
+                                                        Margin="0,0,4,0"
+                                                        FontSize="12"
+                                                        Foreground="#334155" />
 
                                                 <TextBox
-                                                    Grid.Column="4"
-                                                    Text="{Binding PuntajeMaximo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                    Height="24"
-                                                    FontSize="11"
-                                                    HorizontalContentAlignment="Center"
-                                                    VerticalContentAlignment="Center"
-                                                    IsEnabled="True"
-                                                    MaxLength="3"
-                                                    Style="{StaticResource RoundedTextBoxStyle}"
-                                                    PreviewTextInput="Numeros_PreviewTextInput"
-                                                    DataObject.Pasting="Numeros_Pasting"
-                                                    TextChanged="ActividadProp_TextChanged" />
+                                                        Grid.Column="4"
+                                                        Text="{Binding PuntajeMaximo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                        Height="24"
+                                                        FontSize="12"
+                                                        HorizontalContentAlignment="Center"
+                                                        VerticalContentAlignment="Center"
+                                                        IsEnabled="True"
+                                                        MaxLength="3"
+                                                        Style="{StaticResource RoundedTextBoxStyle}"
+                                                        PreviewTextInput="Numeros_PreviewTextInput"
+                                                        DataObject.Pasting="Numeros_Pasting"
+                                                        TextChanged="ActividadProp_TextChanged" />
 
                                             </Grid>
 
                                         </StackPanel>
 
-                                        <!-- ============================================= -->
-                                        <!-- COLOR DEL PANEL -->
-                                        <!-- ============================================= -->
-
                                         <Border.Style>
 
                                             <Style
-                                                TargetType="Border"
-                                                BasedOn="{StaticResource ActividadBorderStyle}">
+                                                    TargetType="Border"
+                                                    BasedOn="{StaticResource ActividadBorderStyle}">
 
                                                 <Style.Triggers>
 
-                                                    <!-- ========================================= -->
-                                                    <!-- COMPLETA = VERDE -->
-                                                    <!-- ========================================= -->
-
+                                                    <!-- ACTIVIDAD COMPLETA = AZUL -->
                                                     <MultiDataTrigger>
 
                                                         <MultiDataTrigger.Conditions>
 
                                                             <Condition
-                                                                Binding="{Binding Activa}"
-                                                                Value="True" />
+                                                                    Binding="{Binding Activa}"
+                                                                    Value="True" />
 
                                                             <Condition
-                                                                Binding="{Binding EstaCompleta}"
-                                                                Value="True" />
+                                                                    Binding="{Binding EstaCompleta}"
+                                                                    Value="True" />
 
                                                         </MultiDataTrigger.Conditions>
 
                                                         <Setter
-                                                            Property="BorderBrush"
-                                                            Value="#16A34A" />
+                                                                Property="BorderBrush"
+                                                                Value="{StaticResource AppBlue}" />
 
                                                         <Setter
-                                                            Property="Background"
-                                                            Value="#ECFDF5" />
+                                                                Property="Background"
+                                                                Value="{StaticResource AppBlueSoft}" />
 
                                                     </MultiDataTrigger>
 
-                                                    <!-- ========================================= -->
-                                                    <!-- INCOMPLETA = ROJO -->
-                                                    <!-- ========================================= -->
-
+                                                    <!-- ACTIVIDAD INCOMPLETA = ROJO -->
                                                     <MultiDataTrigger>
 
                                                         <MultiDataTrigger.Conditions>
 
                                                             <Condition
-                                                                Binding="{Binding Activa}"
-                                                                Value="True" />
+                                                                    Binding="{Binding Activa}"
+                                                                    Value="True" />
 
                                                             <Condition
-                                                                Binding="{Binding EstaCompleta}"
-                                                                Value="False" />
+                                                                    Binding="{Binding EstaCompleta}"
+                                                                    Value="False" />
 
                                                         </MultiDataTrigger.Conditions>
 
                                                         <Setter
-                                                            Property="BorderBrush"
-                                                            Value="#DC2626" />
+                                                                Property="BorderBrush"
+                                                                Value="{StaticResource AppRed}" />
 
                                                         <Setter
-                                                            Property="Background"
-                                                            Value="#FFFBFA" />
+                                                                Property="Background"
+                                                                Value="{StaticResource AppRedSoft}" />
 
                                                     </MultiDataTrigger>
 
-                                                    <!-- ========================================= -->
                                                     <!-- DESACTIVADA = GRIS -->
-                                                    <!-- ========================================= -->
-
                                                     <DataTrigger
-                                                        Binding="{Binding Activa}"
-                                                        Value="False">
+                                                            Binding="{Binding Activa}"
+                                                            Value="False">
 
                                                         <Setter
-                                                            Property="BorderBrush"
-                                                            Value="#9CA3AF" />
+                                                                Property="BorderBrush"
+                                                                Value="#9CA3AF" />
 
                                                         <Setter
-                                                            Property="Background"
-                                                            Value="#F3F4F6" />
+                                                                Property="Background"
+                                                                Value="{StaticResource AppGraySoft}" />
 
                                                     </DataTrigger>
 
@@ -1161,96 +1229,101 @@
                             <Grid>
 
                                 <Grid.RowDefinitions>
+
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+
                                 </Grid.RowDefinitions>
 
                                 <Grid.ColumnDefinitions>
+
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
+
                                 </Grid.ColumnDefinitions>
 
                                 <ContentControl
-                                    Grid.Row="0"
-                                    Grid.Column="0"
-                                    Content="{Binding Actividades[0]}"
-                                    ContentTemplate="{StaticResource ActividadTemplate}"
-                                    Margin="2" />
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        Content="{Binding Actividades[0]}"
+                                        ContentTemplate="{StaticResource ActividadTemplate}"
+                                        Margin="2" />
 
                                 <ContentControl
-                                    Grid.Row="0"
-                                    Grid.Column="1"
-                                    Content="{Binding Actividades[1]}"
-                                    ContentTemplate="{StaticResource ActividadTemplate}"
-                                    Margin="2" />
+                                        Grid.Row="0"
+                                        Grid.Column="1"
+                                        Content="{Binding Actividades[1]}"
+                                        ContentTemplate="{StaticResource ActividadTemplate}"
+                                        Margin="2" />
 
                                 <ContentControl
-                                    Grid.Row="1"
-                                    Grid.Column="0"
-                                    Content="{Binding Actividades[2]}"
-                                    ContentTemplate="{StaticResource ActividadTemplate}"
-                                    Margin="2" />
+                                        Grid.Row="1"
+                                        Grid.Column="0"
+                                        Content="{Binding Actividades[2]}"
+                                        ContentTemplate="{StaticResource ActividadTemplate}"
+                                        Margin="2" />
 
                                 <ContentControl
-                                    Grid.Row="1"
-                                    Grid.Column="1"
-                                    Content="{Binding Actividades[3]}"
-                                    ContentTemplate="{StaticResource ActividadTemplate}"
-                                    Margin="2" />
+                                        Grid.Row="1"
+                                        Grid.Column="1"
+                                        Content="{Binding Actividades[3]}"
+                                        ContentTemplate="{StaticResource ActividadTemplate}"
+                                        Margin="2" />
 
                             </Grid>
 
                         </GroupBox>
 
                         <!-- ================================================= -->
-                        <!-- ASISTENCIAS                                         -->
+                        <!-- ASISTENCIAS                                      -->
                         <!-- ================================================= -->
 
                         <GroupBox
-                            Grid.Row="1"
-                            Header="Configuración de Asistencias"
-                            Margin="0,4,0,0"
-                            Style="{StaticResource CardGroupBoxStyle}">
+                                Grid.Row="1"
+                                Header="Configuración de Asistencias"
+                                Margin="0,4,0,0"
+                                Style="{StaticResource CardGroupBoxStyle}">
 
                             <Border
-                                BorderBrush="#D7DEE8"
-                                BorderThickness="1"
-                                CornerRadius="8"
-                                Padding="10,6"
-                                Margin="3"
-                                Background="#F8FAFC">
+                                    BorderBrush="#D7DEE8"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="10,6"
+                                    Margin="3"
+                                    Background="#F8FAFC">
 
                                 <StackPanel>
 
                                     <CheckBox
-                                        Content="Evaluar asistencia en este parcial"
-                                        IsChecked="{Binding AsistenciaActiva, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                        Margin="0,0,0,6" />
+                                            Content="Evaluar asistencia en este parcial"
+                                            FontSize="12"
+                                            IsChecked="{Binding AsistenciaActiva, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            Margin="0,0,0,6" />
 
                                     <WrapPanel
-                                        Orientation="Horizontal"
-                                        VerticalAlignment="Center"
-                                        IsEnabled="{Binding AsistenciaActiva}">
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            IsEnabled="{Binding AsistenciaActiva}">
 
                                         <TextBlock
-                                            Text="Clases en el Parcial:"
-                                            VerticalAlignment="Center"
-                                            FontSize="11"
-                                            Margin="0,0,5,5"
-                                            Foreground="#334155" />
+                                                Text="Clases en el Parcial:"
+                                                VerticalAlignment="Center"
+                                                FontSize="12"
+                                                Margin="0,0,5,5"
+                                                Foreground="#334155" />
 
                                         <TextBox
-                                            Width="50"
-                                            Height="24"
-                                            FontSize="11"
-                                            HorizontalContentAlignment="Center"
-                                            VerticalContentAlignment="Center"
-                                            Margin="0,0,15,5"
-                                            MaxLength="3"
-                                            Text="{Binding ClasesTotales, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                            Style="{StaticResource RoundedTextBoxStyle}"
-                                            PreviewTextInput="NumerosEnteros_PreviewTextInput"
-                                            DataObject.Pasting="Numeros_Pasting" />
+                                                Width="50"
+                                                Height="24"
+                                                FontSize="12"
+                                                HorizontalContentAlignment="Center"
+                                                VerticalContentAlignment="Center"
+                                                Margin="0,0,15,5"
+                                                MaxLength="3"
+                                                Text="{Binding ClasesTotales, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                Style="{StaticResource RoundedTextBoxStyle}"
+                                                PreviewTextInput="NumerosEnteros_PreviewTextInput"
+                                                DataObject.Pasting="Numeros_Pasting" />
 
                                     </WrapPanel>
 
@@ -1261,42 +1334,42 @@
                         </GroupBox>
 
                         <!-- ================================================= -->
-                        <!-- PORCENTAJE                                           -->
+                        <!-- PORCENTAJE                                       -->
                         <!-- ================================================= -->
 
                         <Border
-                            Grid.Row="2"
-                            Background="#EAF0F8"
-                            BorderBrush="#D7DEE8"
-                            BorderThickness="1"
-                            CornerRadius="8"
-                            Padding="10,7"
-                            Margin="0,7,0,0">
+                                Grid.Row="2"
+                                Background="{StaticResource AppBlueSoft}"
+                                BorderBrush="{StaticResource AppBlueSoftBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10,7"
+                                Margin="0,7,0,0">
 
                             <StackPanel
-                                Orientation="Horizontal"
-                                VerticalAlignment="Center">
+                                    Orientation="Horizontal"
+                                    VerticalAlignment="Center">
 
                                 <TextBlock
-                                    Text="{Binding SumaPorcentajesTexto}"
-                                    VerticalAlignment="Center"
-                                    Margin="0,0,10,0">
+                                        Text="{Binding SumaPorcentajesTexto}"
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,10,0">
 
                                     <TextBlock.Style>
 
                                         <Style
-                                            TargetType="TextBlock"
-                                            BasedOn="{StaticResource SumaPorcText}">
+                                                TargetType="TextBlock"
+                                                BasedOn="{StaticResource SumaPorcText}">
 
                                             <Style.Triggers>
 
                                                 <DataTrigger
-                                                    Binding="{Binding SumaValida}"
-                                                    Value="False">
+                                                        Binding="{Binding SumaValida}"
+                                                        Value="False">
 
                                                     <Setter
-                                                        Property="Foreground"
-                                                        Value="#D97706" />
+                                                            Property="Foreground"
+                                                            Value="#D97706" />
 
                                                 </DataTrigger>
 
@@ -1309,10 +1382,10 @@
                                 </TextBlock>
 
                                 <TextBlock
-                                    Text="Porcentaje acumulado mostrado arriba."
-                                    FontSize="11"
-                                    Foreground="#64748B"
-                                    VerticalAlignment="Center" />
+                                        Text="Porcentaje acumulado mostrado arriba."
+                                        FontSize="12"
+                                        Foreground="{StaticResource AppTextSecondary}"
+                                        VerticalAlignment="Center" />
 
                             </StackPanel>
 
@@ -1321,73 +1394,97 @@
                     </Grid>
 
                     <!-- ================================================= -->
-                    <!-- ALUMNOS                                               -->
+                    <!-- COLUMNA DERECHA                                  -->
                     <!-- ================================================= -->
 
+                    <!-- Se redujo el margen izquierdo de 10 a 5 -->
                     <Grid
-                        Grid.Column="1"
-                        Margin="10,0,0,0">
+                            Grid.Column="1"
+                            Margin="5,0,0,0">
 
                         <Grid.RowDefinitions>
+
+                            <!-- Lista de alumnos -->
                             <RowDefinition Height="*" />
+
+                            <!-- Navegación -->
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
+
+                            <!-- Puntajes -->
+                            <RowDefinition Height="*" />
+
                         </Grid.RowDefinitions>
 
+                        <!-- ================================================= -->
+                        <!-- ALUMNOS                                         -->
+                        <!-- ================================================= -->
+
                         <GroupBox
-                            Header="Alumnos"
-                            Margin="0,0,0,4"
-                            Style="{StaticResource CardGroupBoxStyle}">
+                                Grid.Row="0"
+                                Header="Alumnos"
+                                Margin="0,0,0,4"
+                                VerticalAlignment="Stretch"
+                                Style="{StaticResource CardGroupBoxStyle}">
 
                             <Grid>
 
                                 <Grid.RowDefinitions>
+
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
+
                                 </Grid.RowDefinitions>
 
                                 <Grid
-                                    Grid.Row="0"
-                                    Margin="8,0,8,2">
+                                        Grid.Row="0"
+                                        Margin="8,0,8,2">
 
                                     <Grid.ColumnDefinitions>
+
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="40" />
+
                                     </Grid.ColumnDefinitions>
 
                                     <TextBlock
-                                        Text="Matrícula"
-                                        FontWeight="Bold"
-                                        Foreground="#1B365D"
-                                        FontSize="12"
-                                        VerticalAlignment="Center" />
+                                            Text="Matrícula"
+                                            FontWeight="Bold"
+                                            Foreground="{StaticResource AppBlue}"
+                                            FontSize="12"
+                                            VerticalAlignment="Center" />
 
                                     <TextBlock
-                                        Grid.Column="1"
-                                        Text="Nombre"
-                                        FontWeight="Bold"
-                                        Foreground="#1B365D"
-                                        FontSize="12"
-                                        VerticalAlignment="Center" />
+                                            Grid.Column="1"
+                                            Text="Nombre"
+                                            FontWeight="Bold"
+                                            Foreground="{StaticResource AppBlue}"
+                                            FontSize="12"
+                                            VerticalAlignment="Center" />
 
                                 </Grid>
 
                                 <ListBox
-                                    Grid.Row="1"
-                                    ItemsSource="{Binding Alumnos}"
-                                    SelectedItem="{Binding AlumnoSeleccionado, Mode=TwoWay}"
-                                    SelectionChanged="Alumnos_SelectionChanged"
-                                    BorderThickness="0"
-                                    Background="Transparent"
-                                    ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                        Grid.Row="1"
+                                        ItemsSource="{Binding Alumnos}"
+                                        SelectedItem="{Binding AlumnoSeleccionado, Mode=TwoWay}"
+                                        SelectionChanged="Alumnos_SelectionChanged"
+                                        BorderThickness="0"
+                                        Background="Transparent"
+                                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Disabled">
 
                                     <ListBox.ItemContainerStyle>
 
                                         <Style
-                                            TargetType="ListBoxItem"
-                                            BasedOn="{StaticResource AlumnoListBoxItemStyle}" />
+                                                TargetType="ListBoxItem"
+                                                BasedOn="{StaticResource AlumnoListBoxItemStyle}">
+
+                                            <Setter
+                                                    Property="Margin"
+                                                    Value="0,0,0,1" />
+
+                                        </Style>
 
                                     </ListBox.ItemContainerStyle>
 
@@ -1396,51 +1493,56 @@
                                         <DataTemplate>
 
                                             <Border
-                                                Background="Transparent"
-                                                Padding="7,7"
-                                                Margin="1,1">
+                                                    Background="Transparent"
+                                                    Padding="5,3"
+                                                    Margin="1,0">
 
                                                 <Grid>
 
                                                     <Grid.ColumnDefinitions>
+
                                                         <ColumnDefinition Width="80" />
                                                         <ColumnDefinition Width="*" />
                                                         <ColumnDefinition Width="40" />
+
                                                     </Grid.ColumnDefinitions>
 
                                                     <TextBlock
-                                                        Text="{Binding Matricula}"
-                                                        FontWeight="SemiBold"
-                                                        Foreground="#1E293B"
-                                                        FontSize="14"
-                                                        VerticalAlignment="Center" />
+                                                            Text="{Binding Matricula}"
+                                                            FontWeight="SemiBold"
+                                                            Foreground="#1E293B"
+                                                            FontSize="13"
+                                                            VerticalAlignment="Center" />
 
                                                     <TextBlock
-                                                        Grid.Column="1"
-                                                        Text="{Binding Nombre}"
-                                                        Foreground="#334155"
-                                                        FontSize="14"
-                                                        VerticalAlignment="Center"
-                                                        TextTrimming="CharacterEllipsis" />
+                                                            Grid.Column="1"
+                                                            Text="{Binding Nombre}"
+                                                            Foreground="#334155"
+                                                            FontSize="13"
+                                                            VerticalAlignment="Center"
+                                                            TextTrimming="CharacterEllipsis" />
 
                                                     <Button
-                                                        Grid.Column="2"
-                                                        Style="{StaticResource IconButtonStyle}"
-                                                        ToolTip="Ver detalles del alumno"
-                                                        HorizontalAlignment="Right"
-                                                        VerticalAlignment="Center"
-                                                        Click="PapelButton_Click"
-                                                        Tag="{Binding}"
-                                                        Focusable="False"
-                                                        IsTabStop="False">
+                                                            Grid.Column="2"
+                                                            Style="{StaticResource IconButtonStyle}"
+                                                            ToolTip="Ver detalles del alumno"
+                                                            HorizontalAlignment="Right"
+                                                            VerticalAlignment="Center"
+                                                            Click="PapelButton_Click"
+                                                            Tag="{Binding}"
+                                                            Focusable="False"
+                                                            IsTabStop="False"
+                                                            Padding="4,2"
+                                                            MinWidth="32"
+                                                            MinHeight="30">
 
                                                         <Viewbox
-                                                            Width="22"
-                                                            Height="22">
+                                                                Width="19"
+                                                                Height="19">
 
                                                             <Path
-                                                                Fill="#475569"
-                                                                Data="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2ZM13,17H11V11H13V17ZM13,9H11V7H13V9Z" />
+                                                                    Fill="{StaticResource AppBlue}"
+                                                                    Data="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2ZM13,17H11V11H13V17ZM13,9H11V7H13V9Z" />
 
                                                         </Viewbox>
 
@@ -1461,102 +1563,110 @@
                         </GroupBox>
 
                         <!-- ================================================= -->
-                        <!-- NAVEGACIÓN                                           -->
+                        <!-- NAVEGACIÓN                                      -->
                         <!-- ================================================= -->
 
                         <StackPanel
-                            Grid.Row="1"
-                            Orientation="Horizontal"
-                            HorizontalAlignment="Center"
-                            Margin="0,0,0,4">
+                                Grid.Row="1"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
 
                             <Button
-                                Content="Inicio"
-                                Command="{Binding InicioCommand}"
-                                Margin="0,0,4,0"
-                                MinWidth="72"
-                                Style="{StaticResource BlueButtonStyle}" />
+                                    Content="Inicio"
+                                    Command="{Binding InicioCommand}"
+                                    Margin="0,0,4,0"
+                                    MinWidth="72"
+                                    Style="{StaticResource BlueButtonStyle}" />
 
                             <Button
-                                Content="Anterior"
-                                Command="{Binding AnteriorCommand}"
-                                Margin="0,0,4,0"
-                                MinWidth="72"
-                                Style="{StaticResource BlueButtonStyle}" />
+                                    Content="Anterior"
+                                    Command="{Binding AnteriorCommand}"
+                                    Margin="0,0,4,0"
+                                    MinWidth="72"
+                                    Style="{StaticResource BlueButtonStyle}" />
 
                             <Button
-                                Content="Siguiente"
-                                Command="{Binding SiguienteCommand}"
-                                Margin="0,0,4,0"
-                                MinWidth="72"
-                                Style="{StaticResource BlueButtonStyle}" />
+                                    Content="Siguiente"
+                                    Command="{Binding SiguienteCommand}"
+                                    Margin="0,0,4,0"
+                                    MinWidth="72"
+                                    Style="{StaticResource BlueButtonStyle}" />
 
                             <Button
-                                Content="Final"
-                                Command="{Binding FinalCommand}"
-                                MinWidth="72"
-                                Style="{StaticResource BlueButtonStyle}" />
+                                    Content="Final"
+                                    Command="{Binding FinalCommand}"
+                                    MinWidth="72"
+                                    Style="{StaticResource BlueButtonStyle}" />
 
                         </StackPanel>
 
                         <!-- ================================================= -->
-                        <!-- PUNTAJES                                             -->
+                        <!-- PUNTAJES OBTENIDOS                              -->
                         <!-- ================================================= -->
 
                         <GroupBox
-                            Grid.Row="2"
-                            Header="Puntajes obtenidos:"
-                            Margin="0,4,0,0"
-                            Style="{StaticResource CardGroupBoxStyle}">
+                                Grid.Row="2"
+                                Header="Puntajes obtenidos:"
+                                Margin="0,4,0,0"
+                                VerticalAlignment="Stretch"
+                                Style="{StaticResource CardGroupBoxStyle}">
 
-                            <Grid Margin="6,8,6,5">
+                            <Grid
+                                    Margin="6,8,6,5">
 
                                 <Grid.ColumnDefinitions>
+
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="1" />
                                     <ColumnDefinition Width="130" />
+
                                 </Grid.ColumnDefinitions>
 
-                                <StackPanel Grid.Column="0">
+                                <!-- ======================================= -->
+                                <!-- CAPTURA                                  -->
+                                <!-- ======================================= -->
+
+                                <StackPanel
+                                        Grid.Column="0">
 
                                     <TextBlock
-                                        Text="{Binding NombreAlumno}"
-                                        FontWeight="Bold"
-                                        Foreground="#0F172A"
-                                        Margin="0,0,0,8"
-                                        FontSize="12" />
+                                            Text="{Binding NombreAlumno}"
+                                            FontWeight="Bold"
+                                            Foreground="#0F172A"
+                                            Margin="0,0,0,6"
+                                            FontSize="12" />
 
                                     <ItemsControl
-                                        x:Name="PuntajesItemsControl"
-                                        ItemsSource="{Binding Actividades}">
+                                            x:Name="PuntajesItemsControl"
+                                            ItemsSource="{Binding Actividades}">
 
                                         <ItemsControl.ItemTemplate>
 
                                             <DataTemplate>
 
-                                                <!-- ========================================= -->
-                                                <!-- ACTIVIDAD DESACTIVADA = FILA OCULTA -->
-                                                <!-- ========================================= -->
-
-                                                <Grid Margin="0,3">
+                                                <Grid
+                                                        Height="27"
+                                                        Margin="0,1">
 
                                                     <Grid.Style>
 
-                                                        <Style TargetType="Grid">
+                                                        <Style
+                                                                TargetType="Grid">
 
                                                             <Setter
-                                                                Property="Visibility"
-                                                                Value="Visible" />
+                                                                    Property="Visibility"
+                                                                    Value="Visible" />
 
                                                             <Style.Triggers>
 
                                                                 <DataTrigger
-                                                                    Binding="{Binding Activa}"
-                                                                    Value="False">
+                                                                        Binding="{Binding Activa}"
+                                                                        Value="False">
 
                                                                     <Setter
-                                                                        Property="Visibility"
-                                                                        Value="Collapsed" />
+                                                                            Property="Visibility"
+                                                                            Value="Collapsed" />
 
                                                                 </DataTrigger>
 
@@ -1567,55 +1677,57 @@
                                                     </Grid.Style>
 
                                                     <Grid.ColumnDefinitions>
+
                                                         <ColumnDefinition Width="140" />
                                                         <ColumnDefinition Width="42" />
                                                         <ColumnDefinition Width="52" />
                                                         <ColumnDefinition Width="40" />
+
                                                     </Grid.ColumnDefinitions>
 
                                                     <TextBlock
-                                                        Text="{Binding NombreParaPuntajes}"
-                                                        VerticalAlignment="Center"
-                                                        FontWeight="SemiBold"
-                                                        Foreground="#1E293B"
-                                                        FontSize="11"
-                                                        TextTrimming="CharacterEllipsis" />
+                                                            Text="{Binding NombreParaPuntajes}"
+                                                            VerticalAlignment="Center"
+                                                            FontWeight="SemiBold"
+                                                            Foreground="#1E293B"
+                                                            FontSize="12"
+                                                            TextTrimming="CharacterEllipsis" />
 
                                                     <TextBox
-                                                        Grid.Column="1"
-                                                        Text="{Binding DisplayPuntajeObtenido, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                        Height="22"
-                                                        VerticalContentAlignment="Center"
-                                                        HorizontalContentAlignment="Center"
-                                                        FontSize="11"
-                                                        Margin="2,0"
-                                                        MaxLength="4"
-                                                        PreviewTextInput="PuntajeObtenido_PreviewTextInput"
-                                                        DataObject.Pasting="PuntajeObtenido_Pasting"
-                                                        KeyDown="PuntajeObtenido_KeyDown"
-                                                        TextChanged="Puntaje_TextChanged"
-                                                        GotFocus="CampoSc_GotFocus"
-                                                        LostFocus="CampoSc_LostFocus">
+                                                            Grid.Column="1"
+                                                            Text="{Binding DisplayPuntajeObtenido, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                            Height="22"
+                                                            VerticalContentAlignment="Center"
+                                                            HorizontalContentAlignment="Center"
+                                                            FontSize="12"
+                                                            Margin="2,0"
+                                                            MaxLength="4"
+                                                            PreviewTextInput="PuntajeObtenido_PreviewTextInput"
+                                                            DataObject.Pasting="PuntajeObtenido_Pasting"
+                                                            KeyDown="PuntajeObtenido_KeyDown"
+                                                            TextChanged="Puntaje_TextChanged"
+                                                            GotFocus="CampoSc_GotFocus"
+                                                            LostFocus="CampoSc_LostFocus">
 
                                                         <TextBox.Style>
 
                                                             <Style
-                                                                TargetType="TextBox"
-                                                                BasedOn="{StaticResource RoundedTextBoxStyle}">
+                                                                    TargetType="TextBox"
+                                                                    BasedOn="{StaticResource RoundedTextBoxStyle}">
 
                                                                 <Setter
-                                                                    Property="IsEnabled"
-                                                                    Value="{Binding IsPuntajeEditableFinal}" />
+                                                                        Property="IsEnabled"
+                                                                        Value="{Binding IsPuntajeEditableFinal}" />
 
                                                                 <Style.Triggers>
 
                                                                     <DataTrigger
-                                                                        Binding="{Binding DataContext.AlumnoConCapturaDirecta, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                        Value="True">
+                                                                            Binding="{Binding DataContext.AlumnoConCapturaDirecta, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                            Value="True">
 
                                                                         <Setter
-                                                                            Property="IsEnabled"
-                                                                            Value="False" />
+                                                                                Property="IsEnabled"
+                                                                                Value="False" />
 
                                                                     </DataTrigger>
 
@@ -1628,21 +1740,21 @@
                                                     </TextBox>
 
                                                     <TextBlock
-                                                        Grid.Column="2"
-                                                        Text="{Binding FraccionTexto}"
-                                                        VerticalAlignment="Center"
-                                                        HorizontalAlignment="Center"
-                                                        Foreground="#475569"
-                                                        FontSize="12" />
+                                                            Grid.Column="2"
+                                                            Text="{Binding FraccionTexto}"
+                                                            VerticalAlignment="Center"
+                                                            HorizontalAlignment="Center"
+                                                            Foreground="#475569"
+                                                            FontSize="12" />
 
                                                     <TextBlock
-                                                        Grid.Column="3"
-                                                        Text="{Binding ContribucionTexto}"
-                                                        VerticalAlignment="Center"
-                                                        HorizontalAlignment="Right"
-                                                        FontWeight="Bold"
-                                                        Foreground="#1B365D"
-                                                        FontSize="12" />
+                                                            Grid.Column="3"
+                                                            Text="{Binding ContribucionTexto}"
+                                                            VerticalAlignment="Center"
+                                                            HorizontalAlignment="Right"
+                                                            FontWeight="Bold"
+                                                            Foreground="{StaticResource AppBlue}"
+                                                            FontSize="12" />
 
                                                 </Grid>
 
@@ -1652,107 +1764,66 @@
 
                                     </ItemsControl>
 
-                                    <TextBlock
-                                        Text="{Binding LeyendaCapturaDirecta}"
-                                        Foreground="#B91C1C"
-                                        FontSize="12"
-                                        Margin="0,7,0,0"
-                                        TextWrapping="Wrap"
-                                        Visibility="{Binding AlumnoConCapturaDirecta, Converter={StaticResource BoolToVis}}" />
+                                    <!-- ======================================= -->
+                                    <!-- QUINTA FILA: INASISTENCIAS             -->
+                                    <!-- ======================================= -->
 
-                                </StackPanel>
+                                    <Grid
+                                            Height="27"
+                                            Margin="0,1">
 
-                                <Border
-                                    Grid.Column="1"
-                                    Width="1"
-                                    Background="#D7DEE8"
-                                    Margin="8,0" />
+                                        <Grid.ColumnDefinitions>
 
-                                <StackPanel
-                                    Grid.Column="2"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center">
+                                            <ColumnDefinition Width="140" />
+                                            <ColumnDefinition Width="42" />
+                                            <ColumnDefinition Width="52" />
+                                            <ColumnDefinition Width="40" />
 
-                                    <TextBlock
-                                        Text="Calificación"
-                                        HorizontalAlignment="Center"
-                                        Foreground="#334155"
-                                        FontSize="15" />
-
-                                    <TextBlock
-                                        Text="Parcial:"
-                                        HorizontalAlignment="Center"
-                                        Foreground="#334155"
-                                        FontSize="15"
-                                        Margin="0,-1,0,0" />
-
-                                    <Border
-                                        Style="{StaticResource BlueGradeBlock}"
-                                        Margin="0,8,0,10">
-
-                                        <TextBox
-                                            Text="{Binding CalificacionParcialTexto, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                            Foreground="{Binding CalificacionParcialTexto, Converter={StaticResource ColorCalifConverter}}"
-                                            Style="{StaticResource RoundedTextBoxStyle}"
-                                            FontSize="22"
-                                            FontWeight="Black"
-                                            HorizontalContentAlignment="Center"
-                                            VerticalContentAlignment="Center"
-                                            Width="100"
-                                            IsEnabled="{Binding AlumnoConCapturaDirecta}"
-                                            TextChanged="CalificacionParcial_TextChanged" />
-
-                                    </Border>
-
-                                    <StackPanel
-                                        Orientation="Horizontal"
-                                        Margin="0,8,0,4"
-                                        HorizontalAlignment="Center">
+                                        </Grid.ColumnDefinitions>
 
                                         <TextBlock
-                                            Text="Inasistencias:"
-                                            VerticalAlignment="Center"
-                                            Margin="0,0,6,0"
-                                            FontWeight="SemiBold"
-                                            Foreground="#1E293B"
-                                            FontSize="11" />
+                                                Text="INASISTENCIAS"
+                                                VerticalAlignment="Center"
+                                                FontWeight="SemiBold"
+                                                Foreground="#1E293B"
+                                                FontSize="12"
+                                                TextTrimming="CharacterEllipsis" />
 
                                         <TextBox
-                                            Width="50"
-                                            Height="24"
-                                            Text="{Binding Inasistencias, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                            HorizontalContentAlignment="Center"
-                                            VerticalContentAlignment="Center"
-                                            MaxLength="3"
-                                            PreviewTextInput="NumerosEnteros_PreviewTextInput"
-                                            DataObject.Pasting="Numeros_Pasting"
-                                            TextChanged="Puntaje_TextChanged">
+                                                Grid.Column="1"
+                                                Text="{Binding Inasistencias, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                Height="22"
+                                                VerticalContentAlignment="Center"
+                                                HorizontalContentAlignment="Center"
+                                                FontSize="12"
+                                                Margin="2,0"
+                                                MaxLength="3"
+                                                PreviewTextInput="NumerosEnteros_PreviewTextInput"
+                                                DataObject.Pasting="Numeros_Pasting"
+                                                KeyDown="PuntajeObtenido_KeyDown"
+                                                TextChanged="Puntaje_TextChanged"
+                                                GotFocus="CampoSc_GotFocus"
+                                                LostFocus="CampoSc_LostFocus">
 
                                             <TextBox.Style>
 
                                                 <Style
-                                                    TargetType="TextBox"
-                                                    BasedOn="{StaticResource RoundedTextBoxStyle}">
+                                                        TargetType="TextBox"
+                                                        BasedOn="{StaticResource RoundedTextBoxStyle}">
+
+                                                    <Setter
+                                                            Property="IsEnabled"
+                                                            Value="{Binding AsistenciaActiva}" />
 
                                                     <Style.Triggers>
 
                                                         <DataTrigger
-                                                            Binding="{Binding AsistenciaActiva}"
-                                                            Value="False">
+                                                                Binding="{Binding AlumnoConCapturaDirecta}"
+                                                                Value="True">
 
                                                             <Setter
-                                                                Property="IsEnabled"
-                                                                Value="False" />
-
-                                                        </DataTrigger>
-
-                                                        <DataTrigger
-                                                            Binding="{Binding AlumnoConCapturaDirecta}"
-                                                            Value="True">
-
-                                                            <Setter
-                                                                Property="IsEnabled"
-                                                                Value="False" />
+                                                                    Property="IsEnabled"
+                                                                    Value="False" />
 
                                                         </DataTrigger>
 
@@ -1764,7 +1835,71 @@
 
                                         </TextBox>
 
-                                    </StackPanel>
+                                    </Grid>
+
+                                    <!-- ======================================= -->
+                                    <!-- LEYENDA                                  -->
+                                    <!-- ======================================= -->
+
+                                    <TextBlock
+                                            Text="{Binding LeyendaCapturaDirecta}"
+                                            Foreground="#B91C1C"
+                                            FontSize="12"
+                                            Margin="0,4,0,0"
+                                            TextWrapping="Wrap"
+                                            Visibility="{Binding AlumnoConCapturaDirecta, Converter={StaticResource BoolToVis}}" />
+
+                                </StackPanel>
+
+                                <!-- =========================================== -->
+                                <!-- SEPARADOR                                   -->
+                                <!-- =========================================== -->
+
+                                <Border
+                                        Grid.Column="1"
+                                        Width="1"
+                                        Background="#D7DEE8"
+                                        Margin="8,0" />
+
+                                <!-- =========================================== -->
+                                <!-- CALIFICACIÓN                               -->
+                                <!-- =========================================== -->
+
+                                <StackPanel
+                                        Grid.Column="2"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+
+                                    <TextBlock
+                                            Text="Calificación"
+                                            HorizontalAlignment="Center"
+                                            Foreground="#334155"
+                                            FontSize="15" />
+
+                                    <TextBlock
+                                            Text="Parcial:"
+                                            HorizontalAlignment="Center"
+                                            Foreground="#334155"
+                                            FontSize="15"
+                                            Margin="0,-1,0,0" />
+
+                                    <Border
+                                            Style="{StaticResource BlueGradeBlock}"
+                                            Margin="0,8,0,8">
+
+                                        <TextBox
+                                                Text="{Binding CalificacionParcialTexto, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                Foreground="{Binding CalificacionParcialTexto, Converter={StaticResource ColorCalifConverter}}"
+                                                Style="{StaticResource RoundedTextBoxStyle}"
+                                                FontSize="22"
+                                                FontWeight="Black"
+                                                HorizontalContentAlignment="Center"
+                                                VerticalContentAlignment="Center"
+                                                Width="100"
+                                                IsEnabled="{Binding AlumnoConCapturaDirecta}"
+                                                TextChanged="CalificacionParcial_TextChanged" />
+
+                                    </Border>
 
                                 </StackPanel>
 

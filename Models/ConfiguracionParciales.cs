@@ -11,4 +11,7 @@ public class ConfiguracionParciales
     public bool PreExtraordinarioHabilitado { get; set; }
     // Permite que la evaluación EXTRA sea visible/usable cuando lo autorice Servicios Escolares
     public bool ExtraHabilitado { get; set; }
+    // Indica la evaluación global seleccionada: P1, P2, P3, SEM
+    // No debe usarse "EXTRA" como evaluación global.
+    public string EvaluacionGlobal { get; set; } = "P1";
 }

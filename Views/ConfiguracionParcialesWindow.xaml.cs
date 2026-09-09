@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
@@ -37,6 +38,9 @@ public partial class ConfiguracionParcialesWindow :
         _evaluacionesGlobalesDisponibles =
             new();
 
+    // La ruta/configuración global ahora se gestiona exclusivamente en parciales.db
+    // mediante ConfiguracionParcialesService. No usar archivos en AppData.
+
     private bool _isGlobalComboEnabled = true;
 
     private bool _cargandoDatos;
@@ -53,14 +57,14 @@ public partial class ConfiguracionParcialesWindow :
     // ============================================================
 
     private readonly ObservableCollection<
-        LiteDbService.ProfesorConfigurado>
+        SqliteService.ProfesorConfigurado>
         _profesores =
             new();
 
     private string _claveProfesorCap =
         string.Empty;
 
-    private LiteDbService.ProfesorConfigurado?
+    private SqliteService.ProfesorConfigurado?
         _profesorSeleccionado;
 
     private bool _usarProfesorDelCap = true;
@@ -131,7 +135,7 @@ public partial class ConfiguracionParcialesWindow :
         _evaluacionesGlobalesDisponibles;
 
     public ObservableCollection<
-        LiteDbService.ProfesorConfigurado>
+        SqliteService.ProfesorConfigurado>
         Profesores =>
         _profesores;
 
@@ -232,7 +236,7 @@ public partial class ConfiguracionParcialesWindow :
         }
     }
 
-    public LiteDbService.ProfesorConfigurado?
+    public SqliteService.ProfesorConfigurado?
         ProfesorSeleccionado
     {
         get => _profesorSeleccionado;
@@ -702,6 +706,7 @@ public partial class ConfiguracionParcialesWindow :
 
         _configuracionService =
             new ConfiguracionParcialesService();
+        // placeholder: configuración inicial cargada
 
         _parserService =
             new CapParserService();
@@ -718,6 +723,7 @@ public partial class ConfiguracionParcialesWindow :
         CargarMateriasDisponibles();
 
         SuscribirCambiosDeSeleccionCaps();
+        // placeholder: subscripción de cambios
 
         CargarProfesores();
 
@@ -726,6 +732,7 @@ public partial class ConfiguracionParcialesWindow :
         VerificarSiCapEsExtra();
 
         CargarEvaluacionesGlobales();
+        // placeholder: evaluaciones globales preparadas
 
         CargarEstadoGlobal();
 
@@ -787,7 +794,7 @@ public partial class ConfiguracionParcialesWindow :
         try
         {
             using var lite =
-                new LiteDbService();
+                new SqliteService();
 
             foreach (var profesor
                      in lite.GetProfesores())
@@ -1481,7 +1488,7 @@ public partial class ConfiguracionParcialesWindow :
                 "Este correo fue enviado automáticamente desde CEIM.";
 
             using var lite =
-                new LiteDbService();
+                new SqliteService();
 
             await lite.EnviarCorreoAsync(
                 destinatario,
@@ -1631,87 +1638,40 @@ public partial class ConfiguracionParcialesWindow :
 
     private void CargarEstadoGlobal()
     {
-        var rutaGlobal =
-            Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory,
-                "configuracion_global.json");
-
-        bool existeConfiguracion =
-            false;
-
-        if (File.Exists(
-                rutaGlobal))
+        try
         {
-            try
+            var cfg = _configuracionService.ObtenerConfiguracion();
+
+            if (cfg != null)
             {
-                var json =
-                    File.ReadAllText(
-                        rutaGlobal);
-
-                var data =
-                    JsonSerializer.Deserialize<
-                        Dictionary<string, string>>(
-                        json);
-
-                if (data != null &&
-                    data.TryGetValue(
-                        "EvaluacionGlobal",
-                        out var eval) &&
-                    !string.IsNullOrWhiteSpace(
-                        eval))
+                if (!string.IsNullOrWhiteSpace(cfg.EvaluacionGlobal) &&
+                    !string.Equals(cfg.EvaluacionGlobal, "EXTRA", StringComparison.OrdinalIgnoreCase))
                 {
-                    _evaluacionGlobalSeleccionada =
-                        eval;
-
-                    existeConfiguracion =
-                        true;
+                    _evaluacionGlobalSeleccionada = cfg.EvaluacionGlobal;
+                }
+                else
+                {
+                    // Fallback: determinar a partir de los flags
+                    if (cfg.Parcial1Habilitado) _evaluacionGlobalSeleccionada = "P1";
+                    else if (cfg.Parcial2Habilitado) _evaluacionGlobalSeleccionada = "P2";
+                    else if (cfg.Parcial3Habilitado) _evaluacionGlobalSeleccionada = "P3";
+                    else if (cfg.SemestralHabilitado) _evaluacionGlobalSeleccionada = "SEM";
+                    else _evaluacionGlobalSeleccionada = cfg.EvaluacionGlobal ?? "P1";
                 }
             }
-            catch
+            else
             {
+                _evaluacionGlobalSeleccionada = "P1";
             }
         }
-
-        if (!existeConfiguracion)
+        catch
         {
-            _evaluacionGlobalSeleccionada =
-                "P1";
-
-            try
-            {
-                var data =
-                    new Dictionary<string, string>
-                    {
-                        ["EvaluacionGlobal"] =
-                            "P1"
-                    };
-
-                var json =
-                    JsonSerializer.Serialize(
-                        data);
-
-                File.WriteAllText(
-                    rutaGlobal,
-                    json);
-            }
-            catch
-            {
-            }
-        }
-
-        if (string.Equals(
-                _evaluacionGlobalSeleccionada,
-                "EXTRA",
-                StringComparison.OrdinalIgnoreCase))
-        {
-            _evaluacionGlobalSeleccionada =
-                "P1";
+            _evaluacionGlobalSeleccionada = "P1";
         }
 
         AplicarConfiguracionGlobal();
 
-        OnPropertyChanged(
-            nameof(EvaluacionGlobalSeleccionada));
+        OnPropertyChanged(nameof(EvaluacionGlobalSeleccionada));
     }
 
     // ============================================================
@@ -1800,26 +1760,18 @@ public partial class ConfiguracionParcialesWindow :
 
         try
         {
-            var data =
-                new Dictionary<string, string>
-                {
-                    ["EvaluacionGlobal"] =
-                        EvaluacionGlobalSeleccionada
-                        ?? "P1"
-                };
+            var cfg = _configuracionService.ObtenerConfiguracion() ?? new ConfiguracionParciales();
 
-            var json =
-                JsonSerializer.Serialize(
-                    data);
+            // Ajustar flags según la evaluación seleccionada
+            cfg.Parcial1Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P1", StringComparison.OrdinalIgnoreCase);
+            cfg.Parcial2Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P2", StringComparison.OrdinalIgnoreCase);
+            cfg.Parcial3Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P3", StringComparison.OrdinalIgnoreCase);
+            cfg.SemestralHabilitado = string.Equals(EvaluacionGlobalSeleccionada, "SEM", StringComparison.OrdinalIgnoreCase);
+            cfg.PreExtraordinarioHabilitado = string.Equals(EvaluacionGlobalSeleccionada, "PREEXTRAORDINARIO", StringComparison.OrdinalIgnoreCase);
+            cfg.ExtraHabilitado = false; // La evaluación global nunca será EXTRA
+            cfg.EvaluacionGlobal = EvaluacionGlobalSeleccionada ?? "P1";
 
-            var rutaGlobal =
-                Path.Combine(
-                    AppDomain.CurrentDomain.BaseDirectory,
-                    "configuracion_global.json");
-
-            File.WriteAllText(
-                rutaGlobal,
-                json);
+            _configuracionService.GuardarConfiguracion("", cfg);
 
             AplicarConfiguracionGlobal();
         }

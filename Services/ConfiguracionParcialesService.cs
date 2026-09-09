@@ -12,7 +12,7 @@ public class ConfiguracionParcialesService
     {
         try
         {
-            using var lite = new LiteDbService();
+            using var lite = new SqliteService();
 
             // Si no se especifica materia, se usa la clave "GLOBAL"
             string clave = string.IsNullOrWhiteSpace(claveMateria) ? ClaveGlobal : claveMateria;
@@ -49,7 +49,18 @@ public class ConfiguracionParcialesService
             // Si la clave viene vacía o nula, guardamos directamente como "GLOBAL" dentro de parciales.db
             string clave = string.IsNullOrWhiteSpace(claveMateria) ? ClaveGlobal : claveMateria;
 
-            using var lite = new LiteDbService();
+            // Si la evaluación EXTRA está habilitada, no debe coexistir con otras evaluaciones.
+            // Forzamos las demás evaluaciones a false cuando ExtraHabilitado == true.
+            if (cfg.ExtraHabilitado)
+            {
+                cfg.Parcial1Habilitado = false;
+                cfg.Parcial2Habilitado = false;
+                cfg.Parcial3Habilitado = false;
+                cfg.SemestralHabilitado = false;
+                cfg.PreExtraordinarioHabilitado = false;
+            }
+
+            using var lite = new SqliteService();
             lite.SaveConfiguracion(clave, cfg);
         }
         catch

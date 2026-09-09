@@ -742,6 +742,94 @@ public partial class ParcialesView : UserControl
     }
 
     // =========================================================
+    // PORCENTAJE / PUNTAJE MÁXIMO — abre modal PorcentajesWindow
+    // =========================================================
+
+    private void PorcentajeInfo_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is ParcialesViewModel vm)
+        {
+            // Calcular por cada parcial (P1,P2,P3) la suma de porcentajes y suma de puntajes máximos
+            string clave = string.Empty;
+
+            // Reconstruir clave de materia igual que en el ViewModel
+            if (!string.IsNullOrWhiteSpace(vm.MainVm?.ArchivoCompletoActual))
+            {
+                try
+                {
+                    var nombre = System.IO.Path.GetFileNameWithoutExtension(vm.MainVm.ArchivoCompletoActual ?? string.Empty) ?? string.Empty;
+                    clave = nombre.Trim().Replace(' ', '_');
+                }
+                catch
+                {
+                    clave = string.Empty;
+                }
+            }
+            else
+            {
+                var nombreVisual = vm.MainVm?.ArchivoSeleccionado ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(nombreVisual))
+                {
+                    string texto = nombreVisual.Trim();
+                    int indexEspacio = texto.IndexOf(" - Grupo:");
+                    if (indexEspacio > 0)
+                        texto = texto.Substring(0, indexEspacio).Trim();
+
+                    int firstSpace = texto.IndexOf(' ');
+                    if (firstSpace <= 0)
+                        clave = texto.Replace(' ', '_');
+                    else
+                    {
+                        string clavePart = texto.Substring(0, firstSpace).Trim();
+                        string nombreRest = texto.Substring(firstSpace + 1).Trim();
+                        clave = string.IsNullOrWhiteSpace(nombreRest) ? clavePart : $"{clavePart}_{nombreRest}";
+                    }
+                }
+            }
+
+            double p1Porc = 0.0, p1Max = 0.0;
+            double p2Porc = 0.0, p2Max = 0.0;
+            double p3Porc = 0.0, p3Max = 0.0;
+
+            var servicio = new Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services.ParcialJsonService();
+
+            void Procesar(string eval, ref double porcAcc, ref double maxAcc)
+            {
+                if (string.IsNullOrWhiteSpace(clave))
+                    return;
+
+                string claveEval = $"{clave}_{eval}";
+                var materia = servicio.ObtenerMateria(claveEval);
+                if (materia?.Actividades == null)
+                    return;
+
+                foreach (var a in materia.Actividades)
+                {
+                    if (!a.Activa)
+                        continue;
+
+                    porcAcc += a.Porcentaje;
+                    maxAcc += a.PuntajeMaximo;
+                }
+            }
+
+            Procesar("P1", ref p1Porc, ref p1Max);
+            Procesar("P2", ref p2Porc, ref p2Max);
+            Procesar("P3", ref p3Porc, ref p3Max);
+
+            var modal = new PorcentajesWindow(
+                p1Porc, p1Max,
+                p2Porc, p2Max,
+                p3Porc, p3Max)
+            {
+                Owner = Window.GetWindow(this)
+            };
+
+            modal.ShowDialog();
+        }
+    }
+
+    // =========================================================
     // INFORMACIÓN DEL ALUMNO
     // =========================================================
 
