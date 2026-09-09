@@ -41,12 +41,12 @@ public partial class App : Application
 
         var mainWindow = new MainWindow();
 
-        if ((SystemParameters.PrimaryScreenWidth == 1366 ||
+        /*if ((SystemParameters.PrimaryScreenWidth == 1366 ||
              SystemParameters.PrimaryScreenWidth == 1360) &&
             SystemParameters.PrimaryScreenHeight == 768)
         {
             mainWindow.WindowState = WindowState.Maximized;
-        }
+        }*/
 
         MainWindow = mainWindow;
         mainWindow.Show();

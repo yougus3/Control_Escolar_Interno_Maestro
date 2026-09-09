@@ -4,7 +4,7 @@ using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 
-// Este servicio mantiene la API previa pero persiste en LiteDB en lugar de JSON plano.
+// Este servicio mantiene la API previa pero persiste en SQLite en lugar de JSON plano.
 public class ParcialJsonService
 {
     public ParcialJsonService()

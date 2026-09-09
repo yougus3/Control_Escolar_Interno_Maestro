@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -15,188 +16,362 @@ public partial class ExtraView : UserControl
         InitializeComponent();
     }
 
-    private void UserControl_Loaded(object sender, RoutedEventArgs e)
+    private void UserControl_Loaded(
+        object sender,
+        RoutedEventArgs e)
     {
         if (DataContext is MainViewModel mainVm)
         {
-            // Solo forzamos la selección si no estamos ya en EXTRA y no estamos en actualización programática
-            if (mainVm.EvaluacionSeleccionada?.ToUpperInvariant() != "EXTRA" && !mainVm.IsUpdatingProgrammatically)
-            {
-                mainVm.EvaluacionSeleccionada = "EXTRA";
-            }
+            mainVm.ActualizarConteoEvaluadosExtra();
         }
     }
 
-    private void TextBox_KeyDown(object sender, KeyEventArgs e)
+    private void TextBox_KeyDown(
+        object sender,
+        KeyEventArgs e)
     {
-        if (e.Key != Key.Enter) return;
+        if (e.Key != Key.Enter)
+            return;
 
-        var tb = sender as TextBox;
-        if (tb == null) return;
+        if (sender is not TextBox tb)
+            return;
 
-        var alumno = tb.DataContext as Alumno;
-        if (alumno != null && !alumno.TieneDerechoExtra) return;
+        var alumno =
+            tb.DataContext as Alumno;
 
-        if (DataContext is MainViewModel mainVm && !mainVm.IsUpdatingProgrammatically)
+        if (alumno != null &&
+            !alumno.TieneDerechoExtra)
+        {
+            return;
+        }
+
+        if (DataContext is MainViewModel mainVm &&
+            !mainVm.IsUpdatingProgrammatically)
         {
             mainVm.TieneCambios = true;
         }
 
-        // LÓGICA DE DETENCIÓN ESTRICTA POR GRUPO
-        var groupItem = FindVisualParent<GroupItem>(tb);
+        var groupItem =
+            FindVisualParent<GroupItem>(
+                tb);
+
         if (groupItem != null)
         {
-            var textBoxes = FindVisualChildren<TextBox>(groupItem).ToList();
-            int index = textBoxes.IndexOf(tb);
-            
-            if (index >= 0 && index < textBoxes.Count - 1)
+            var textBoxes =
+                FindVisualChildren<TextBox>(
+                    groupItem)
+                .ToList();
+
+            int index =
+                textBoxes.IndexOf(tb);
+
+            if (index >= 0 &&
+                index < textBoxes.Count - 1)
             {
-                var nextTb = textBoxes[index + 1];
+                var nextTb =
+                    textBoxes[index + 1];
+
                 nextTb.Focus();
                 nextTb.SelectAll();
+
                 e.Handled = true;
             }
         }
     }
 
-    private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+    private void TextBox_TextChanged(
+        object sender,
+        TextChangedEventArgs e)
     {
-        var mainVm = DataContext as MainViewModel;
-        if (mainVm != null && mainVm.IsUpdatingProgrammatically) return;
+        var mainVm =
+            DataContext as MainViewModel;
 
-        if (sender is TextBox tb)
+        if (mainVm != null &&
+            mainVm.IsUpdatingProgrammatically)
         {
-            var alumno = tb.DataContext as Alumno;
-            if (alumno != null && !alumno.TieneDerechoExtra) return;
+            return;
+        }
 
-            var change = e.Changes.FirstOrDefault();
-            string textUpper = tb.Text.ToUpperInvariant();
+        if (sender is not TextBox tb)
+            return;
 
-            if (change != null)
+        var alumno =
+            tb.DataContext as Alumno;
+
+        if (alumno != null &&
+            !alumno.TieneDerechoExtra)
+        {
+            return;
+        }
+
+        var change =
+            e.Changes.FirstOrDefault();
+
+        string textUpper =
+            tb.Text.ToUpperInvariant();
+
+        if (change != null)
+        {
+            if (change.AddedLength > 0 &&
+                textUpper == "N")
             {
-                // Si teclea N (agrega un caracter y queda "N") -> Autocompleta NP
-                if (change.AddedLength > 0 && textUpper == "N")
+                tb.Text = "NP";
+
+                tb.SelectionStart = 2;
+
+                if (alumno != null)
                 {
-                    tb.Text = "NP";
-                    tb.SelectionStart = 2; 
-                    
-                    if (alumno != null) alumno.Calificación["EXTRA"] = "NP"; 
-                    
-                    if (mainVm != null) 
-                    {
-                        mainVm.TieneCambios = true;
-                        mainVm.ActualizarConteoEvaluadosExtra();
-                    }
-                    return;
+                    alumno.Calificación["EXTRA"] =
+                        "NP";
                 }
-                
-                // Si borra un caracter del "NP" y solo queda "N" -> Se limpia la celda
-                if (change.RemovedLength > 0 && textUpper == "N")
+
+                if (mainVm != null)
                 {
-                    tb.Text = "";
-                    
-                    if (alumno != null) alumno.Calificación["EXTRA"] = "";
-                    
-                    if (mainVm != null) 
-                    {
-                        mainVm.TieneCambios = true;
-                        mainVm.ActualizarConteoEvaluadosExtra();
-                    }
-                    return;
+                    mainVm.TieneCambios = true;
+
+                    mainVm.ActualizarConteoEvaluadosExtra();
                 }
+
+                return;
             }
 
-            // Normalización general si no se autocompletó nada arriba
-            if (textUpper == "NP")
+            if (change.RemovedLength > 0 &&
+                textUpper == "N")
             {
-                if (tb.Text != "NP")
+                tb.Text = "";
+
+                if (alumno != null)
                 {
-                    tb.Text = "NP";
-                    tb.SelectionStart = 2;
+                    alumno.Calificación["EXTRA"] =
+                        "";
                 }
-                if (alumno != null) alumno.Calificación["EXTRA"] = "NP";
+
+                if (mainVm != null)
+                {
+                    mainVm.TieneCambios = true;
+
+                    mainVm.ActualizarConteoEvaluadosExtra();
+                }
+
+                return;
             }
-            else
+        }
+
+        if (textUpper == "NP")
+        {
+            if (tb.Text != "NP")
             {
-                string normalized = NormalizeToSingleDecimalRange(tb.Text);
-                if (tb.Text != normalized && normalized != "NP")
-                {
-                    int sel = tb.SelectionStart;
-                    tb.Text = normalized;
-                    tb.SelectionStart = System.Math.Min(sel, tb.Text.Length);
-                }
-                if (alumno != null) alumno.Calificación["EXTRA"] = tb.Text;
+                tb.Text = "NP";
+                tb.SelectionStart = 2;
+            }
+
+            if (alumno != null)
+            {
+                alumno.Calificación["EXTRA"] =
+                    "NP";
+            }
+        }
+        else
+        {
+            string normalized =
+                NormalizeToSingleDecimalRange(
+                    tb.Text);
+
+            if (tb.Text != normalized &&
+                normalized != "NP")
+            {
+                int sel =
+                    tb.SelectionStart;
+
+                tb.Text =
+                    normalized;
+
+                tb.SelectionStart =
+                    System.Math.Min(
+                        sel,
+                        tb.Text.Length);
+            }
+
+            if (alumno != null)
+            {
+                alumno.Calificación["EXTRA"] =
+                    tb.Text;
             }
         }
 
         if (mainVm != null)
         {
             mainVm.TieneCambios = true;
+
             mainVm.ActualizarConteoEvaluadosExtra();
         }
     }
 
-    private void WarningNoEvaluados_Click(object sender, RoutedEventArgs e)
+    private void WarningNoEvaluados_Click(
+        object sender,
+        RoutedEventArgs e)
     {
-        if (DataContext is MainViewModel mainVm && mainVm.FaltanPorEvaluarExtra)
+        if (DataContext is not MainViewModel mainVm)
         {
-            var modal = new Views.Modals.NoEvaluadosWindow(mainVm.ListaNoEvaluadosExtra);
-            modal.Owner = Window.GetWindow(this);
-            modal.ShowDialog();
+            return;
         }
+
+        if (!mainVm.FaltanPorEvaluarExtra)
+        {
+            return;
+        }
+
+        var modal =
+            new Views.Modals.NoEvaluadosWindow(
+                mainVm.ListaNoEvaluadosExtra);
+
+        modal.Owner =
+            Window.GetWindow(this);
+
+        modal.ShowDialog();
     }
 
-    private static string NormalizeToSingleDecimalRange(string input)
+    private static string
+        NormalizeToSingleDecimalRange(
+            string input)
     {
-        if (string.IsNullOrWhiteSpace(input)) return string.Empty;
-        if (input.Trim().ToUpperInvariant() == "NP") return "NP";
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return string.Empty;
+        }
 
-        string s = input.Trim().Replace(',', '.');
-        var sb = new System.Text.StringBuilder();
+        if (input.Trim()
+            .ToUpperInvariant() == "NP")
+        {
+            return "NP";
+        }
+
+        string s =
+            input.Trim().Replace(',', '.');
+
+        var sb =
+            new System.Text.StringBuilder();
+
         foreach (char c in s)
         {
-            if (char.IsDigit(c) || c == '.') sb.Append(c);
-        }
-        s = sb.ToString();
-        
-        int firstDot = s.IndexOf('.');
-        if (firstDot >= 0)
-        {
-            s = s.Substring(0, firstDot + 1) + s.Substring(firstDot + 1).Replace(".", "");
-            int decimals = s.Length - firstDot - 1;
-            if (decimals > 1) s = s.Substring(0, firstDot + 2);
+            if (char.IsDigit(c) ||
+                c == '.')
+            {
+                sb.Append(c);
+            }
         }
 
-        if (double.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val))
+        s =
+            sb.ToString();
+
+        int firstDot =
+            s.IndexOf('.');
+
+        if (firstDot >= 0)
         {
-            if (val < 0) val = 0;
-            if (val > 10) val = 10;
-            return val % 1 == 0 ? ((int)val).ToString(System.Globalization.CultureInfo.InvariantCulture) : val.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+            s =
+                s.Substring(
+                    0,
+                    firstDot + 1)
+                +
+                s.Substring(
+                    firstDot + 1)
+                 .Replace(".", "");
+
+            int decimals =
+                s.Length -
+                firstDot -
+                1;
+
+            if (decimals > 1)
+            {
+                s =
+                    s.Substring(
+                        0,
+                        firstDot + 2);
+            }
+        }
+
+        if (double.TryParse(
+                s,
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out double val))
+        {
+            if (val < 0)
+                val = 0;
+
+            if (val > 10)
+                val = 10;
+
+            return val % 1 == 0
+                ? ((int)val).ToString(
+                    System.Globalization.CultureInfo.InvariantCulture)
+                : val.ToString(
+                    "0.#",
+                    System.Globalization.CultureInfo.InvariantCulture);
         }
 
         return s;
     }
 
-    private static T? FindVisualParent<T>(DependencyObject child) where T : DependencyObject
+    private static T? FindVisualParent<T>(
+        DependencyObject child)
+        where T : DependencyObject
     {
-        DependencyObject parentObject = System.Windows.Media.VisualTreeHelper.GetParent(child);
-        if (parentObject == null) return null;
-        if (parentObject is T parent) return parent;
-        return FindVisualParent<T>(parentObject);
+        DependencyObject parentObject =
+            System.Windows.Media.VisualTreeHelper
+                .GetParent(child);
+
+        if (parentObject == null)
+        {
+            return null;
+        }
+
+        if (parentObject is T parent)
+        {
+            return parent;
+        }
+
+        return FindVisualParent<T>(
+            parentObject);
     }
 
-    private static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
+    private static IEnumerable<T>
+        FindVisualChildren<T>(
+            DependencyObject depObj)
+        where T : DependencyObject
     {
-        if (depObj != null)
+        if (depObj == null)
         {
-            for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(depObj); i++)
-            {
-                DependencyObject child = System.Windows.Media.VisualTreeHelper.GetChild(depObj, i);
-                if (child != null && child is T t)
-                    yield return t;
+            yield break;
+        }
 
-                foreach (T childOfChild in FindVisualChildren<T>(child))
-                    yield return childOfChild;
+        for (
+            int i = 0;
+            i <
+            System.Windows.Media.VisualTreeHelper
+                .GetChildrenCount(depObj);
+            i++)
+        {
+            DependencyObject child =
+                System.Windows.Media.VisualTreeHelper
+                    .GetChild(
+                        depObj,
+                        i);
+
+            if (child != null &&
+                child is T t)
+            {
+                yield return t;
+            }
+
+            foreach (
+                T childOfChild
+                in FindVisualChildren<T>(
+                    child))
+            {
+                yield return childOfChild;
             }
         }
     }

@@ -200,14 +200,23 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<Alumno>
         Alumnos { get; } = new();
 
+    // ============================================================
+    // ALUMNOS CON DERECHO A EXTRA
+    // ============================================================
+
+    public ObservableCollection<Alumno>
+        AlumnosConDerechoExtra { get; } = new();
+
     private readonly List<Alumno> _subscribedAlumnos =
         new();
 
     // Proxy para mostrar el texto de evaluados en la barra superior
-    public string TextoEvaluados => ParcialesVm?.TextoEvaluados ?? string.Empty;
+    public string TextoEvaluados =>
+        ParcialesVm?.TextoEvaluados ?? string.Empty;
 
     // Proxy para visibilidad del icono de advertencia
-    public bool ParcialesFaltan => ParcialesVm?.FaltanPorEvaluar ?? false;
+    public bool ParcialesFaltan =>
+        ParcialesVm?.FaltanPorEvaluar ?? false;
 
     public bool EsExtraSeleccionado =>
         string.Equals(
@@ -252,10 +261,11 @@ public partial class MainViewModel : ObservableObject
         ParcialesVm =
             new ParcialesViewModel(this);
 
-        // Suscribirse a cambios en ParcialesVm para exponer propiedades útiles en la barra superior
+        // Suscribirse a cambios en ParcialesVm
         if (ParcialesVm != null)
         {
-            ParcialesVm.PropertyChanged += ParcialesVm_PropertyChangedHandler;
+            ParcialesVm.PropertyChanged +=
+                ParcialesVm_PropertyChangedHandler;
         }
 
         try
@@ -276,7 +286,8 @@ public partial class MainViewModel : ObservableObject
             RutaUsb =
                 carpetaData;
 
-            RutaUsbEditable = false;
+            RutaUsbEditable =
+                false;
 
             RutaUsbLabel =
                 "Raiz";
@@ -297,15 +308,22 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private void ParcialesVm_PropertyChangedHandler(object? sender, PropertyChangedEventArgs e)
+    private void ParcialesVm_PropertyChangedHandler(
+        object? sender,
+        PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ParcialesViewModel.TextoEvaluados))
+        if (e.PropertyName ==
+            nameof(ParcialesViewModel.TextoEvaluados))
         {
-            OnPropertyChanged(nameof(TextoEvaluados));
+            OnPropertyChanged(
+                nameof(TextoEvaluados));
         }
-        else if (e.PropertyName == nameof(ParcialesViewModel.FaltanPorEvaluar))
+        else if (
+            e.PropertyName ==
+            nameof(ParcialesViewModel.FaltanPorEvaluar))
         {
-            OnPropertyChanged(nameof(ParcialesFaltan));
+            OnPropertyChanged(
+                nameof(ParcialesFaltan));
         }
     }
 
@@ -434,7 +452,8 @@ public partial class MainViewModel : ObservableObject
     private void SeleccionarProfesorPorClave(
         string claveProfesor)
     {
-        ProfesorSeleccionado = null;
+        ProfesorSeleccionado =
+            null;
 
         if (string.IsNullOrWhiteSpace(
                 claveProfesor))
@@ -552,13 +571,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     // ============================================================
-    // MÉTODO PARA ENVIAR EL REPORTE PDF
-    // ============================================================
-    //
-    // El PDF lo seguirá generando tu servicio actual.
-    //
-    // Este método recibe la ruta del PDF ya generado.
-    //
+    // ENVIAR REPORTE
     // ============================================================
 
     [RelayCommand]
@@ -607,7 +620,8 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        EnviandoCorreo = true;
+        EnviandoCorreo =
+            true;
 
         EstadoCorreo =
             "Enviando reporte...";
@@ -663,12 +677,13 @@ public partial class MainViewModel : ObservableObject
         }
         finally
         {
-            EnviandoCorreo = false;
+            EnviandoCorreo =
+                false;
         }
     }
 
     // ============================================================
-    // RESTO DEL MAINVIEWMODEL
+    // CONTADOR EXTRA
     // ============================================================
 
     public void ActualizarConteoEvaluadosExtra()
@@ -682,14 +697,16 @@ public partial class MainViewModel : ObservableObject
         }
 
         int total =
-            Alumnos.Count;
+            AlumnosConDerechoExtra.Count;
 
-        int evaluados = 0;
+        int evaluados =
+            0;
 
         var lista =
             new List<AlumnoFaltante>();
 
-        foreach (var alumno in Alumnos)
+        foreach (var alumno
+                 in AlumnosConDerechoExtra)
         {
             if (!string.IsNullOrWhiteSpace(
                     alumno.Calificación["EXTRA"]))
@@ -729,6 +746,212 @@ public partial class MainViewModel : ObservableObject
             lista;
     }
 
+    // ============================================================
+    // CLAVE DE MATERIA ACTUAL
+    // ============================================================
+
+    private string ObtenerClaveMateriaActual()
+    {
+        if (!string.IsNullOrWhiteSpace(
+                _archivoCompletoActual))
+        {
+            string clave =
+                Path.GetFileNameWithoutExtension(
+                    _archivoCompletoActual);
+
+            return string.IsNullOrWhiteSpace(clave)
+                ? string.Empty
+                : clave.Trim().Replace(
+                    ' ',
+                    '_');
+        }
+
+        return string.Empty;
+    }
+
+    // ============================================================
+    // OBTENER CLAVEASIGNATURA DIRECTAMENTE DEL CAP
+    // ============================================================
+
+    private static string ObtenerClaveAsignaturaDesdeCap(
+        string? rutaCompleta)
+    {
+        if (string.IsNullOrWhiteSpace(
+                rutaCompleta) ||
+            !File.Exists(rutaCompleta))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            Encoding.RegisterProvider(
+                CodePagesEncodingProvider.Instance);
+
+            var encodingCap =
+                Encoding.GetEncoding(
+                    "iso-8859-1");
+
+            foreach (var linea in
+                     File.ReadLines(
+                         rutaCompleta,
+                         encodingCap))
+            {
+                string texto =
+                    linea.Trim();
+
+                if (!texto.Contains('='))
+                    continue;
+
+                var partes =
+                    texto.Split('=', 2);
+
+                if (partes.Length != 2)
+                    continue;
+
+                string clave =
+                    partes[0].Trim();
+
+                if (clave.Equals(
+                        "CLAVEASIGNATURA",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return partes[1].Trim();
+                }
+            }
+        }
+        catch
+        {
+        }
+
+        return string.Empty;
+    }
+
+    // ============================================================
+    // CARGAR ALUMNOS AUTORIZADOS PARA EXTRA
+    // ============================================================
+
+    private void CargarAlumnosConDerechoExtra()
+    {
+        AlumnosConDerechoExtra.Clear();
+
+        string claveAsignatura =
+            ObtenerClaveAsignaturaDesdeCap(
+                _archivoCompletoActual);
+
+        if (string.IsNullOrWhiteSpace(
+                claveAsignatura))
+        {
+            System.Diagnostics.Debug.WriteLine(
+                "[EXTRA] El CAP no contiene CLAVEASIGNATURA.");
+
+            return;
+        }
+
+        try
+        {
+            using var lite =
+                new SqliteService();
+
+            var autorizados =
+                lite.ObtenerMatriculasConDerechoExtra(
+                    claveAsignatura);
+
+            var autorizadosNormalizados =
+                new HashSet<string>(
+                    autorizados
+                        .Where(x =>
+                            !string.IsNullOrWhiteSpace(x))
+                        .Select(x =>
+                            x.Trim()),
+                    StringComparer.OrdinalIgnoreCase);
+
+            foreach (var alumno in Alumnos)
+            {
+                if (alumno == null)
+                    continue;
+
+                string matricula =
+                    alumno.Matricula?.Trim()
+                    ?? string.Empty;
+
+                if (string.IsNullOrWhiteSpace(
+                        matricula))
+                {
+                    continue;
+                }
+
+                if (autorizadosNormalizados.Contains(
+                        matricula))
+                {
+                    AlumnosConDerechoExtra.Add(
+                        alumno);
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine(
+                $"[EXTRA] CLAVEASIGNATURA CAP = {claveAsignatura}");
+
+            System.Diagnostics.Debug.WriteLine(
+                $"[EXTRA] Matrículas autorizadas = {autorizadosNormalizados.Count}");
+
+            System.Diagnostics.Debug.WriteLine(
+                $"[EXTRA] Alumnos del CAP = {Alumnos.Count}");
+
+            System.Diagnostics.Debug.WriteLine(
+                $"[EXTRA] Alumnos mostrados = {AlumnosConDerechoExtra.Count}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"[EXTRA] Error: {ex}");
+
+            AlumnosConDerechoExtra.Clear();
+        }
+    }
+
+    // ============================================================
+    // COMPROBAR DERECHO EXTRA DE UNA MATRÍCULA
+    // ============================================================
+
+    public bool AlumnoTieneDerechoExtra(
+        string matricula)
+    {
+        if (string.IsNullOrWhiteSpace(
+                matricula))
+        {
+            return false;
+        }
+
+        string claveAsignatura =
+            ObtenerClaveAsignaturaDesdeCap(
+                _archivoCompletoActual);
+
+        if (string.IsNullOrWhiteSpace(
+                claveAsignatura))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var lite =
+                new SqliteService();
+
+            return lite.TieneDerechoExtra(
+                claveAsignatura,
+                matricula.Trim());
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    // ============================================================
+    // MANEJAR CAMBIOS PENDIENTES
+    // ============================================================
+
     private bool ManejarCambiosPendientes()
     {
         if (!TieneCambios)
@@ -756,10 +979,15 @@ public partial class MainViewModel : ObservableObject
             Guardar();
         }
 
-        TieneCambios = false;
+        TieneCambios =
+            false;
 
         return true;
     }
+
+    // ============================================================
+    // RECARGAR CONFIGURACIÓN Y ARCHIVO ACTUAL
+    // ============================================================
 
     public void RecargarConfiguracionYArchivoActual()
     {
@@ -770,8 +998,16 @@ public partial class MainViewModel : ObservableObject
         {
             CargarArchivoSeleccionado(
                 ArchivoSeleccionado);
+
+            return;
         }
+
+        CargarAlumnosConDerechoExtra();
     }
+
+    // ============================================================
+    // CLAVE MATERIA DESDE RUTA
+    // ============================================================
 
     private static string ObtenerClaveMateriaDesdeRuta(
         string? rutaCompleta)
@@ -792,6 +1028,10 @@ public partial class MainViewModel : ObservableObject
                 ' ',
                 '_');
     }
+
+    // ============================================================
+    // EVALUACIÓN HABILITADA
+    // ============================================================
 
     private bool EvaluacionEstaHabilitada(
         string evaluacion)
@@ -841,6 +1081,10 @@ public partial class MainViewModel : ObservableObject
         };
     }
 
+    // ============================================================
+    // BUSCAR CARPETA
+    // ============================================================
+
     [RelayCommand]
     public void BuscarCarpeta()
     {
@@ -862,7 +1106,8 @@ public partial class MainViewModel : ObservableObject
             RutaUsb =
                 carpetaData;
 
-            RutaUsbEditable = false;
+            RutaUsbEditable =
+                false;
 
             RutaUsbLabel =
                 "Raiz";
@@ -879,6 +1124,10 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    // ============================================================
+    // PROCESAR DIRECTORIO
+    // ============================================================
+
     private void ProcesarDirectorioSeleccionado()
     {
         if (!string.IsNullOrWhiteSpace(
@@ -890,6 +1139,7 @@ public partial class MainViewModel : ObservableObject
 
         ArchivosDisponibles.Clear();
         Alumnos.Clear();
+        AlumnosConDerechoExtra.Clear();
         EvaluacionesDisponibles.Clear();
 
         _mapaArchivos.Clear();
@@ -900,10 +1150,12 @@ public partial class MainViewModel : ObservableObject
         TieneCambios = false;
 
         _archivoSeleccionado = null;
+
         OnPropertyChanged(
             nameof(ArchivoSeleccionado));
 
         _evaluacionSeleccionada = null;
+
         OnPropertyChanged(
             nameof(EvaluacionSeleccionada));
 
@@ -972,6 +1224,10 @@ public partial class MainViewModel : ObservableObject
             nameof(EsPreExtraordinarioSeleccionado));
     }
 
+    // ============================================================
+    // CARGAR ARCHIVO SELECCIONADO
+    // ============================================================
+
     private void CargarArchivoSeleccionado(
         string? value)
     {
@@ -980,6 +1236,8 @@ public partial class MainViewModel : ObservableObject
         try
         {
             Alumnos.Clear();
+
+            AlumnosConDerechoExtra.Clear();
 
             EvaluacionesDisponibles.Clear();
 
@@ -1014,7 +1272,6 @@ public partial class MainViewModel : ObservableObject
                 rutaCompleta;
 
             // ====================================================
-            // NUEVO:
             // DETECTAR PROFESOR DESDE EL CAP
             // ====================================================
 
@@ -1091,7 +1348,8 @@ public partial class MainViewModel : ObservableObject
                     EvaluacionesDisponibles.Add(
                         new EvaluacionItem
                         {
-                            Id = eval,
+                            Id =
+                                eval,
 
                             Nombre =
                                 ObtenerNombreEvaluacionVisual(
@@ -1146,6 +1404,12 @@ public partial class MainViewModel : ObservableObject
             }
 
             SuscribirAlumnos();
+
+            // ====================================================
+            // FILTRAR ALUMNOS AUTORIZADOS PARA EXTRA
+            // ====================================================
+
+            CargarAlumnosConDerechoExtra();
 
             if (esExtra)
             {
@@ -1205,6 +1469,10 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    // ============================================================
+    // CAMBIAR EVALUACIÓN
+    // ============================================================
+
     private void CambiarEvaluacion(
         string? value)
     {
@@ -1241,15 +1509,25 @@ public partial class MainViewModel : ObservableObject
 
             SincronizarCalificacionSemestral();
         }
-        else if (valor == "PREEXTRAORDINARIO")
+        else if (
+            valor == "PREEXTRAORDINARIO")
         {
             CurrentView =
                 "Preextraordinario";
         }
-        else if (valor == "EXTRA")
+        else if (
+            valor == "EXTRA")
         {
             CurrentView =
                 "Extra";
+
+            // ====================================================
+            // RECARGAR FILTRO EXTRA
+            // ====================================================
+
+            CargarAlumnosConDerechoExtra();
+
+            ActualizarConteoEvaluadosExtra();
         }
         else
         {
@@ -1275,6 +1553,10 @@ public partial class MainViewModel : ObservableObject
         TieneCambios =
             false;
     }
+
+    // ============================================================
+    // GUARDAR RESULTADOS PRE EN CAP
+    // ============================================================
 
     public bool GuardarResultadosPreEnCap()
     {
@@ -1358,6 +1640,10 @@ public partial class MainViewModel : ObservableObject
             return false;
         }
     }
+
+    // ============================================================
+    // GUARDAR
+    // ============================================================
 
     [RelayCommand]
     public void Guardar()
@@ -1484,6 +1770,10 @@ public partial class MainViewModel : ObservableObject
                 ? MessageBoxImage.Information
                 : MessageBoxImage.Error);
     }
+
+    // ============================================================
+    // SINCRONIZAR CALIFICACIÓN SEMESTRAL
+    // ============================================================
 
     private void SincronizarCalificacionSemestral()
     {
@@ -1653,7 +1943,7 @@ public partial class MainViewModel : ObservableObject
             c3.TryGetValue(
                 "ClasesTotales",
                 out var ct3) &&
-                ct3 > 0
+            ct3 > 0
                 ? (int)ct3
                 : 0;
 
@@ -1787,9 +2077,14 @@ public partial class MainViewModel : ObservableObject
             MidpointRounding.AwayFromZero);
     }
 
+    // ============================================================
+    // SUSCRIBIR ALUMNOS
+    // ============================================================
+
     private void SuscribirAlumnos()
     {
-        foreach (var a in _subscribedAlumnos)
+        foreach (var a
+                 in _subscribedAlumnos)
         {
             try
             {
@@ -1816,6 +2111,10 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    // ============================================================
+    // CAMBIO DE CALIFICACIÓN
+    // ============================================================
+
     private void Alumno_CalificacionChanged(
         object? sender,
         PropertyChangedEventArgs e)
@@ -1834,6 +2133,50 @@ public partial class MainViewModel : ObservableObject
             {
                 ActualizarConteoEvaluadosExtra();
             }
+        }
+    }
+
+    // ============================================================
+    // DERECHO PRE
+    // ============================================================
+
+    public bool AlumnoTieneDerechoPre(
+        string matricula)
+    {
+        if (string.IsNullOrWhiteSpace(
+                matricula))
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(
+                _archivoCompletoActual))
+        {
+            return false;
+        }
+
+        string claveMateria =
+            ObtenerClaveMateriaDesdeRuta(
+                _archivoCompletoActual);
+
+        if (string.IsNullOrWhiteSpace(
+                claveMateria))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var lite =
+                new SqliteService();
+
+            return lite.TieneDerechoPre(
+                claveMateria,
+                matricula);
+        }
+        catch
+        {
+            return false;
         }
     }
 }

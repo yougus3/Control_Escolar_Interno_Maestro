@@ -111,6 +111,22 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
 
                 foreach (var alumno in alumnos)
                 {
+                    if (alumno == null)
+                        continue;
+
+                    // ====================================================
+                    // FILTRO DE AUTORIZACIÓN
+                    //
+                    // PREEXTRAORDINARIO usa la lista PRE de
+                    // configuracion.bin
+                    // ====================================================
+
+                    if (!_mainVm.AlumnoTieneDerechoPre(
+                            alumno.Matricula))
+                    {
+                        continue;
+                    }
+
                     AlumnosPre.Add(
                         new AlumnoPreItem(
                             alumno.Matricula,

@@ -20,26 +20,6 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 
 public class SqliteService : IDisposable
 {
-    // ============================================================
-    // RUTAS
-    // ============================================================
-    //
-    // TODO se guarda DIRECTAMENTE junto al ejecutable.
-    //
-    // Ejemplo:
-    //
-    // MiPrograma.exe
-    // parciales.db
-    // configuracion.bin
-    //
-    // NO SE UTILIZA:
-    // - AppData
-    // - LocalApplicationData
-    // - Roaming
-    // - GlobalSettings.CurrentCapDirectory
-    //
-    // ============================================================
-
     private readonly string _dataFolder;
     private readonly string _dbPath;
     private readonly string _configuracionBinPath;
@@ -69,11 +49,6 @@ public class SqliteService : IDisposable
     private const string SmtpUser =
         "gustavomiranda@prefecotemixco.edu.mx";
 
-    // IMPORTANTE:
-    // Coloca aquí tu contraseña de aplicación de Gmail.
-    //
-    // NO la subas a GitHub ni la compartas.
-    //
     private const string SmtpAppPassword =
         "TU_CONTRASENA_DE_APLICACION";
 
@@ -96,7 +71,7 @@ public class SqliteService : IDisposable
     private ConfiguracionBin? _configuracion;
 
     // ============================================================
-    // CONSTANTES DEL BINARIO
+    // CONSTANTES BINARIO
     // ============================================================
 
     private const int HeaderSize = 4;
@@ -105,10 +80,10 @@ public class SqliteService : IDisposable
 
     private static readonly byte[] ConfiguracionHeader =
     [
-        0x43, // C
-        0x45, // E
-        0x49, // I
-        0x4D  // M
+        0x43,
+        0x45,
+        0x49,
+        0x4D
     ];
 
     // ============================================================
@@ -117,35 +92,37 @@ public class SqliteService : IDisposable
 
     public SqliteService()
     {
-
-        // ============================================================
-        // GUARDAR DIRECTAMENTE JUNTO AL EJECUTABLE (SIN APPDATA)
-        // ============================================================
-
-        // Usar la carpeta Data junto al ejecutable (AppContext.BaseDirectory\Data)
-        _dataFolder = Path.Combine(AppContext.BaseDirectory ?? string.Empty, "Data");
+        _dataFolder =
+            Path.Combine(
+                AppContext.BaseDirectory ?? string.Empty,
+                "Data");
 
         if (!Directory.Exists(_dataFolder))
         {
             Directory.CreateDirectory(_dataFolder);
         }
 
-        // Archivo sqlite dentro de la carpeta Data junto al exe
-        _dbPath = Path.GetFullPath(Path.Combine(_dataFolder, "parciales.db"));
+        _dbPath =
+            Path.GetFullPath(
+                Path.Combine(
+                    _dataFolder,
+                    "parciales.db"));
 
-        // Archivo configuracion.bin también dentro de Data
-        _configuracionBinPath = Path.GetFullPath(Path.Combine(_dataFolder, "configuracion.bin"));
+        _configuracionBinPath =
+            Path.GetFullPath(
+                Path.Combine(
+                    _dataFolder,
+                    "configuracion.bin"));
 
-        // Información de depuración sobre rutas (se ve en Output -> Debug)
-        System.Diagnostics.Debug.WriteLine($"[SqliteService] DB path: {_dbPath}");
-        System.Diagnostics.Debug.WriteLine($"[SqliteService] ConfiguracionBin path: {_configuracionBinPath}");
+        System.Diagnostics.Debug.WriteLine(
+            $"[SqliteService] DB path: {_dbPath}");
 
-        // ============================================================
-        // CONEXIÓN
-        // ============================================================
+        System.Diagnostics.Debug.WriteLine(
+            $"[SqliteService] ConfiguracionBin path: {_configuracionBinPath}");
 
-        _conn = new SqliteConnection(
-            $"Data Source={_dbPath}");
+        _conn =
+            new SqliteConnection(
+                $"Data Source={_dbPath}");
 
         _conn.Open();
 
@@ -197,14 +174,13 @@ CREATE TABLE IF NOT EXISTS Configuraciones (
 
         while (reader.Read())
         {
-            var id =
+            string id =
                 reader.GetString(0);
 
-            var data =
+            string data =
                 reader.GetString(1);
 
-            MateriaParcial? mp =
-                null;
+            MateriaParcial? mp = null;
 
             try
             {
@@ -215,7 +191,6 @@ CREATE TABLE IF NOT EXISTS Configuraciones (
             }
             catch
             {
-                // Registro inválido.
             }
 
             if (mp != null)
@@ -234,8 +209,7 @@ CREATE TABLE IF NOT EXISTS Configuraciones (
     public MateriaParcial? GetMateria(
         string clave)
     {
-        if (string.IsNullOrWhiteSpace(
-                clave))
+        if (string.IsNullOrWhiteSpace(clave))
         {
             return null;
         }
@@ -253,18 +227,16 @@ CREATE TABLE IF NOT EXISTS Configuraciones (
         var result =
             cmd.ExecuteScalar() as string;
 
-        if (string.IsNullOrWhiteSpace(
-                result))
+        if (string.IsNullOrWhiteSpace(result))
         {
             return null;
         }
 
         try
         {
-            return
-                JsonSerializer.Deserialize<MateriaParcial>(
-                    result,
-                    _jsonOptions);
+            return JsonSerializer.Deserialize<MateriaParcial>(
+                result,
+                _jsonOptions);
         }
         catch
         {
@@ -280,8 +252,7 @@ CREATE TABLE IF NOT EXISTS Configuraciones (
         string clave,
         MateriaParcial materia)
     {
-        if (string.IsNullOrWhiteSpace(
-                clave) ||
+        if (string.IsNullOrWhiteSpace(clave) ||
             materia == null)
         {
             return;
@@ -317,10 +288,9 @@ VALUES
             "@data",
             json);
 
-        // Log escritura para depuración: qué Id se guarda y en qué fichero DB
-        System.Diagnostics.Debug.WriteLine($"[SqliteService] SaveMateria id={clave} db={_dbPath}");
+        System.Diagnostics.Debug.WriteLine(
+            $"[SqliteService] SaveMateria id={clave} db={_dbPath}");
 
-        // Ejecutar la inserción
         cmd.ExecuteNonQuery();
     }
 
@@ -344,14 +314,13 @@ VALUES
 
         while (reader.Read())
         {
-            var id =
+            string id =
                 reader.GetString(0);
 
-            var data =
+            string data =
                 reader.GetString(1);
 
-            ConfiguracionParciales? cfg =
-                null;
+            ConfiguracionParciales? cfg = null;
 
             try
             {
@@ -362,7 +331,6 @@ VALUES
             }
             catch
             {
-                // Registro inválido.
             }
 
             if (cfg != null)
@@ -382,8 +350,7 @@ VALUES
         string clave,
         ConfiguracionParciales cfg)
     {
-        if (string.IsNullOrWhiteSpace(
-                clave) ||
+        if (string.IsNullOrWhiteSpace(clave) ||
             cfg == null)
         {
             return;
@@ -419,10 +386,9 @@ VALUES
             "@data",
             json);
 
-        // Log escritura para depuración: qué Id se guarda y en qué fichero DB
-        System.Diagnostics.Debug.WriteLine($"[SqliteService] SaveConfiguracion id={clave} db={_dbPath}");
+        System.Diagnostics.Debug.WriteLine(
+            $"[SqliteService] SaveConfiguracion id={clave} db={_dbPath}");
 
-        // Ejecutar la inserción
         cmd.ExecuteNonQuery();
     }
 
@@ -443,15 +409,10 @@ VALUES
             StringComparer.OrdinalIgnoreCase);
     }
 
-    // ============================================================
-    // OBTENER GRUPO POR MATRÍCULA
-    // ============================================================
-
     public string ObtenerGrupoPorMatricula(
         string matricula)
     {
-        if (string.IsNullOrWhiteSpace(
-                matricula))
+        if (string.IsNullOrWhiteSpace(matricula))
         {
             return "S/G";
         }
@@ -468,10 +429,154 @@ VALUES
             _configuracion.Grupos.TryGetValue(
                 matriculaBuscada,
                 out string? grupo) &&
-            !string.IsNullOrWhiteSpace(
-                grupo)
+            !string.IsNullOrWhiteSpace(grupo)
                 ? grupo.Trim()
                 : "S/G";
+    }
+
+    // ============================================================
+    // DERECHO PRE
+    // ============================================================
+
+    public bool TieneDerechoPre(
+        string claveAsignatura,
+        string matricula)
+    {
+        return TieneDerechoEvaluacion(
+            _configuracion?.PRE,
+            claveAsignatura,
+            matricula);
+    }
+
+    // ============================================================
+    // DERECHO EXTRA
+    // ============================================================
+
+    public bool TieneDerechoExtra(
+        string claveAsignatura,
+        string matricula)
+    {
+        return TieneDerechoEvaluacion(
+            _configuracion?.EXTRA,
+            claveAsignatura,
+            matricula);
+    }
+
+    // ============================================================
+    // MATRÍCULAS AUTORIZADAS PRE
+    // ============================================================
+
+    public HashSet<string>
+        ObtenerMatriculasConDerechoPre(
+            string claveAsignatura)
+    {
+        return
+            ObtenerMatriculasConDerecho(
+                _configuracion?.PRE,
+                claveAsignatura);
+    }
+
+    // ============================================================
+    // MATRÍCULAS AUTORIZADAS EXTRA
+    // ============================================================
+
+    public HashSet<string>
+        ObtenerMatriculasConDerechoExtra(
+            string claveAsignatura)
+    {
+        return
+            ObtenerMatriculasConDerecho(
+                _configuracion?.EXTRA,
+                claveAsignatura);
+    }
+
+    // ============================================================
+    // LÓGICA COMÚN DE DERECHO
+    // ============================================================
+
+    private static bool TieneDerechoEvaluacion(
+        IEnumerable<EvaluacionAdicional>? lista,
+        string claveAsignatura,
+        string matricula)
+    {
+        if (lista == null)
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(claveAsignatura) ||
+            string.IsNullOrWhiteSpace(matricula))
+        {
+            return false;
+        }
+
+        string clave =
+            claveAsignatura.Trim();
+
+        string mat =
+            matricula.Trim();
+
+        return lista.Any(
+            e =>
+                e != null &&
+                string.Equals(
+                    e.CLAVEASIGNATURA?.Trim(),
+                    clave,
+                    StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(
+                    e.MATRICULA?.Trim(),
+                    mat,
+                    StringComparison.OrdinalIgnoreCase));
+    }
+
+    // ============================================================
+    // OBTENER MATRÍCULAS AUTORIZADAS
+    // ============================================================
+
+    private static HashSet<string>
+        ObtenerMatriculasConDerecho(
+            IEnumerable<EvaluacionAdicional>? lista,
+            string claveAsignatura)
+    {
+        var resultado =
+            new HashSet<string>(
+                StringComparer.OrdinalIgnoreCase);
+
+        if (lista == null ||
+            string.IsNullOrWhiteSpace(claveAsignatura))
+        {
+            return resultado;
+        }
+
+        string clave =
+            claveAsignatura.Trim();
+
+        foreach (var item in lista)
+        {
+            if (item == null)
+            {
+                continue;
+            }
+
+            if (!string.Equals(
+                    item.CLAVEASIGNATURA?.Trim(),
+                    clave,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    item.MATRICULA))
+            {
+                continue;
+            }
+
+            resultado.Add(
+                item.MATRICULA.Trim());
+        }
+
+        return resultado;
     }
 
     // ============================================================
@@ -481,8 +586,7 @@ VALUES
     private static string NormalizarClaveProfesor(
         string? clave)
     {
-        if (string.IsNullOrWhiteSpace(
-                clave))
+        if (string.IsNullOrWhiteSpace(clave))
         {
             return string.Empty;
         }
@@ -490,13 +594,11 @@ VALUES
         var caracteres =
             clave
                 .Trim()
-                .Where(
-                    char.IsLetterOrDigit)
+                .Where(char.IsLetterOrDigit)
                 .ToArray();
 
-        return
-            new string(
-                caracteres)
+        return new string(
+            caracteres)
             .ToUpperInvariant();
     }
 
@@ -516,8 +618,7 @@ VALUES
         var resultado =
             new List<ProfesorConfigurado>();
 
-        foreach (var item
-                 in _configuracion.Profesores)
+        foreach (var item in _configuracion.Profesores)
         {
             string clave =
                 item.Key?.Trim()
@@ -526,8 +627,7 @@ VALUES
             var profesor =
                 item.Value;
 
-            if (string.IsNullOrWhiteSpace(
-                    clave))
+            if (string.IsNullOrWhiteSpace(clave))
             {
                 continue;
             }
@@ -537,27 +637,21 @@ VALUES
                 continue;
             }
 
-            // La clave del diccionario es la autoridad.
-
             profesor.CLAVEPROFESOR =
                 clave;
 
             profesor.EMAIL =
-                profesor.EMAIL
-                ?.Trim()
+                profesor.EMAIL?.Trim()
                 ?? string.Empty;
 
-            resultado.Add(
-                profesor);
+            resultado.Add(profesor);
         }
 
-        return
-            resultado
-                .OrderBy(
-                    p =>
-                        p.CLAVEPROFESOR,
-                    StringComparer.OrdinalIgnoreCase)
-                .ToList();
+        return resultado
+            .OrderBy(
+                p => p.CLAVEPROFESOR,
+                StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     // ============================================================
@@ -609,8 +703,7 @@ VALUES
                 item.Key.Trim();
 
             profesor.EMAIL =
-                profesor.EMAIL
-                ?.Trim()
+                profesor.EMAIL?.Trim()
                 ?? string.Empty;
 
             return profesor;
@@ -619,36 +712,20 @@ VALUES
         return null;
     }
 
-    // ============================================================
-    // CORREO PROFESOR
-    // ============================================================
-
     public string ObtenerCorreoProfesor(
         string claveProfesor)
     {
-        return
-            GetProfesorPorClave(
+        return GetProfesorPorClave(
                 claveProfesor)
             ?.EMAIL
             ?.Trim()
             ?? string.Empty;
     }
 
-    // ============================================================
-    // NOMBRE PROFESOR
-    // ============================================================
-    //
-    // Se conserva por compatibilidad.
-    //
-    // La identificación del profesor NO depende del nombre.
-    //
-    // ============================================================
-
     public string ObtenerNombreProfesor(
         string claveProfesor)
     {
-        return
-            GetProfesorPorClave(
+        return GetProfesorPorClave(
                 claveProfesor)
             ?.NOMBREPROFESOR
             ?.Trim()
@@ -656,7 +733,7 @@ VALUES
     }
 
     // ============================================================
-    // ENVIAR CORREO
+    // CORREO
     // ============================================================
 
     public async Task EnviarCorreoAsync(
@@ -672,8 +749,7 @@ VALUES
                 "No se especificó el correo destinatario.");
         }
 
-        if (string.IsNullOrWhiteSpace(
-                SmtpUser) ||
+        if (string.IsNullOrWhiteSpace(SmtpUser) ||
             SmtpUser.Contains(
                 "TU_CORREO",
                 StringComparison.OrdinalIgnoreCase))
@@ -713,10 +789,6 @@ VALUES
         mensaje.IsBodyHtml =
             false;
 
-        // ========================================================
-        // ADJUNTO
-        // ========================================================
-
         if (!string.IsNullOrWhiteSpace(
                 archivoAdjunto))
         {
@@ -753,10 +825,6 @@ VALUES
             mensaje);
     }
 
-    // ============================================================
-    // ENVIAR CORREO A PROFESOR
-    // ============================================================
-
     public async Task EnviarCorreoProfesorAsync(
         string claveProfesor,
         string asunto,
@@ -790,17 +858,6 @@ VALUES
     // ============================================================
     // GUARDAR GRUPOS
     // ============================================================
-    //
-    // IMPORTANTE:
-    //
-    // Antes solamente se modificaba _configuracion en memoria.
-    //
-    // AHORA:
-    //
-    // 1. Modifica _configuracion.
-    // 2. Guarda configuracion.bin directamente en la raíz.
-    //
-    // ============================================================
 
     public void SaveGrupos(
         Dictionary<string, string> grupos)
@@ -825,10 +882,8 @@ VALUES
 
         foreach (var item in grupos)
         {
-            if (string.IsNullOrWhiteSpace(
-                    item.Key) ||
-                string.IsNullOrWhiteSpace(
-                    item.Value))
+            if (string.IsNullOrWhiteSpace(item.Key) ||
+                string.IsNullOrWhiteSpace(item.Value))
             {
                 continue;
             }
@@ -838,20 +893,11 @@ VALUES
                 item.Value.Trim();
         }
 
-        // ========================================================
-        // ESCRIBIR CAMBIOS AL ARCHIVO REAL
-        // ========================================================
-
         GuardarConfiguracionBin();
     }
 
     // ============================================================
     // GUARDAR PROFESORES
-    // ============================================================
-    //
-    // Este método queda disponible por si posteriormente
-    // necesitas modificar profesores desde CEIM.
-    //
     // ============================================================
 
     public void SaveProfesores(
@@ -876,8 +922,7 @@ VALUES
 
         foreach (var item in profesores)
         {
-            if (string.IsNullOrWhiteSpace(
-                    item.Key))
+            if (string.IsNullOrWhiteSpace(item.Key))
             {
                 continue;
             }
@@ -894,8 +939,7 @@ VALUES
                 clave;
 
             item.Value.EMAIL =
-                item.Value.EMAIL
-                ?.Trim()
+                item.Value.EMAIL?.Trim()
                 ?? string.Empty;
 
             profesoresNormalizados[
@@ -906,10 +950,6 @@ VALUES
         _configuracion.Profesores =
             profesoresNormalizados;
 
-        // ========================================================
-        // ESCRIBIR CAMBIOS AL BINARIO REAL
-        // ========================================================
-
         GuardarConfiguracionBin();
     }
 
@@ -919,15 +959,10 @@ VALUES
 
     private void CargarConfiguracionBin()
     {
-        _configuracion =
-            null;
+        _configuracion = null;
 
         try
         {
-            // ====================================================
-            // EL ARCHIVO SE BUSCA DIRECTAMENTE EN LA RAÍZ
-            // ====================================================
-
             if (!File.Exists(
                     _configuracionBinPath))
             {
@@ -948,10 +983,6 @@ VALUES
                 return;
             }
 
-            // ====================================================
-            // VALIDAR HEADER CEIM
-            // ====================================================
-
             if (datos[0] != ConfiguracionHeader[0] ||
                 datos[1] != ConfiguracionHeader[1] ||
                 datos[2] != ConfiguracionHeader[2] ||
@@ -959,10 +990,6 @@ VALUES
             {
                 return;
             }
-
-            // ====================================================
-            // NONCE
-            // ====================================================
 
             byte[] nonce =
                 new byte[NonceSize];
@@ -974,10 +1001,6 @@ VALUES
                 0,
                 NonceSize);
 
-            // ====================================================
-            // TAG
-            // ====================================================
-
             byte[] tag =
                 new byte[TagSize];
 
@@ -987,10 +1010,6 @@ VALUES
                 tag,
                 0,
                 TagSize);
-
-            // ====================================================
-            // DATOS CIFRADOS
-            // ====================================================
 
             int encryptedOffset =
                 HeaderSize +
@@ -1007,8 +1026,7 @@ VALUES
             }
 
             byte[] cifrado =
-                new byte[
-                    encryptedLength];
+                new byte[encryptedLength];
 
             Buffer.BlockCopy(
                 datos,
@@ -1018,12 +1036,7 @@ VALUES
                 encryptedLength);
 
             byte[] texto =
-                new byte[
-                    encryptedLength];
-
-            // ====================================================
-            // AES-GCM
-            // ====================================================
+                new byte[encryptedLength];
 
             using var aes =
                 new AesGcm(
@@ -1036,17 +1049,9 @@ VALUES
                 tag,
                 texto);
 
-            // ====================================================
-            // JSON
-            // ====================================================
-
             string json =
                 Encoding.UTF8.GetString(
                     texto);
-
-            // ====================================================
-            // DESERIALIZAR
-            // ====================================================
 
             var configuracion =
                 JsonSerializer.Deserialize<ConfiguracionBin>(
@@ -1073,8 +1078,7 @@ VALUES
             foreach (var item
                      in configuracion.Grupos)
             {
-                if (string.IsNullOrWhiteSpace(
-                        item.Key))
+                if (string.IsNullOrWhiteSpace(item.Key))
                 {
                     continue;
                 }
@@ -1086,8 +1090,7 @@ VALUES
                     item.Value?.Trim()
                     ?? string.Empty;
 
-                if (string.IsNullOrWhiteSpace(
-                        grupo))
+                if (string.IsNullOrWhiteSpace(grupo))
                 {
                     continue;
                 }
@@ -1119,8 +1122,7 @@ VALUES
             foreach (var item
                      in configuracion.Profesores)
             {
-                if (string.IsNullOrWhiteSpace(
-                        item.Key))
+                if (string.IsNullOrWhiteSpace(item.Key))
                 {
                     continue;
                 }
@@ -1140,8 +1142,7 @@ VALUES
                     clave;
 
                 profesor.EMAIL =
-                    profesor.EMAIL
-                    ?.Trim()
+                    profesor.EMAIL?.Trim()
                     ?? string.Empty;
 
                 profesoresNormalizados[
@@ -1153,30 +1154,76 @@ VALUES
                 profesoresNormalizados;
 
             // ====================================================
-            // CONFIGURACIÓN FINAL
+            // NORMALIZAR PRE
             // ====================================================
+
+            configuracion.PRE ??=
+                new List<EvaluacionAdicional>();
+
+            configuracion.PRE =
+                NormalizarEvaluaciones(
+                    configuracion.PRE);
+
+            // ====================================================
+            // NORMALIZAR EXTRA
+            // ====================================================
+
+            configuracion.EXTRA ??=
+                new List<EvaluacionAdicional>();
+
+            configuracion.EXTRA =
+                NormalizarEvaluaciones(
+                    configuracion.EXTRA);
 
             _configuracion =
                 configuracion;
         }
         catch
         {
-            // Si configuracion.bin no puede leerse,
-            // no se carga ninguna configuración.
-
-            _configuracion =
-                null;
+            _configuracion = null;
         }
     }
 
     // ============================================================
-    // GUARDAR CONFIGURACION.BIN
+    // NORMALIZAR EVALUACIONES
     // ============================================================
-    //
-    // ESCRIBE DIRECTAMENTE:
-    //
-    // AppContext.BaseDirectory\configuracion.bin
-    //
+
+    private static List<EvaluacionAdicional>
+        NormalizarEvaluaciones(
+            IEnumerable<EvaluacionAdicional>? lista)
+    {
+        if (lista == null)
+        {
+            return [];
+        }
+
+        return lista
+            .Where(e =>
+                e != null &&
+                !string.IsNullOrWhiteSpace(
+                    e.CLAVEASIGNATURA) &&
+                !string.IsNullOrWhiteSpace(
+                    e.MATRICULA))
+            .Select(e =>
+                new EvaluacionAdicional
+                {
+                    CLAVEASIGNATURA =
+                        e.CLAVEASIGNATURA.Trim(),
+
+                    MATRICULA =
+                        e.MATRICULA.Trim()
+                })
+            .GroupBy(
+                e =>
+                    $"{e.CLAVEASIGNATURA}|{e.MATRICULA}",
+                StringComparer.OrdinalIgnoreCase)
+            .Select(
+                g => g.First())
+            .ToList();
+    }
+
+    // ============================================================
+    // GUARDAR CONFIGURACION.BIN
     // ============================================================
 
     private void GuardarConfiguracionBin()
@@ -1188,10 +1235,6 @@ VALUES
 
         try
         {
-            // ====================================================
-            // ASEGURAR DICCIONARIOS
-            // ====================================================
-
             _configuracion.Grupos ??=
                 new Dictionary<string, string>(
                     StringComparer.OrdinalIgnoreCase);
@@ -1202,9 +1245,11 @@ VALUES
                     ProfesorConfigurado>(
                     StringComparer.OrdinalIgnoreCase);
 
-            // ====================================================
-            // SERIALIZAR CONFIGURACIÓN
-            // ====================================================
+            _configuracion.PRE ??=
+                new List<EvaluacionAdicional>();
+
+            _configuracion.EXTRA ??=
+                new List<EvaluacionAdicional>();
 
             string json =
                 JsonSerializer.Serialize(
@@ -1215,23 +1260,14 @@ VALUES
                 Encoding.UTF8.GetBytes(
                     json);
 
-            // ====================================================
-            // NONCE NUEVO PARA CADA GUARDADO
-            // ====================================================
-
             byte[] nonce =
                 new byte[NonceSize];
 
             RandomNumberGenerator.Fill(
                 nonce);
 
-            // ====================================================
-            // CIFRADO
-            // ====================================================
-
             byte[] cifrado =
-                new byte[
-                    texto.Length];
+                new byte[texto.Length];
 
             byte[] tag =
                 new byte[TagSize];
@@ -1248,15 +1284,6 @@ VALUES
                     tag);
             }
 
-            // ====================================================
-            // CONSTRUIR ARCHIVO
-            //
-            // [CEIM]
-            // [NONCE]
-            // [TAG]
-            // [CIFRADO]
-            // ====================================================
-
             int totalLength =
                 HeaderSize +
                 NonceSize +
@@ -1266,16 +1293,12 @@ VALUES
             byte[] resultado =
                 new byte[totalLength];
 
-            // HEADER
-
             Buffer.BlockCopy(
                 ConfiguracionHeader,
                 0,
                 resultado,
                 0,
                 HeaderSize);
-
-            // NONCE
 
             Buffer.BlockCopy(
                 nonce,
@@ -1284,16 +1307,12 @@ VALUES
                 HeaderSize,
                 NonceSize);
 
-            // TAG
-
             Buffer.BlockCopy(
                 tag,
                 0,
                 resultado,
                 HeaderSize + NonceSize,
                 TagSize);
-
-            // CIFRADO
 
             Buffer.BlockCopy(
                 cifrado,
@@ -1304,16 +1323,6 @@ VALUES
                 TagSize,
                 cifrado.Length);
 
-            // ====================================================
-            // ARCHIVO TEMPORAL
-            // ====================================================
-            //
-            // Primero escribimos un temporal para evitar dejar
-            // configuracion.bin corrupto si el proceso se
-            // interrumpe durante la escritura.
-            //
-            // ====================================================
-
             string archivoTemporal =
                 _configuracionBinPath +
                 ".tmp";
@@ -1321,10 +1330,6 @@ VALUES
             File.WriteAllBytes(
                 archivoTemporal,
                 resultado);
-
-            // ====================================================
-            // REEMPLAZAR ARCHIVO REAL
-            // ====================================================
 
             if (File.Exists(
                     _configuracionBinPath))
@@ -1339,8 +1344,6 @@ VALUES
         }
         catch
         {
-            // Intentar limpiar temporal.
-
             try
             {
                 string archivoTemporal =
@@ -1356,7 +1359,6 @@ VALUES
             }
             catch
             {
-                // Ignorar limpieza.
             }
 
             throw;
@@ -1364,12 +1366,7 @@ VALUES
     }
 
     // ============================================================
-    // FORZAR RECARGA DE CONFIGURACION.BIN
-    // ============================================================
-    //
-    // Útil si otro proceso modifica configuracion.bin mientras
-    // CEIM está abierto.
-    //
+    // RECARGAR CONFIGURACION
     // ============================================================
 
     public void RecargarConfiguracion()
@@ -1377,18 +1374,10 @@ VALUES
         CargarConfiguracionBin();
     }
 
-    // ============================================================
-    // RUTA REAL DE CONFIGURACION.BIN
-    // ============================================================
-
     public string ObtenerRutaConfiguracionBin()
     {
         return _configuracionBinPath;
     }
-
-    // ============================================================
-    // RUTA REAL DE SQLITE
-    // ============================================================
 
     public string ObtenerRutaBaseDatos()
     {
@@ -1428,10 +1417,41 @@ VALUES
         } =
             new(
                 StringComparer.OrdinalIgnoreCase);
+
+        public List<EvaluacionAdicional> PRE
+        {
+            get;
+            set;
+        } = new();
+
+        public List<EvaluacionAdicional> EXTRA
+        {
+            get;
+            set;
+        } = new();
     }
 
     // ============================================================
-    // PROFESOR CONFIGURADO
+    // EVALUACION ADICIONAL
+    // ============================================================
+
+    public class EvaluacionAdicional
+    {
+        public string CLAVEASIGNATURA
+        {
+            get;
+            set;
+        } = string.Empty;
+
+        public string MATRICULA
+        {
+            get;
+            set;
+        } = string.Empty;
+    }
+
+    // ============================================================
+    // PROFESOR
     // ============================================================
 
     public class ProfesorConfigurado
@@ -1440,26 +1460,22 @@ VALUES
         {
             get;
             set;
-        } =
-            string.Empty;
+        } = string.Empty;
 
         public string EMAIL
         {
             get;
             set;
-        } =
-            string.Empty;
+        } = string.Empty;
 
         public string NOMBREPROFESOR
         {
             get;
             set;
-        } =
-            string.Empty;
+        } = string.Empty;
 
         public string TextoCombo =>
-            string.IsNullOrWhiteSpace(
-                EMAIL)
+            string.IsNullOrWhiteSpace(EMAIL)
                 ? CLAVEPROFESOR
                 : $"{CLAVEPROFESOR} | {EMAIL}";
     }

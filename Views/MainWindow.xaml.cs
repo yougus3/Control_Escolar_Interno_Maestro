@@ -11,7 +11,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         DataContext = new MainViewModel();
         RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.Fant);
-        this.MouseLeftButtonDown += MainWindow_MouseLeftButtonDown;
+        //this.MouseLeftButtonDown += MainWindow_MouseLeftButtonDown;
     }
 
     private void Configuracion_Click(object sender, RoutedEventArgs e)

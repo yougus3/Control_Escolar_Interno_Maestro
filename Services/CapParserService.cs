@@ -22,7 +22,7 @@ public class CapParserService
     //
     // CapParserService no necesita conocer cómo se descifra
     // configuracion.bin. Esa responsabilidad pertenece a
-    // LiteDbService.
+    // SQLiteService.
     //
     // ============================================================
 

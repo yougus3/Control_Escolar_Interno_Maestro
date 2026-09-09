@@ -2,181 +2,449 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:d="http://schemas.openxmlformats.org/expression/blend/2008"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
              xmlns:converters="clr-namespace:Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Converters"
              mc:Ignorable="d"
-             Loaded="UserControl_Loaded"
              d:DesignHeight="680"
-             d:DesignWidth="1200">
+             d:DesignWidth="1200"
+             Loaded="UserControl_Loaded">
 
     <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis" />
-        <converters:CalificacionColorConverter x:Key="ColorCalifConverter" />
 
-        <CollectionViewSource x:Key="AlumnosAgrupados" Source="{Binding Alumnos}">
+        <BooleanToVisibilityConverter
+            x:Key="BoolToVis" />
+
+        <converters:CalificacionColorConverter
+            x:Key="ColorCalifConverter" />
+
+        <!-- =====================================================
+             IMPORTANTE:
+             AQUÍ SE FILTRAN LOS AUTORIZADOS PARA EXTRA
+             ===================================================== -->
+
+        <CollectionViewSource
+            x:Key="AlumnosAgrupados"
+            Source="{Binding AlumnosConDerechoExtra}">
+
             <CollectionViewSource.GroupDescriptions>
-                <PropertyGroupDescription PropertyName="Grupo" />
+                <PropertyGroupDescription
+                    PropertyName="Grupo" />
             </CollectionViewSource.GroupDescriptions>
+
             <CollectionViewSource.SortDescriptions>
-                <scm:SortDescription PropertyName="Grupo" Direction="Ascending" />
-                <scm:SortDescription PropertyName="Nombre" Direction="Ascending" />
+                <scm:SortDescription
+                    PropertyName="Grupo"
+                    Direction="Ascending" />
+
+                <scm:SortDescription
+                    PropertyName="Nombre"
+                    Direction="Ascending" />
             </CollectionViewSource.SortDescriptions>
+
         </CollectionViewSource>
 
-        <SolidColorBrush x:Key="AppBlue" Color="#1B365D" />
+        <SolidColorBrush
+            x:Key="AppBlue"
+            Color="#1B365D" />
 
-        <Style x:Key="RoundedTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#CBD5E1" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="8,2" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            
-            <Setter Property="IsEnabled" Value="{Binding TieneDerechoExtra}" />
-            
-            <Setter Property="Template">
+        <Style
+            x:Key="RoundedTextBoxStyle"
+            TargetType="TextBox">
+
+            <Setter
+                Property="Background"
+                Value="White" />
+
+            <Setter
+                Property="BorderBrush"
+                Value="#CBD5E1" />
+
+            <Setter
+                Property="BorderThickness"
+                Value="1" />
+
+            <Setter
+                Property="Padding"
+                Value="8,2" />
+
+            <Setter
+                Property="VerticalContentAlignment"
+                Value="Center" />
+
+            <Setter
+                Property="IsEnabled"
+                Value="{Binding TieneDerechoExtra}" />
+
+            <Setter
+                Property="Template">
+
                 <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border x:Name="Bd"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8"
-                                SnapsToDevicePixels="True">
+
+                    <ControlTemplate
+                        TargetType="TextBox">
+
+                        <Border
+                            x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8"
+                            SnapsToDevicePixels="True">
+
                             <Grid>
-                                <ScrollViewer x:Name="PART_ContentHost" Margin="0" VerticalAlignment="Center" />
-                                
-                                <TextBlock x:Name="LeyendaBloqueo" 
-                                           Text="SIN DERECHO" 
-                                           Foreground="#D32F2F" 
-                                           FontWeight="Bold"
-                                           FontSize="10"
-                                           TextWrapping="Wrap"
-                                           TextAlignment="Center"
-                                           HorizontalAlignment="Center" 
-                                           VerticalAlignment="Center"
-                                           Visibility="Collapsed" />
+
+                                <ScrollViewer
+                                    x:Name="PART_ContentHost"
+                                    Margin="0"
+                                    VerticalAlignment="Center" />
+
+                                <TextBlock
+                                    x:Name="LeyendaBloqueo"
+                                    Text="SIN DERECHO"
+                                    Foreground="#D32F2F"
+                                    FontWeight="Bold"
+                                    FontSize="10"
+                                    TextWrapping="Wrap"
+                                    TextAlignment="Center"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Visibility="Collapsed" />
+
                             </Grid>
+
                         </Border>
+
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AppBlue}" />
-                                <Setter TargetName="Bd" Property="BorderThickness" Value="1.5" />
+
+                            <Trigger
+                                Property="IsKeyboardFocused"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="Bd"
+                                    Property="BorderBrush"
+                                    Value="{StaticResource AppBlue}" />
+
+                                <Setter
+                                    TargetName="Bd"
+                                    Property="BorderThickness"
+                                    Value="1.5" />
+
                             </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#93C5FD" />
+
+                            <Trigger
+                                Property="IsMouseOver"
+                                Value="True">
+
+                                <Setter
+                                    TargetName="Bd"
+                                    Property="BorderBrush"
+                                    Value="#93C5FD" />
+
                             </Trigger>
-                            
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Background" Value="#FEE2E2" />
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#F87171" />
-                                <Setter Property="ToolTip" Value="Este alumno no tiene derecho a la evaluación porque ya aprobó la materia en ordinario." />
-                                <Setter TargetName="PART_ContentHost" Property="Visibility" Value="Collapsed" />
-                                <Setter TargetName="LeyendaBloqueo" Property="Visibility" Value="Visible" />
+
+                            <Trigger
+                                Property="IsEnabled"
+                                Value="False">
+
+                                <Setter
+                                    TargetName="Bd"
+                                    Property="Background"
+                                    Value="#FEE2E2" />
+
+                                <Setter
+                                    TargetName="Bd"
+                                    Property="BorderBrush"
+                                    Value="#F87171" />
+
+                                <Setter
+                                    Property="ToolTip"
+                                    Value="Este alumno no tiene derecho a la evaluación porque no está autorizado en configuracion.bin." />
+
+                                <Setter
+                                    TargetName="PART_ContentHost"
+                                    Property="Visibility"
+                                    Value="Collapsed" />
+
+                                <Setter
+                                    TargetName="LeyendaBloqueo"
+                                    Property="Visibility"
+                                    Value="Visible" />
+
                             </Trigger>
+
                         </ControlTemplate.Triggers>
+
                     </ControlTemplate>
+
                 </Setter.Value>
+
             </Setter>
+
         </Style>
+
     </UserControl.Resources>
 
     <Grid Background="#F1F5F9">
-        <Border Background="White" BorderBrush="#D7DEE8" BorderThickness="1" CornerRadius="12" Padding="8">
+
+        <Border
+            Background="White"
+            BorderBrush="#D7DEE8"
+            BorderThickness="1"
+            CornerRadius="12"
+            Padding="8">
+
             <Grid>
+
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <Border Grid.Row="0" Background="#1B365D" CornerRadius="10" Padding="12,10" Margin="0,0,0,8">
+                <Border
+                    Grid.Row="0"
+                    Background="#1B365D"
+                    CornerRadius="10"
+                    Padding="12,10"
+                    Margin="0,0,0,8">
+
                     <Grid>
+
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Calificación de Extraordinario" Foreground="White" FontSize="16" FontWeight="Bold" />
-                            <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                <TextBlock Text="Asignatura: " Foreground="#D6E4FF" FontSize="12" FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding NombreMateriaExtra}" Foreground="White" FontSize="12" FontWeight="SemiBold" />
-                                
-                                <TextBlock Text="  Evaluación: " Foreground="#D6E4FF" FontSize="12" FontWeight="SemiBold" Margin="15,0,0,0" />
-                                <TextBlock Text="EXTRA" Foreground="White" FontSize="12" FontWeight="SemiBold" />
-                                
-                                <TextBlock Text="  Grupo: " Foreground="#D6E4FF" FontSize="12" FontWeight="SemiBold" Margin="15,0,0,0" />
-                                <TextBlock Text="{Binding NombreProfesorExtra}" Foreground="White" FontSize="12" FontWeight="SemiBold" />
-                                
-                                <StackPanel Orientation="Horizontal" Margin="15,0,0,0">
-                                    <TextBlock Text="  Alumnos evaluados: " Foreground="#D6E4FF" FontSize="12" FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding TextoEvaluadosExtra}" Foreground="White" FontSize="12" FontWeight="SemiBold" />
-                                    <Button Margin="8,0,0,0"
-                                            Background="Transparent" BorderThickness="0" Cursor="Hand"
-                                            Visibility="{Binding FaltanPorEvaluarExtra, Converter={StaticResource BoolToVis}}"
-                                            Click="WarningNoEvaluados_Click"
-                                            ToolTip="Ver lista de alumnos pendientes">
-                                        <Viewbox Width="17" Height="17">
-                                            <Path Fill="#FACC15" Data="M12,2L1,21H23M12,6L19.53,19H4.47M11,10V14H13V10M11,16V18H13V16" />
+
+                            <TextBlock
+                                Text="Calificación de Extraordinario"
+                                Foreground="White"
+                                FontSize="16"
+                                FontWeight="Bold" />
+
+                            <StackPanel
+                                Orientation="Horizontal"
+                                Margin="0,2,0,0">
+
+                                <TextBlock
+                                    Text="Asignatura: "
+                                    Foreground="#D6E4FF"
+                                    FontSize="12"
+                                    FontWeight="SemiBold" />
+
+                                <TextBlock
+                                    Text="{Binding NombreMateriaExtra}"
+                                    Foreground="White"
+                                    FontSize="12"
+                                    FontWeight="SemiBold" />
+
+                                <TextBlock
+                                    Text="  Evaluación: "
+                                    Foreground="#D6E4FF"
+                                    FontSize="12"
+                                    FontWeight="SemiBold"
+                                    Margin="15,0,0,0" />
+
+                                <TextBlock
+                                    Text="EXTRA"
+                                    Foreground="White"
+                                    FontSize="12"
+                                    FontWeight="SemiBold" />
+
+                                <TextBlock
+                                    Text="  Grupo: "
+                                    Foreground="#D6E4FF"
+                                    FontSize="12"
+                                    FontWeight="SemiBold"
+                                    Margin="15,0,0,0" />
+
+                                <TextBlock
+                                    Text="{Binding NombreProfesorExtra}"
+                                    Foreground="White"
+                                    FontSize="12"
+                                    FontWeight="SemiBold" />
+
+                                <StackPanel
+                                    Orientation="Horizontal"
+                                    Margin="15,0,0,0">
+
+                                    <TextBlock
+                                        Text="  Alumnos evaluados: "
+                                        Foreground="#D6E4FF"
+                                        FontSize="12"
+                                        FontWeight="SemiBold" />
+
+                                    <TextBlock
+                                        Text="{Binding TextoEvaluadosExtra}"
+                                        Foreground="White"
+                                        FontSize="12"
+                                        FontWeight="SemiBold" />
+
+                                    <Button
+                                        Margin="8,0,0,0"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Cursor="Hand"
+                                        Visibility="{Binding FaltanPorEvaluarExtra, Converter={StaticResource BoolToVis}}"
+                                        Click="WarningNoEvaluados_Click"
+                                        ToolTip="Ver lista de alumnos pendientes">
+
+                                        <Viewbox
+                                            Width="17"
+                                            Height="17">
+
+                                            <Path
+                                                Fill="#FACC15"
+                                                Data="M12,2L1,21H23M12,6L19.53,19H4.47M11,10V14H13V10M11,16V18H13V16" />
+
                                         </Viewbox>
+
                                     </Button>
+
                                 </StackPanel>
+
                             </StackPanel>
+
                         </StackPanel>
+
                     </Grid>
+
                 </Border>
 
-                <Grid Grid.Row="1" Margin="12,10,12,0">
+                <Grid
+                    Grid.Row="1"
+                    Margin="12,10,12,0">
+
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="80" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="100" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Matrícula" FontWeight="Bold" Foreground="#1B365D" FontSize="13" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="1" Text="Nombre del Alumno" FontWeight="Bold" Foreground="#1B365D" FontSize="13" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="2" Text="Calificación" FontWeight="Bold" Foreground="#1B365D" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                    <TextBlock
+                        Grid.Column="0"
+                        Text="Matrícula"
+                        FontWeight="Bold"
+                        Foreground="#1B365D"
+                        FontSize="13"
+                        VerticalAlignment="Center" />
+
+                    <TextBlock
+                        Grid.Column="1"
+                        Text="Nombre del Alumno"
+                        FontWeight="Bold"
+                        Foreground="#1B365D"
+                        FontSize="13"
+                        VerticalAlignment="Center" />
+
+                    <TextBlock
+                        Grid.Column="2"
+                        Text="Calificación"
+                        FontWeight="Bold"
+                        Foreground="#1B365D"
+                        FontSize="13"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
+
                 </Grid>
 
-                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="6">
-                    <ItemsControl ItemsSource="{Binding Source={StaticResource AlumnosAgrupados}}">
+                <ScrollViewer
+                    Grid.Row="2"
+                    VerticalScrollBarVisibility="Auto"
+                    Margin="6">
+
+                    <ItemsControl
+                        ItemsSource="{Binding Source={StaticResource AlumnosAgrupados}}">
+
                         <ItemsControl.GroupStyle>
+
                             <GroupStyle>
+
                                 <GroupStyle.HeaderTemplate>
+
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="16" Foreground="#1B365D" Margin="4,15,0,5" />
+
+                                        <TextBlock
+                                            Text="{Binding Name}"
+                                            FontWeight="Bold"
+                                            FontSize="16"
+                                            Foreground="#1B365D"
+                                            Margin="4,15,0,5" />
+
                                     </DataTemplate>
+
                                 </GroupStyle.HeaderTemplate>
+
                             </GroupStyle>
+
                         </ItemsControl.GroupStyle>
-                        
+
                         <ItemsControl.ItemTemplate>
+
                             <DataTemplate>
-                                <Border Background="#FAFBFD" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="6" Margin="0,4">
+
+                                <Border
+                                    Background="#FAFBFD"
+                                    BorderBrush="#E2E8F0"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="6"
+                                    Margin="0,4">
+
                                     <Grid>
+
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="80" />
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="100" />
                                         </Grid.ColumnDefinitions>
 
-                                        <TextBlock Text="{Binding Matricula}" FontWeight="SemiBold" Foreground="#1E293B" FontSize="14" VerticalAlignment="Center" />
-                                        <TextBlock Grid.Column="1" Text="{Binding Nombre}" Foreground="#334155" FontSize="14" VerticalAlignment="Center" />
+                                        <TextBlock
+                                            Text="{Binding Matricula}"
+                                            FontWeight="SemiBold"
+                                            Foreground="#1E293B"
+                                            FontSize="14"
+                                            VerticalAlignment="Center" />
 
-                                        <TextBox Grid.Column="2" 
-                                                 Text="{Binding Calificación[EXTRA], Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Foreground="{Binding Text, RelativeSource={RelativeSource Self}, Converter={StaticResource ColorCalifConverter}}"
-                                                 Style="{StaticResource RoundedTextBoxStyle}"
-                                                 FontSize="16" FontWeight="Bold" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="85"
-                                                 KeyDown="TextBox_KeyDown" TextChanged="TextBox_TextChanged"/>
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            Text="{Binding Nombre}"
+                                            Foreground="#334155"
+                                            FontSize="14"
+                                            VerticalAlignment="Center" />
+
+                                        <TextBox
+                                            Grid.Column="2"
+                                            Text="{Binding Calificación[EXTRA], Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            Foreground="{Binding Text, RelativeSource={RelativeSource Self}, Converter={StaticResource ColorCalifConverter}}"
+                                            Style="{StaticResource RoundedTextBoxStyle}"
+                                            FontSize="16"
+                                            FontWeight="Bold"
+                                            HorizontalContentAlignment="Center"
+                                            VerticalContentAlignment="Center"
+                                            Width="85"
+                                            KeyDown="TextBox_KeyDown"
+                                            TextChanged="TextBox_TextChanged" />
+
                                     </Grid>
+
                                 </Border>
+
                             </DataTemplate>
+
                         </ItemsControl.ItemTemplate>
+
                     </ItemsControl>
+
                 </ScrollViewer>
+
             </Grid>
+
         </Border>
+
     </Grid>
+
 </UserControl>
