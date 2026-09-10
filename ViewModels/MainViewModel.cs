@@ -1121,21 +1121,12 @@ public partial class MainViewModel : ObservableObject
             {
                 // ====================================================
                 // EXTRA:
-                // El selector identifica el grupo del CAP.
-                // El grupo se obtiene del propio contenido del CAP.
+                // El grupo se obtiene DIRECTAMENTE del CAP.
+                // NO se usa configuracion.bin.
                 // ====================================================
 
-                var resExtra =
-                    _parserService
-                        .ProcesarArchivoCompleto(
-                            archivo);
-
                 string grupoExtra =
-                    resExtra.Alumnos
-                        .Select(a => a.Grupo)
-                        .FirstOrDefault(
-                            g => !string.IsNullOrWhiteSpace(g))
-                    ?? "S/G";
+                    ObtenerGrupoDesdeCap(archivo);
 
                 nombreCombo =
                     $"{info.NombreBase} - Grupo: {grupoExtra}";
@@ -1278,11 +1269,8 @@ public partial class MainViewModel : ObservableObject
             // ====================================================
 
             NombreGrupoExtra =
-                resultado.Alumnos
-                    .Select(a => a.Grupo)
-                    .FirstOrDefault(
-                        g => !string.IsNullOrWhiteSpace(g))
-                ?? "S/G";
+                ObtenerGrupoDesdeCap(
+                    rutaCompleta);
 
             foreach (var kvp in
                      resultado.EvaluacionIdPorNombre)
@@ -1308,7 +1296,7 @@ public partial class MainViewModel : ObservableObject
                             "EXTRA",
 
                         Nombre =
-                            "EXTRAORDINARIO/INTER"
+                            "EXTRAORDINARIO"
                     });
             }
             else
@@ -2113,6 +2101,80 @@ public partial class MainViewModel : ObservableObject
                 ActualizarConteoEvaluadosExtra();
             }
         }
+    }
+    
+    private string ObtenerGrupoDesdeCap(
+        string rutaCompleta)
+    {
+        if (string.IsNullOrWhiteSpace(rutaCompleta) ||
+            !File.Exists(rutaCompleta))
+        {
+            return "S/G";
+        }
+
+        try
+        {
+            Encoding.RegisterProvider(
+                CodePagesEncodingProvider.Instance);
+
+            var encodingCap =
+                Encoding.GetEncoding("iso-8859-1");
+
+            bool dentroDatosGrupo = false;
+
+            foreach (var linea in
+                     File.ReadLines(
+                         rutaCompleta,
+                         encodingCap))
+            {
+                string texto =
+                    linea.Trim();
+
+                if (texto.Equals(
+                        "[DatosGrupo]",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    dentroDatosGrupo = true;
+                    continue;
+                }
+
+                if (dentroDatosGrupo &&
+                    texto.StartsWith("[") &&
+                    texto.EndsWith("]"))
+                {
+                    break;
+                }
+
+                if (!dentroDatosGrupo ||
+                    !texto.Contains('='))
+                {
+                    continue;
+                }
+
+                var partes =
+                    texto.Split('=', 2);
+
+                if (partes.Length != 2)
+                    continue;
+
+                if (partes[0].Trim().Equals(
+                        "CodigoGrupo",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    string grupo =
+                        partes[1].Trim();
+
+                    return string.IsNullOrWhiteSpace(grupo)
+                        ? "S/G"
+                        : grupo;
+                }
+            }
+        }
+        catch
+        {
+        }
+
+        return "S/G";
     }
 
     // ============================================================
