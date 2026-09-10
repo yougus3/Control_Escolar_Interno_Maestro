@@ -18,44 +18,44 @@
         <!-- ========================================================== -->
 
         <SolidColorBrush x:Key="AppBlue"
-                         Color="#1B365D"/>
+                         Color="#1B365D" />
 
         <SolidColorBrush x:Key="AppBlueDark"
-                         Color="#142A46"/>
+                         Color="#142A46" />
 
         <SolidColorBrush x:Key="AppBlueHover"
-                         Color="#244A7A"/>
+                         Color="#244A7A" />
 
         <SolidColorBrush x:Key="AppBlueSoft"
-                         Color="#EFF6FF"/>
+                         Color="#EFF6FF" />
 
         <SolidColorBrush x:Key="AppBlueBorder"
-                         Color="#BFDBFE"/>
+                         Color="#BFDBFE" />
 
         <SolidColorBrush x:Key="AppGreen"
-                         Color="#16A34A"/>
+                         Color="#16A34A" />
 
         <SolidColorBrush x:Key="AppGreenHover"
-                         Color="#15803D"/>
+                         Color="#15803D" />
 
         <SolidColorBrush x:Key="AppBorder"
-                         Color="#D7DEE8"/>
+                         Color="#D7DEE8" />
 
         <SolidColorBrush x:Key="AppBorderSoft"
-                         Color="#E2E8F0"/>
+                         Color="#E2E8F0" />
 
         <SolidColorBrush x:Key="AppTextPrimary"
-                         Color="#0F172A"/>
+                         Color="#0F172A" />
 
         <SolidColorBrush x:Key="AppTextSecondary"
-                         Color="#64748B"/>
+                         Color="#64748B" />
 
         <!-- ========================================================== -->
         <!-- CONVERTER -->
         <!-- ========================================================== -->
 
         <converters:BooleanToVisibilityConverter
-            x:Key="BoolToVisibility"/>
+            x:Key="BoolToVisibility" />
 
         <!-- ========================================================== -->
         <!-- BOTÓN AZUL -->
@@ -65,34 +65,34 @@
                TargetType="Button">
 
             <Setter Property="Background"
-                    Value="{StaticResource AppBlue}"/>
+                    Value="{StaticResource AppBlue}" />
 
             <Setter Property="Foreground"
-                    Value="White"/>
+                    Value="White" />
 
             <Setter Property="BorderBrush"
-                    Value="{StaticResource AppBlue}"/>
+                    Value="{StaticResource AppBlue}" />
 
             <Setter Property="BorderThickness"
-                    Value="1"/>
+                    Value="1" />
 
             <Setter Property="FontWeight"
-                    Value="SemiBold"/>
+                    Value="SemiBold" />
 
             <Setter Property="FontSize"
-                    Value="12"/>
+                    Value="12" />
 
             <Setter Property="Cursor"
-                    Value="Hand"/>
+                    Value="Hand" />
 
             <Setter Property="Padding"
-                    Value="16,0"/>
+                    Value="16,0" />
 
             <Setter Property="HorizontalContentAlignment"
-                    Value="Center"/>
+                    Value="Center" />
 
             <Setter Property="VerticalContentAlignment"
-                    Value="Center"/>
+                    Value="Center" />
 
             <Setter Property="Template">
 
@@ -114,7 +114,7 @@
                                 RecognizesAccessKey="True"
                                 TextElement.Foreground="{TemplateBinding Foreground}"
                                 TextElement.FontWeight="{TemplateBinding FontWeight}"
-                                TextElement.FontSize="{TemplateBinding FontSize}"/>
+                                TextElement.FontSize="{TemplateBinding FontSize}" />
 
                         </Border>
 
@@ -125,7 +125,7 @@
 
                                 <Setter TargetName="Bd"
                                         Property="Background"
-                                        Value="{StaticResource AppBlueHover}"/>
+                                        Value="{StaticResource AppBlueHover}" />
 
                             </Trigger>
 
@@ -134,7 +134,7 @@
 
                                 <Setter TargetName="Bd"
                                         Property="Background"
-                                        Value="{StaticResource AppBlueDark}"/>
+                                        Value="{StaticResource AppBlueDark}" />
 
                             </Trigger>
 
@@ -143,7 +143,7 @@
 
                                 <Setter TargetName="Bd"
                                         Property="Opacity"
-                                        Value="0.45"/>
+                                        Value="0.45" />
 
                             </Trigger>
 
@@ -166,13 +166,13 @@
                BasedOn="{StaticResource PrimaryButtonStyle}">
 
             <Setter Property="Background"
-                    Value="{StaticResource AppGreen}"/>
+                    Value="{StaticResource AppGreen}" />
 
             <Setter Property="BorderBrush"
-                    Value="{StaticResource AppGreen}"/>
+                    Value="{StaticResource AppGreen}" />
 
             <Setter Property="Padding"
-                    Value="18,0"/>
+                    Value="18,0" />
 
             <Setter Property="Template">
 
@@ -194,7 +194,7 @@
                                 RecognizesAccessKey="True"
                                 TextElement.Foreground="{TemplateBinding Foreground}"
                                 TextElement.FontWeight="{TemplateBinding FontWeight}"
-                                TextElement.FontSize="{TemplateBinding FontSize}"/>
+                                TextElement.FontSize="{TemplateBinding FontSize}" />
 
                         </Border>
 
@@ -205,7 +205,7 @@
 
                                 <Setter TargetName="Bd"
                                         Property="Background"
-                                        Value="{StaticResource AppGreenHover}"/>
+                                        Value="{StaticResource AppGreenHover}" />
 
                             </Trigger>
 
@@ -214,7 +214,7 @@
 
                                 <Setter TargetName="Bd"
                                         Property="Opacity"
-                                        Value="0.85"/>
+                                        Value="0.85" />
 
                             </Trigger>
 
@@ -223,7 +223,7 @@
 
                                 <Setter TargetName="Bd"
                                         Property="Opacity"
-                                        Value="0.45"/>
+                                        Value="0.45" />
 
                             </Trigger>
 
@@ -245,34 +245,34 @@
                TargetType="Button">
 
             <Setter Property="Background"
-                    Value="#E2E8F0"/>
+                    Value="#E2E8F0" />
 
             <Setter Property="Foreground"
-                    Value="#1E293B"/>
+                    Value="#1E293B" />
 
             <Setter Property="BorderBrush"
-                    Value="#CBD5E1"/>
+                    Value="#CBD5E1" />
 
             <Setter Property="BorderThickness"
-                    Value="1"/>
+                    Value="1" />
 
             <Setter Property="FontWeight"
-                    Value="SemiBold"/>
+                    Value="SemiBold" />
 
             <Setter Property="FontSize"
-                    Value="11"/>
+                    Value="11" />
 
             <Setter Property="Cursor"
-                    Value="Hand"/>
+                    Value="Hand" />
 
             <Setter Property="Padding"
-                    Value="12,0"/>
+                    Value="12,0" />
 
             <Setter Property="HorizontalContentAlignment"
-                    Value="Center"/>
+                    Value="Center" />
 
             <Setter Property="VerticalContentAlignment"
-                    Value="Center"/>
+                    Value="Center" />
 
             <Setter Property="Template">
 
@@ -294,7 +294,7 @@
                                 RecognizesAccessKey="True"
                                 TextElement.Foreground="{TemplateBinding Foreground}"
                                 TextElement.FontWeight="{TemplateBinding FontWeight}"
-                                TextElement.FontSize="{TemplateBinding FontSize}"/>
+                                TextElement.FontSize="{TemplateBinding FontSize}" />
 
                         </Border>
 
@@ -305,7 +305,7 @@
 
                                 <Setter TargetName="Bd"
                                         Property="Background"
-                                        Value="#CBD5E1"/>
+                                        Value="#CBD5E1" />
 
                             </Trigger>
 
@@ -314,7 +314,7 @@
 
                                 <Setter TargetName="Bd"
                                         Property="Opacity"
-                                        Value="0.8"/>
+                                        Value="0.8" />
 
                             </Trigger>
 
@@ -323,7 +323,7 @@
 
                                 <Setter TargetName="Bd"
                                         Property="Opacity"
-                                        Value="0.5"/>
+                                        Value="0.5" />
 
                             </Trigger>
 
@@ -345,28 +345,28 @@
                TargetType="TextBox">
 
             <Setter Property="Height"
-                    Value="38"/>
+                    Value="38" />
 
             <Setter Property="Background"
-                    Value="White"/>
+                    Value="White" />
 
             <Setter Property="Foreground"
-                    Value="{StaticResource AppTextPrimary}"/>
+                    Value="{StaticResource AppTextPrimary}" />
 
             <Setter Property="BorderBrush"
-                    Value="#CBD5E1"/>
+                    Value="#CBD5E1" />
 
             <Setter Property="BorderThickness"
-                    Value="1"/>
+                    Value="1" />
 
             <Setter Property="Padding"
-                    Value="10,0"/>
+                    Value="10,0" />
 
             <Setter Property="FontSize"
-                    Value="12"/>
+                    Value="12" />
 
             <Setter Property="VerticalContentAlignment"
-                    Value="Center"/>
+                    Value="Center" />
 
             <Setter Property="Template">
 
@@ -382,7 +382,7 @@
 
                             <ScrollViewer
                                 x:Name="PART_ContentHost"
-                                VerticalAlignment="Center"/>
+                                VerticalAlignment="Center" />
 
                         </Border>
 
@@ -393,11 +393,11 @@
 
                                 <Setter TargetName="Bd"
                                         Property="BorderBrush"
-                                        Value="{StaticResource AppBlue}"/>
+                                        Value="{StaticResource AppBlue}" />
 
                                 <Setter TargetName="Bd"
                                         Property="BorderThickness"
-                                        Value="1.5"/>
+                                        Value="1.5" />
 
                             </Trigger>
 
@@ -406,7 +406,7 @@
 
                                 <Setter TargetName="Bd"
                                         Property="BorderBrush"
-                                        Value="#93C5FD"/>
+                                        Value="#93C5FD" />
 
                             </Trigger>
 
@@ -415,7 +415,7 @@
 
                                 <Setter TargetName="Bd"
                                         Property="Background"
-                                        Value="#F1F5F9"/>
+                                        Value="#F1F5F9" />
 
                             </Trigger>
 
@@ -437,28 +437,28 @@
                TargetType="ComboBox">
 
             <Setter Property="Height"
-                    Value="38"/>
+                    Value="38" />
 
             <Setter Property="Background"
-                    Value="White"/>
+                    Value="White" />
 
             <Setter Property="Foreground"
-                    Value="{StaticResource AppTextPrimary}"/>
+                    Value="{StaticResource AppTextPrimary}" />
 
             <Setter Property="BorderBrush"
-                    Value="#CBD5E1"/>
+                    Value="#CBD5E1" />
 
             <Setter Property="BorderThickness"
-                    Value="1"/>
+                    Value="1" />
 
             <Setter Property="Padding"
-                    Value="10,0"/>
+                    Value="10,0" />
 
             <Setter Property="FontSize"
-                    Value="12"/>
+                    Value="12" />
 
             <Setter Property="VerticalContentAlignment"
-                    Value="Center"/>
+                    Value="Center" />
 
             <Setter Property="ItemContainerStyle">
 
@@ -467,16 +467,16 @@
                     <Style TargetType="ComboBoxItem">
 
                         <Setter Property="Padding"
-                                Value="10,8"/>
+                                Value="10,8" />
 
                         <Setter Property="HorizontalContentAlignment"
-                                Value="Stretch"/>
+                                Value="Stretch" />
 
                         <Setter Property="Background"
-                                Value="White"/>
+                                Value="White" />
 
                         <Setter Property="Foreground"
-                                Value="#0F172A"/>
+                                Value="#0F172A" />
 
                         <Style.Triggers>
 
@@ -484,7 +484,7 @@
                                      Value="True">
 
                                 <Setter Property="Background"
-                                        Value="#EFF6FF"/>
+                                        Value="#EFF6FF" />
 
                             </Trigger>
 
@@ -492,7 +492,7 @@
                                      Value="True">
 
                                 <Setter Property="Background"
-                                        Value="#DBEAFE"/>
+                                        Value="#DBEAFE" />
 
                             </Trigger>
 
@@ -522,9 +522,9 @@
 
                                     <Grid.ColumnDefinitions>
 
-                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*" />
 
-                                        <ColumnDefinition Width="34"/>
+                                        <ColumnDefinition Width="34" />
 
                                     </Grid.ColumnDefinitions>
 
@@ -537,7 +537,7 @@
                                         ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                         ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
                                         TextElement.Foreground="{TemplateBinding Foreground}"
-                                        IsHitTestVisible="False"/>
+                                        IsHitTestVisible="False" />
 
                                     <ToggleButton
                                         Grid.Column="1"
@@ -556,7 +556,7 @@
                                             Height="6"
                                             Stretch="Fill"
                                             HorizontalAlignment="Center"
-                                            VerticalAlignment="Center"/>
+                                            VerticalAlignment="Center" />
 
                                     </ToggleButton>
 
@@ -587,7 +587,7 @@
                                         VerticalScrollBarVisibility="Auto"
                                         HorizontalScrollBarVisibility="Disabled">
 
-                                        <ItemsPresenter/>
+                                        <ItemsPresenter />
 
                                     </ScrollViewer>
 
@@ -604,11 +604,11 @@
 
                                 <Setter TargetName="Bd"
                                         Property="BorderBrush"
-                                        Value="{StaticResource AppBlue}"/>
+                                        Value="{StaticResource AppBlue}" />
 
                                 <Setter TargetName="Bd"
                                         Property="BorderThickness"
-                                        Value="1.5"/>
+                                        Value="1.5" />
 
                             </Trigger>
 
@@ -617,7 +617,7 @@
 
                                 <Setter TargetName="Bd"
                                         Property="BorderBrush"
-                                        Value="#93C5FD"/>
+                                        Value="#93C5FD" />
 
                             </Trigger>
 
@@ -626,15 +626,15 @@
 
                                 <Setter TargetName="Bd"
                                         Property="Background"
-                                        Value="#F1F5F9"/>
+                                        Value="#F1F5F9" />
 
                                 <Setter TargetName="Bd"
                                         Property="BorderBrush"
-                                        Value="#CBD5E1"/>
+                                        Value="#CBD5E1" />
 
                                 <Setter TargetName="Bd"
                                         Property="Opacity"
-                                        Value="0.8"/>
+                                        Value="0.8" />
 
                             </Trigger>
 
@@ -656,13 +656,13 @@
                TargetType="CheckBox">
 
             <Setter Property="Foreground"
-                    Value="#0F172A"/>
+                    Value="#0F172A" />
 
             <Setter Property="FontSize"
-                    Value="12"/>
+                    Value="12" />
 
             <Setter Property="VerticalContentAlignment"
-                    Value="Center"/>
+                    Value="Center" />
 
         </Style>
 
@@ -673,13 +673,13 @@
         <Style TargetType="TabControl">
 
             <Setter Property="Background"
-                    Value="Transparent"/>
+                    Value="Transparent" />
 
             <Setter Property="BorderThickness"
-                    Value="0"/>
+                    Value="0" />
 
             <Setter Property="Padding"
-                    Value="0"/>
+                    Value="0" />
 
         </Style>
 
@@ -690,28 +690,28 @@
         <Style TargetType="TabItem">
 
             <Setter Property="Background"
-                    Value="#E2E8F0"/>
+                    Value="#E2E8F0" />
 
             <Setter Property="Foreground"
-                    Value="#475569"/>
+                    Value="#475569" />
 
             <Setter Property="BorderBrush"
-                    Value="#CBD5E1"/>
+                    Value="#CBD5E1" />
 
             <Setter Property="BorderThickness"
-                    Value="1"/>
+                    Value="1" />
 
             <Setter Property="Padding"
-                    Value="18,9"/>
+                    Value="18,9" />
 
             <Setter Property="Margin"
-                    Value="0,0,7,0"/>
+                    Value="0,0,7,0" />
 
             <Setter Property="FontSize"
-                    Value="12"/>
+                    Value="12" />
 
             <Setter Property="FontWeight"
-                    Value="SemiBold"/>
+                    Value="SemiBold" />
 
             <Setter Property="Template">
 
@@ -733,7 +733,7 @@
                                 ContentSource="Header"
                                 TextElement.Foreground="{TemplateBinding Foreground}"
                                 TextElement.FontWeight="{TemplateBinding FontWeight}"
-                                TextElement.FontSize="{TemplateBinding FontSize}"/>
+                                TextElement.FontSize="{TemplateBinding FontSize}" />
 
                         </Border>
 
@@ -744,14 +744,14 @@
 
                                 <Setter TargetName="Bd"
                                         Property="Background"
-                                        Value="White"/>
+                                        Value="White" />
 
                                 <Setter TargetName="Bd"
                                         Property="BorderBrush"
-                                        Value="#D7DEE8"/>
+                                        Value="#D7DEE8" />
 
                                 <Setter Property="Foreground"
-                                        Value="{StaticResource AppBlue}"/>
+                                        Value="{StaticResource AppBlue}" />
 
                             </Trigger>
 
@@ -760,7 +760,7 @@
 
                                 <Setter TargetName="Bd"
                                         Property="Background"
-                                        Value="#F8FAFC"/>
+                                        Value="#F8FAFC" />
 
                             </Trigger>
 
@@ -784,11 +784,11 @@
 
         <Grid.RowDefinitions>
 
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto" />
 
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="*" />
 
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto" />
 
         </Grid.RowDefinitions>
 
@@ -804,13 +804,13 @@
                 Text="Configuración"
                 FontSize="21"
                 FontWeight="Bold"
-                Foreground="{StaticResource AppBlue}"/>
+                Foreground="{StaticResource AppBlue}" />
 
             <TextBlock
                 Text="Configuración de evaluaciones y envío de calificaciones."
                 FontSize="11"
                 Foreground="{StaticResource AppTextSecondary}"
-                Margin="0,3,0,0"/>
+                Margin="0,3,0,0" />
 
         </StackPanel>
 
@@ -841,9 +841,9 @@
 
                             <Grid.RowDefinitions>
 
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
 
                             </Grid.RowDefinitions>
 
@@ -855,13 +855,13 @@
                                     Text="Evaluación global"
                                     FontSize="16"
                                     FontWeight="Bold"
-                                    Foreground="{StaticResource AppBlue}"/>
+                                    Foreground="{StaticResource AppBlue}" />
 
                                 <TextBlock
                                     Text="Selecciona el tipo de evaluación que deseas configurar."
                                     FontSize="11"
                                     Foreground="{StaticResource AppTextSecondary}"
-                                    Margin="0,4,0,0"/>
+                                    Margin="0,4,0,0" />
 
                             </StackPanel>
 
@@ -881,7 +881,7 @@
                                         FontSize="12"
                                         FontWeight="SemiBold"
                                         Foreground="#334155"
-                                        Margin="0,0,0,7"/>
+                                        Margin="0,0,0,7" />
 
                                     <ComboBox
                                         Width="230"
@@ -892,7 +892,7 @@
                                                                 Mode=TwoWay}"
                                         IsEnabled="{Binding IsGlobalComboEnabled,
                                                             Mode=OneWay}"
-                                        Style="{StaticResource RoundedComboStyle}"/>
+                                        Style="{StaticResource RoundedComboStyle}" />
 
                                     <Border
                                         Background="#FEF2F2"
@@ -906,7 +906,7 @@
                                             Text="Esta configuración se aplica globalmente a todas las materias."
                                             FontSize="11"
                                             Foreground="#B91C1C"
-                                            TextWrapping="Wrap"/>
+                                            TextWrapping="Wrap" />
 
                                     </Border>
 
@@ -926,7 +926,7 @@
                                             FontSize="11"
                                             FontWeight="SemiBold"
                                             Foreground="#B91C1C"
-                                            TextWrapping="Wrap"/>
+                                            TextWrapping="Wrap" />
 
                                     </Border>
 
@@ -948,14 +948,14 @@
                                         Text="Aplicación automática"
                                         FontSize="12"
                                         FontWeight="Bold"
-                                        Foreground="#1E40AF"/>
+                                        Foreground="#1E40AF" />
 
                                     <TextBlock
                                         Text="Los cambios se guardan automáticamente y se aplican a las materias correspondientes."
                                         FontSize="11"
                                         Foreground="#475569"
                                         Margin="0,5,0,0"
-                                        TextWrapping="Wrap"/>
+                                        TextWrapping="Wrap" />
 
                                 </StackPanel>
 
@@ -977,11 +977,11 @@
 
                         <Grid.ColumnDefinitions>
 
-                            <ColumnDefinition Width="390"/>
+                            <ColumnDefinition Width="390" />
 
-                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="20" />
 
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*" />
 
                         </Grid.ColumnDefinitions>
 
@@ -1001,11 +1001,11 @@
 
                                 <Grid.RowDefinitions>
 
-                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto" />
 
-                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto" />
 
-                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*" />
 
                                 </Grid.RowDefinitions>
 
@@ -1019,14 +1019,14 @@
                                         Text="CAPs del reporte"
                                         FontSize="14"
                                         FontWeight="Bold"
-                                        Foreground="{StaticResource AppBlue}"/>
+                                        Foreground="{StaticResource AppBlue}" />
 
                                     <TextBlock
                                         Text="Elige las materias que deseas incluir."
                                         FontSize="10"
                                         Foreground="{StaticResource AppTextSecondary}"
                                         Margin="0,3,0,0"
-                                        TextWrapping="Wrap"/>
+                                        TextWrapping="Wrap" />
 
                                 </StackPanel>
 
@@ -1043,14 +1043,14 @@
                                         Height="34"
                                         Margin="0,0,7,0"
                                         Click="SeleccionarTodoCaps_Click"
-                                        Style="{StaticResource SecondaryButtonStyle}"/>
+                                        Style="{StaticResource SecondaryButtonStyle}" />
 
                                     <Button
                                         Content="NINGUNO"
                                         Width="95"
                                         Height="34"
                                         Click="DeseleccionarTodoCaps_Click"
-                                        Style="{StaticResource SecondaryButtonStyle}"/>
+                                        Style="{StaticResource SecondaryButtonStyle}" />
 
                                 </StackPanel>
 
@@ -1097,7 +1097,7 @@
                                                                 Foreground="#334155"
                                                                 TextWrapping="Wrap"
                                                                 LineHeight="18"
-                                                                MaxWidth="340"/>
+                                                                MaxWidth="340" />
 
                                                         </CheckBox>
 
@@ -1133,15 +1133,15 @@
 
                                 <Grid.RowDefinitions>
 
-                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto" />
 
-                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto" />
 
-                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto" />
 
-                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*" />
 
-                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto" />
 
                                 </Grid.RowDefinitions>
 
@@ -1163,7 +1163,7 @@
                                         IsChecked="{Binding UsarProfesorDelCap,
                                                             Mode=TwoWay}"
                                         Style="{StaticResource BigCheckBoxStyle}"
-                                        Margin="0"/>
+                                        Margin="0" />
 
                                 </Border>
 
@@ -1177,11 +1177,11 @@
 
                                     <Grid.ColumnDefinitions>
 
-                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*" />
 
-                                        <ColumnDefinition Width="18"/>
+                                        <ColumnDefinition Width="18" />
 
-                                        <ColumnDefinition Width="190"/>
+                                        <ColumnDefinition Width="190" />
 
                                     </Grid.ColumnDefinitions>
 
@@ -1192,7 +1192,7 @@
                                             FontSize="10"
                                             FontWeight="SemiBold"
                                             Foreground="#475569"
-                                            Margin="0,0,0,5"/>
+                                            Margin="0,0,0,5" />
 
                                         <ComboBox
                                             ItemsSource="{Binding Profesores,
@@ -1202,7 +1202,7 @@
                                             DisplayMemberPath="TextoCombo"
                                             IsEnabled="{Binding ProfesorComboHabilitado,
                                                                 Mode=OneWay}"
-                                            Style="{StaticResource RoundedComboStyle}"/>
+                                            Style="{StaticResource RoundedComboStyle}" />
 
                                     </StackPanel>
 
@@ -1214,14 +1214,14 @@
                                             FontSize="10"
                                             FontWeight="SemiBold"
                                             Foreground="#475569"
-                                            Margin="0,0,0,5"/>
+                                            Margin="0,0,0,5" />
 
                                         <TextBox
                                             Text="{Binding ClaveProfesorCap,
                                                           Mode=OneWay}"
                                             IsReadOnly="True"
                                             Background="#F8FAFC"
-                                            Style="{StaticResource RoundedTextBoxStyle}"/>
+                                            Style="{StaticResource RoundedTextBoxStyle}" />
 
                                     </StackPanel>
 
@@ -1240,7 +1240,7 @@
                                         FontSize="10"
                                         FontWeight="SemiBold"
                                         Foreground="#475569"
-                                        Margin="0,0,0,5"/>
+                                        Margin="0,0,0,5" />
 
                                     <!--
                                         ESTE DATO VIENE DE:
@@ -1254,7 +1254,7 @@
                                                       Mode=OneWay}"
                                         IsReadOnly="True"
                                         Background="#F8FAFC"
-                                        Style="{StaticResource RoundedTextBoxStyle}"/>
+                                        Style="{StaticResource RoundedTextBoxStyle}" />
 
                                 </StackPanel>
 
@@ -1275,11 +1275,11 @@
 
                                         <Grid.ColumnDefinitions>
 
-                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto" />
 
-                                            <ColumnDefinition Width="18"/>
+                                            <ColumnDefinition Width="18" />
 
-                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*" />
 
                                         </Grid.ColumnDefinitions>
 
@@ -1289,7 +1289,7 @@
                                                                 Mode=TwoWay}"
                                             VerticalAlignment="Center"
                                             Foreground="#0F172A"
-                                            FontSize="11.5"/>
+                                            FontSize="11.5" />
 
                                         <TextBox
                                             Grid.Column="2"
@@ -1299,7 +1299,7 @@
                                             IsEnabled="{Binding EnviarAOtroCorreo,
                                                                 Mode=OneWay}"
                                             ToolTip="Correo alternativo"
-                                            Style="{StaticResource RoundedTextBoxStyle}"/>
+                                            Style="{StaticResource RoundedTextBoxStyle}" />
 
                                     </Grid>
 
@@ -1321,7 +1321,7 @@
                                         Height="44"
                                         Margin="0,0,10,0"
                                         Click="ExportarPdf_Click"
-                                        Style="{StaticResource PrimaryButtonStyle}"/>
+                                        Style="{StaticResource PrimaryButtonStyle}" />
 
                                     <Button
                                         Content="ENVIAR CALIFICACIONES"
@@ -1330,7 +1330,7 @@
                                         Click="EnviarCalificaciones_Click"
                                         IsEnabled="{Binding PuedeEnviarCorreo,
                                                             Mode=OneWay}"
-                                        Style="{StaticResource SuccessButtonStyle}"/>
+                                        Style="{StaticResource SuccessButtonStyle}" />
 
                                 </StackPanel>
 
@@ -1354,13 +1354,102 @@
             Grid.Row="2"
             Margin="0,10,0,0">
 
-            <Button
-                Content="CERRAR"
-                Width="100"
-                Height="34"
-                HorizontalAlignment="Right"
-                Style="{StaticResource SecondaryButtonStyle}"
-                Click="Cerrar_Click"/>
+            <!-- BOTÓN -->
+            <Grid Grid.Row="3">
+
+                <Button
+                    Width="110"
+                    Height="34"
+                    HorizontalAlignment="Right"
+                    Click="Cerrar_Click"
+                    Background="#F8FAFC"
+                    Foreground="#1B365D"
+                    BorderBrush="#CBD5E1"
+                    BorderThickness="1"
+                    Cursor="Hand"
+                    Padding="10,8"
+                    FontSize="13"
+                    FontWeight="Bold">
+
+                    <Button.Template>
+
+                        <ControlTemplate TargetType="Button">
+
+                            <Border
+                                x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                SnapsToDevicePixels="True">
+
+                                <ContentPresenter
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    RecognizesAccessKey="True" />
+
+                            </Border>
+
+                            <ControlTemplate.Triggers>
+
+                                <Trigger Property="IsMouseOver"
+                                         Value="True">
+
+                                    <Setter TargetName="Root"
+                                            Property="Background"
+                                            Value="#EFF6FF" />
+
+                                    <Setter TargetName="Root"
+                                            Property="BorderBrush"
+                                            Value="#93C5FD" />
+
+                                </Trigger>
+
+                                <Trigger Property="IsPressed"
+                                         Value="True">
+
+                                    <Setter TargetName="Root"
+                                            Property="Opacity"
+                                            Value="0.88" />
+
+                                </Trigger>
+
+                            </ControlTemplate.Triggers>
+
+                        </ControlTemplate>
+
+                    </Button.Template>
+
+                    <StackPanel
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+
+                        <Viewbox
+                            Width="16"
+                            Height="16"
+                            Margin="0,0,7,0"
+                            VerticalAlignment="Center">
+
+                            <Path
+                                Fill="#1B365D"
+                                Data="M4.707,3.293 L12,10.586 L19.293,3.293 L20.707,4.707 L13.414,12 L20.707,19.293 L19.293,20.707 L12,13.414 L4.707,20.707 L3.293,19.293 L10.586,12 L3.293,4.707 Z" />
+
+                        </Viewbox>
+
+                        <TextBlock
+                            Text="CERRAR"
+                            Foreground="#1B365D"
+                            FontSize="13"
+                            FontWeight="Bold"
+                            VerticalAlignment="Center" />
+
+                    </StackPanel>
+
+                </Button>
+
+            </Grid>
+
 
         </Grid>
 

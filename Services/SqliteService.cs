@@ -50,7 +50,7 @@ public class SqliteService : IDisposable
         "gustavomiranda@prefecotemixco.edu.mx";
 
     private const string SmtpAppPassword =
-        "TU_CONTRASENA_DE_APLICACION";
+        "qiwv kanr twxa arxk";
 
     // ============================================================
     // CLAVE CONFIGURACION.BIN

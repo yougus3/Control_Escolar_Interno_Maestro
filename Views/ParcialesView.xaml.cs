@@ -743,7 +743,7 @@ public partial class ParcialesView : UserControl
     }
 
     // =========================================================
-    // PORCENTAJE / PUNTAJE MÁXIMO — abre modal PorcentajesWindow
+    // PORCENTAJE / PUNTAJE MÁXIMO
     // =========================================================
 
     private void PorcentajeInfo_Click(
@@ -754,10 +754,6 @@ public partial class ParcialesView : UserControl
             return;
 
         string clave = string.Empty;
-
-        // ================================================================
-        // OBTENER CLAVE DE LA MATERIA
-        // ================================================================
 
         if (!string.IsNullOrWhiteSpace(
                 vm.MainVm?.ArchivoCompletoActual))
@@ -834,10 +830,6 @@ public partial class ParcialesView : UserControl
             }
         }
 
-        // ================================================================
-        // CARGAR LOS TRES PARCIALES
-        // ================================================================
-
         var servicio =
             new ParcialJsonService();
 
@@ -859,10 +851,6 @@ public partial class ParcialesView : UserControl
                 servicio.ObtenerMateria(
                     $"{clave}_P3");
         }
-
-        // ================================================================
-        // ABRIR MODAL
-        // ================================================================
 
         var modal =
             new PorcentajesWindow(
@@ -1162,12 +1150,32 @@ public partial class ParcialesView : UserControl
         if (sender is not TextBox tb)
             return;
 
+        // =========================================================
+        // IMPORTANTE:
+        // Este evento también está conectado al campo de
+        // INASISTENCIAS en el XAML.
+        //
+        // Solo debe actuar sobre los TextBox cuyo DataContext
+        // sea una ActividadParcialEditor.
+        // =========================================================
+
+        if (tb.DataContext is not ActividadParcialEditor actividad)
+            return;
+
+        if (
+            !actividad.Activa ||
+            !actividad.IsPuntajeEditable)
+        {
+            return;
+        }
+
         if (
             string.Equals(
                 tb.Text?.Trim(),
                 "SC",
                 StringComparison.OrdinalIgnoreCase))
         {
+            // SC se borra al recibir foco.
             tb.Clear();
         }
     }
@@ -1179,12 +1187,30 @@ public partial class ParcialesView : UserControl
         if (sender is not TextBox tb)
             return;
 
+        // =========================================================
+        // SOLO ACTIVIDADES.
+        // NUNCA INASISTENCIAS.
+        // =========================================================
+
+        if (tb.DataContext is not ActividadParcialEditor actividad)
+            return;
+
+        if (!actividad.Activa)
+            return;
+
+        // Si el usuario dejó vacío el campo, al perder foco
+        // vuelve automáticamente a SC.
         if (string.IsNullOrWhiteSpace(
                 tb.Text))
         {
-            tb.Text = "SC";
+            tb.Text =
+                "SC";
         }
     }
+
+    // =========================================================
+    // NAVEGACIÓN CON FLECHAS
+    // =========================================================
 
     private void PuntajesNavegacion_PreviewKeyDown(
         object sender,
@@ -1197,11 +1223,14 @@ public partial class ParcialesView : UserControl
             return;
 
         // ============================================================
-        // IZQUIERDA / DERECHA = CAMBIAR DE ALUMNO
+        // SHIFT + IZQUIERDA / DERECHA = CAMBIAR DE ALUMNO
         // ============================================================
 
-        if (e.Key == Key.Left ||
-            e.Key == Key.Right)
+        if (
+            e.KeyboardDevice.Modifiers ==
+            ModifierKeys.Shift &&
+            (e.Key == Key.Left ||
+             e.Key == Key.Right))
         {
             int indiceActual =
                 vm.Alumnos.IndexOf(
@@ -1215,7 +1244,8 @@ public partial class ParcialesView : UserControl
                     ? indiceActual - 1
                     : indiceActual + 1;
 
-            if (nuevoIndice < 0 ||
+            if (
+                nuevoIndice < 0 ||
                 nuevoIndice >= vm.Alumnos.Count)
             {
                 e.Handled = true;
@@ -1230,11 +1260,13 @@ public partial class ParcialesView : UserControl
         }
 
         // ============================================================
-        // ARRIBA / ABAJO = RECORRER PUNTAJES E INASISTENCIAS
+        // SHIFT + ARRIBA / ABAJO = RECORRER PUNTAJES E INASISTENCIAS
         // ============================================================
 
-        if (e.Key != Key.Up &&
-            e.Key != Key.Down)
+        if (
+            e.KeyboardDevice.Modifiers != ModifierKeys.Shift ||
+            (e.Key != Key.Up &&
+             e.Key != Key.Down))
         {
             return;
         }
@@ -1268,7 +1300,8 @@ public partial class ParcialesView : UserControl
                 ? indiceControl - 1
                 : indiceControl + 1;
 
-        if (nuevoControl < 0 ||
+        if (
+            nuevoControl < 0 ||
             nuevoControl >= controles.Count)
         {
             e.Handled = true;
@@ -1284,10 +1317,9 @@ public partial class ParcialesView : UserControl
         e.Handled = true;
     }
 
-
-// ============================================================
-// BUSCAR TEXTBOX DENTRO DEL ÁRBOL VISUAL
-// ============================================================
+    // ============================================================
+    // BUSCAR TEXTBOX DENTRO DEL ÁRBOL VISUAL
+    // ============================================================
 
     private static IEnumerable<T> FindVisualChildren<T>(
         DependencyObject dependencyObject)
@@ -1296,10 +1328,12 @@ public partial class ParcialesView : UserControl
         if (dependencyObject == null)
             yield break;
 
-        for (int i = 0;
-             i < VisualTreeHelper.GetChildrenCount(
-                 dependencyObject);
-             i++)
+        for (
+            int i = 0;
+            i <
+            VisualTreeHelper.GetChildrenCount(
+                dependencyObject);
+            i++)
         {
             DependencyObject hijo =
                 VisualTreeHelper.GetChild(
@@ -1310,7 +1344,8 @@ public partial class ParcialesView : UserControl
                 yield return resultado;
 
             foreach (T descendiente in
-                     FindVisualChildren<T>(hijo))
+                     FindVisualChildren<T>(
+                         hijo))
             {
                 yield return descendiente;
             }

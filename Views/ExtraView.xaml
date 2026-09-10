@@ -19,8 +19,7 @@
             x:Key="ColorCalifConverter" />
 
         <!-- =====================================================
-             IMPORTANTE:
-             AQUÍ SE FILTRAN LOS AUTORIZADOS PARA EXTRA
+             TODOS LOS ALUMNOS DEL CAP DE EXTRA
              ===================================================== -->
 
         <CollectionViewSource
@@ -28,11 +27,14 @@
             Source="{Binding AlumnosConDerechoExtra}">
 
             <CollectionViewSource.GroupDescriptions>
+
                 <PropertyGroupDescription
                     PropertyName="Grupo" />
+
             </CollectionViewSource.GroupDescriptions>
 
             <CollectionViewSource.SortDescriptions>
+
                 <scm:SortDescription
                     PropertyName="Grupo"
                     Direction="Ascending" />
@@ -40,6 +42,7 @@
                 <scm:SortDescription
                     PropertyName="Nombre"
                     Direction="Ascending" />
+
             </CollectionViewSource.SortDescriptions>
 
         </CollectionViewSource>
@@ -71,6 +74,11 @@
             <Setter
                 Property="VerticalContentAlignment"
                 Value="Center" />
+
+            <!-- =================================================
+                 TIENE DERECHO EXTRA:
+                 SIGUE CONTROLANDO EL ESTADO DEL CAMPO
+                 ================================================= -->
 
             <Setter
                 Property="IsEnabled"
@@ -144,6 +152,10 @@
 
                             </Trigger>
 
+                            <!-- =================================================
+                                 SIN DERECHO
+                                 ================================================= -->
+
                             <Trigger
                                 Property="IsEnabled"
                                 Value="False">
@@ -160,7 +172,7 @@
 
                                 <Setter
                                     Property="ToolTip"
-                                    Value="Este alumno no tiene derecho a la evaluación porque no está autorizado en configuracion.bin." />
+                                    Value="Este alumno no puede capturar la calificación de extraordinario." />
 
                                 <Setter
                                     TargetName="PART_ContentHost"
@@ -186,7 +198,8 @@
 
     </UserControl.Resources>
 
-    <Grid Background="#F1F5F9">
+    <Grid
+        Background="#F1F5F9">
 
         <Border
             Background="White"
@@ -203,6 +216,10 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
+                <!-- =====================================================
+                     ENCABEZADO
+                     ===================================================== -->
+
                 <Border
                     Grid.Row="0"
                     Background="#1B365D"
@@ -217,7 +234,8 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0">
+                        <StackPanel
+                            Grid.Column="0">
 
                             <TextBlock
                                 Text="Calificación de Extraordinario"
@@ -262,7 +280,7 @@
                                     Margin="15,0,0,0" />
 
                                 <TextBlock
-                                    Text="{Binding NombreProfesorExtra}"
+                                    Text="{Binding NombreGrupoExtra}"
                                     Foreground="White"
                                     FontSize="12"
                                     FontWeight="SemiBold" />
@@ -314,6 +332,10 @@
 
                 </Border>
 
+                <!-- =====================================================
+                     ENCABEZADOS
+                     ===================================================== -->
+
                 <Grid
                     Grid.Row="1"
                     Margin="12,10,12,0">
@@ -350,6 +372,10 @@
                         VerticalAlignment="Center" />
 
                 </Grid>
+
+                <!-- =====================================================
+                     ALUMNOS
+                     ===================================================== -->
 
                 <ScrollViewer
                     Grid.Row="2"

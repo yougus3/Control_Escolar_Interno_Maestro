@@ -476,8 +476,8 @@ public partial class ParcialesViewModel : ObservableObject
                 string.IsNullOrWhiteSpace(
                     ed.PuntajeObtenido))
             {
-                ed.PuntajeObtenido =
-                    "SC";
+                ed.EstablecerPuntajeDesdeCarga(
+                    "SC");
             }
         }
 
@@ -907,23 +907,6 @@ public partial class ParcialesViewModel : ObservableObject
         }
     }
 
-    private void AsignarSCAutomaticoAActividadesVacias()
-    {
-        foreach (var actividad in Actividades)
-        {
-            if (!actividad.Activa)
-                continue;
-
-            if (
-                string.IsNullOrWhiteSpace(
-                    actividad.PuntajeObtenido))
-            {
-                actividad.EstablecerPuntajeDesdeCarga(
-                    "SC");
-            }
-        }
-    }
-
     private void CargarCapturasDelAlumnoSeleccionado()
     {
         if (AlumnoSeleccionado == null)
@@ -1075,7 +1058,7 @@ public partial class ParcialesViewModel : ObservableObject
                 else
                 {
                     // ====================================================
-                    // SIN CAPTURA = SC AUTOMÁTICO
+                    // SIN CAPTURA = SC DURANTE CARGA
                     // ====================================================
 
                     ed.EstablecerPuntajeDesdeCarga(
@@ -1134,17 +1117,6 @@ public partial class ParcialesViewModel : ObservableObject
                     ?? string.Empty;
             }
 
-            // ============================================================
-            // GARANTÍA FINAL:
-            // cualquier actividad activa que haya quedado vacía
-            // termina como SC.
-            // ============================================================
-
-            AsignarSCAutomaticoAActividadesVacias();
-
-            PersistirCapturasTemporales(
-                AlumnoSeleccionado.Matricula);
-
             return;
         }
 
@@ -1185,15 +1157,6 @@ public partial class ParcialesViewModel : ObservableObject
             ed.SetBloqueadoPorCapturaDirecta(
                 false);
         }
-
-        // ============================================================
-        // GUARDAR INMEDIATAMENTE LAS ACTIVIDADES COMO SC
-        // ============================================================
-
-        AsignarSCAutomaticoAActividadesVacias();
-
-        PersistirCapturasTemporales(
-            AlumnoSeleccionado.Matricula);
     }
 
     private void NormalizarActividadesEnMateria()
@@ -1354,21 +1317,6 @@ public partial class ParcialesViewModel : ObservableObject
                 string.Empty;
 
             // --------------------------------------------------------
-            // ACTIVIDAD ACTIVA VACÍA = SC
-            // --------------------------------------------------------
-
-            if (
-                actividad.Activa &&
-                string.IsNullOrWhiteSpace(
-                    valorTexto))
-            {
-                actividad.EstablecerPuntajeDesdeCarga(
-                    "SC");
-
-                valorTexto = "SC";
-            }
-
-            // --------------------------------------------------------
             // SC = -1
             // --------------------------------------------------------
 
@@ -1384,6 +1332,13 @@ public partial class ParcialesViewModel : ObservableObject
 
             // --------------------------------------------------------
             // VACÍO = NO SE GUARDA
+            //
+            // IMPORTANTE:
+            // No convertimos aquí vacío a SC.
+            //
+            // El campo puede estar temporalmente vacío mientras
+            // el usuario lo está editando después de recibir foco.
+            // CampoSc_LostFocus es quien vuelve a colocar SC.
             // --------------------------------------------------------
 
             if (string.IsNullOrWhiteSpace(
@@ -1509,10 +1464,6 @@ public partial class ParcialesViewModel : ObservableObject
             if (!actividad.Activa)
                 continue;
 
-            // ==========================================================
-            // PORCENTAJE
-            // ==========================================================
-
             if (!double.TryParse(
                     actividad.Porcentaje,
                     NumberStyles.Any,
@@ -1528,10 +1479,6 @@ public partial class ParcialesViewModel : ObservableObject
             sumaPorcentajes +=
                 (decimal)porc;
 
-            // ==========================================================
-            // PUNTAJE MÁXIMO
-            // ==========================================================
-
             if (!double.TryParse(
                     actividad.PuntajeMaximo,
                     NumberStyles.Any,
@@ -1542,10 +1489,6 @@ public partial class ParcialesViewModel : ObservableObject
                 logicaCorrecta = false;
                 continue;
             }
-
-            // ==========================================================
-            // PUNTAJE OBTENIDO
-            // ==========================================================
 
             if (
                 string.IsNullOrWhiteSpace(
@@ -1576,10 +1519,6 @@ public partial class ParcialesViewModel : ObservableObject
                 (porc, max, obt));
         }
 
-        // ==========================================================
-        // NORMALIZACIÓN DEL PORCENTAJE
-        // ==========================================================
-
         double scaling = 1.0;
 
         if (sumaPorcentajes > 0)
@@ -1588,10 +1527,6 @@ public partial class ParcialesViewModel : ObservableObject
                 100.0 /
                 (double)sumaPorcentajes;
         }
-
-        // ==========================================================
-        // CALCULAR ACUMULADO
-        // ==========================================================
 
         foreach (var (porc, max, obt) in entradas)
         {
@@ -1605,19 +1540,11 @@ public partial class ParcialesViewModel : ObservableObject
                 (decimal)porcNorm;
         }
 
-        // ==========================================================
-        // MOSTRAR PORCENTAJE ACUMULADO
-        // ==========================================================
-
         SumaPorcentajes =
             sumaPorcentajes;
 
         SumaPorcentajesTexto =
             $"{TruncarUnDecimal(sumaPorcentajes):0.0}%";
-
-        // ==========================================================
-        // ESTADO DEL PORCENTAJE
-        // ==========================================================
 
         if (sumaPorcentajes > 100m)
         {
@@ -1634,10 +1561,6 @@ public partial class ParcialesViewModel : ObservableObject
 
         SumaValida =
             sumaPorcentajes == 100m;
-
-        // ==========================================================
-        // CALIFICACIÓN FINAL
-        // ==========================================================
 
         if (
             sumaPorcentajes > 0m &&
@@ -1670,8 +1593,6 @@ public partial class ParcialesViewModel : ObservableObject
         {
             if (!AlumnoConCapturaDirecta)
             {
-                // Durante carga/navegación no borrar una calificación
-                // que ya pertenece al alumno seleccionado.
                 if (!esCargaInicial)
                 {
                     CalificacionParcialTexto =
@@ -1705,34 +1626,18 @@ public partial class ParcialesViewModel : ObservableObject
             }
         }
 
-        // ==========================================================
-        // GUARDAR CAPTURAS TEMPORALES
-        // ==========================================================
-
         if (AlumnoSeleccionado != null)
         {
             PersistirCapturasTemporales(
                 AlumnoSeleccionado.Matricula);
         }
 
-        // ==========================================================
-        // GUARDAR JSON
-        // ==========================================================
-
         if (guardarJson)
         {
             GuardarEnJsonLocal();
         }
 
-        // ==========================================================
-        // ACTUALIZAR CONTADOR
-        // ==========================================================
-
         ActualizarConteoEvaluados();
-
-        // ==========================================================
-        // MARCAR CAMBIOS
-        // ==========================================================
 
         if (
             !guardarJson &&
@@ -2214,6 +2119,20 @@ public partial class ActividadParcialEditor : ObservableObject
             return;
         }
 
+        // ============================================================
+        // AL ACTIVAR UNA ACTIVIDAD SIN PUNTAJE, INICIALIZAR EN SC
+        // ============================================================
+
+        if (
+            value &&
+            !_cargandoPuntaje &&
+            string.IsNullOrWhiteSpace(
+                PuntajeObtenido))
+        {
+            EstablecerPuntajeDesdeCarga(
+                "SC");
+        }
+
         RefrescarVista();
 
         NotificarActualizacion();
@@ -2243,34 +2162,20 @@ public partial class ActividadParcialEditor : ObservableObject
     partial void OnPuntajeObtenidoChanged(
         string value)
     {
+        // ============================================================
+        // IMPORTANTE:
+        //
+        // AQUÍ YA NO SE CONVIERTE VACÍO EN SC.
+        //
+        // Esto permite que GotFocus borre SC y deje el campo
+        // realmente vacío mientras el usuario captura.
+        //
+        // LostFocus será quien vuelva a colocar SC.
+        // ============================================================
+
         if (_cargandoPuntaje)
         {
             return;
-        }
-
-        // ==========================================================
-        // EDICIÓN EN TIEMPO REAL
-        //
-        // Si el usuario deja vacío un puntaje de una actividad
-        // activa, se convierte inmediatamente en SC.
-        // ==========================================================
-
-        if (
-            Activa &&
-            string.IsNullOrWhiteSpace(
-                value))
-        {
-            if (
-                !string.Equals(
-                    PuntajeObtenido,
-                    "SC",
-                    StringComparison.OrdinalIgnoreCase))
-            {
-                PuntajeObtenido =
-                    "SC";
-
-                return;
-            }
         }
 
         NotificarActualizacion();
