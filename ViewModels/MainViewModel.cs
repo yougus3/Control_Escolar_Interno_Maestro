@@ -165,10 +165,10 @@
 
         private string? _evaluacionSeleccionada;
 
+        
         public string? EvaluacionSeleccionada
         {
             get => _evaluacionSeleccionada;
-
             set
             {
                 if (_evaluacionSeleccionada == value)
@@ -187,10 +187,34 @@
                     ref _evaluacionSeleccionada,
                     value);
 
+                OnPropertyChanged(
+                    nameof(NombreEvaluacionSeleccionada));
+
                 CambiarEvaluacion(value);
             }
         }
+        
+        public string NombreEvaluacionSeleccionada
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(
+                        EvaluacionSeleccionada))
+                {
+                    return string.Empty;
+                }
 
+                return EvaluacionesDisponibles
+                           .FirstOrDefault(e =>
+                               string.Equals(
+                                   e.Id,
+                                   EvaluacionSeleccionada,
+                                   StringComparison.OrdinalIgnoreCase))
+                           ?.Nombre
+                       ?? EvaluacionSeleccionada;
+            }
+        }
+        
         public ObservableCollection<EvaluacionItem>
             EvaluacionesDisponibles { get; } = new();
 
@@ -1062,9 +1086,8 @@
                 _ => true
             };
         }
-
-        private string ObtenerNombreEvaluacionVisual(
-            string eval)
+        
+        private string ObtenerNombreEvaluacionVisual(string eval)
         {
             return eval.ToUpperInvariant() switch
             {
@@ -1072,11 +1095,13 @@
                 "P2" => "PARCIAL 2",
                 "P3" => "PARCIAL 3",
                 "SEM" => "SEMESTRAL",
-                "PREEXTRAORDINARIO" => "PREEXTRA",
-                "EXTRA" => "EXTRA",
+                "PREEXTRAORDINARIO" => "PREEXTRAORDINARIO",
+                "EXTRA" => "EXTRAORDINARIO",
                 _ => eval
             };
         }
+        
+        
 
         // ============================================================
         // BUSCAR CARPETA

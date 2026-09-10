@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.ViewModels;
@@ -64,8 +65,8 @@ public partial class ParcialesView : UserControl
         {
             var container =
                 PuntajesItemsControl
-                    .ItemContainerGenerator
-                    .ContainerFromIndex(nextIndex)
+                        .ItemContainerGenerator
+                        .ContainerFromIndex(nextIndex)
                     as FrameworkElement;
 
             if (container != null)
@@ -114,8 +115,8 @@ public partial class ParcialesView : UserControl
 
                             var container =
                                 PuntajesItemsControl
-                                    .ItemContainerGenerator
-                                    .ContainerFromIndex(i)
+                                        .ItemContainerGenerator
+                                        .ContainerFromIndex(i)
                                     as FrameworkElement;
 
                             if (container == null)
@@ -236,7 +237,7 @@ public partial class ParcialesView : UserControl
                     firstDot + 1)
                 +
                 s.Substring(
-                    firstDot + 1)
+                        firstDot + 1)
                     .Replace(
                         ".",
                         "");
@@ -590,7 +591,7 @@ public partial class ParcialesView : UserControl
         {
             var actividad =
                 tb.DataContext
-                as ActividadParcialEditor;
+                    as ActividadParcialEditor;
 
             if (actividad != null)
             {
@@ -612,10 +613,10 @@ public partial class ParcialesView : UserControl
                     var text =
                         (a.Porcentaje ??
                          string.Empty)
-                            .Trim()
-                            .Replace(
-                                ',',
-                                '.');
+                        .Trim()
+                        .Replace(
+                            ',',
+                            '.');
 
                     if (
                         double.TryParse(
@@ -631,10 +632,10 @@ public partial class ParcialesView : UserControl
                 string mine =
                     (tb.Text ??
                      string.Empty)
-                        .Trim()
-                        .Replace(
-                            ',',
-                            '.');
+                    .Trim()
+                    .Replace(
+                        ',',
+                        '.');
 
                 if (
                     double.TryParse(
@@ -746,135 +747,135 @@ public partial class ParcialesView : UserControl
     // =========================================================
 
     private void PorcentajeInfo_Click(
-    object sender,
-    RoutedEventArgs e)
-{
-    if (DataContext is not ParcialesViewModel vm)
-        return;
-
-    string clave = string.Empty;
-
-    // ================================================================
-    // OBTENER CLAVE DE LA MATERIA
-    // ================================================================
-
-    if (!string.IsNullOrWhiteSpace(
-            vm.MainVm?.ArchivoCompletoActual))
+        object sender,
+        RoutedEventArgs e)
     {
-        try
+        if (DataContext is not ParcialesViewModel vm)
+            return;
+
+        string clave = string.Empty;
+
+        // ================================================================
+        // OBTENER CLAVE DE LA MATERIA
+        // ================================================================
+
+        if (!string.IsNullOrWhiteSpace(
+                vm.MainVm?.ArchivoCompletoActual))
         {
-            string nombre =
-                Path.GetFileNameWithoutExtension(
-                    vm.MainVm.ArchivoCompletoActual)
+            try
+            {
+                string nombre =
+                    Path.GetFileNameWithoutExtension(
+                        vm.MainVm.ArchivoCompletoActual)
+                    ?? string.Empty;
+
+                clave =
+                    nombre
+                        .Trim()
+                        .Replace(' ', '_');
+            }
+            catch
+            {
+                clave = string.Empty;
+            }
+        }
+        else
+        {
+            string nombreVisual =
+                vm.MainVm?.ArchivoSeleccionado
                 ?? string.Empty;
 
-            clave =
-                nombre
-                    .Trim()
-                    .Replace(' ', '_');
-        }
-        catch
-        {
-            clave = string.Empty;
-        }
-    }
-    else
-    {
-        string nombreVisual =
-            vm.MainVm?.ArchivoSeleccionado
-            ?? string.Empty;
-
-        if (!string.IsNullOrWhiteSpace(nombreVisual))
-        {
-            string texto =
-                nombreVisual.Trim();
-
-            int indexEspacio =
-                texto.IndexOf(" - Grupo:");
-
-            if (indexEspacio > 0)
+            if (!string.IsNullOrWhiteSpace(nombreVisual))
             {
-                texto =
-                    texto.Substring(
-                        0,
-                        indexEspacio)
-                    .Trim();
-            }
+                string texto =
+                    nombreVisual.Trim();
 
-            int firstSpace =
-                texto.IndexOf(' ');
+                int indexEspacio =
+                    texto.IndexOf(" - Grupo:");
 
-            if (firstSpace <= 0)
-            {
-                clave =
-                    texto.Replace(
-                        ' ',
-                        '_');
-            }
-            else
-            {
-                string clavePart =
-                    texto.Substring(
-                        0,
-                        firstSpace)
-                    .Trim();
+                if (indexEspacio > 0)
+                {
+                    texto =
+                        texto.Substring(
+                                0,
+                                indexEspacio)
+                            .Trim();
+                }
 
-                string nombreRest =
-                    texto.Substring(
-                        firstSpace + 1)
-                    .Trim();
+                int firstSpace =
+                    texto.IndexOf(' ');
 
-                clave =
-                    string.IsNullOrWhiteSpace(
-                        nombreRest)
-                        ? clavePart
-                        : $"{clavePart}_{nombreRest}";
+                if (firstSpace <= 0)
+                {
+                    clave =
+                        texto.Replace(
+                            ' ',
+                            '_');
+                }
+                else
+                {
+                    string clavePart =
+                        texto.Substring(
+                                0,
+                                firstSpace)
+                            .Trim();
+
+                    string nombreRest =
+                        texto.Substring(
+                                firstSpace + 1)
+                            .Trim();
+
+                    clave =
+                        string.IsNullOrWhiteSpace(
+                            nombreRest)
+                            ? clavePart
+                            : $"{clavePart}_{nombreRest}";
+                }
             }
         }
-    }
 
-    // ================================================================
-    // CARGAR LOS TRES PARCIALES
-    // ================================================================
+        // ================================================================
+        // CARGAR LOS TRES PARCIALES
+        // ================================================================
 
-    var servicio =
-        new ParcialJsonService();
+        var servicio =
+            new ParcialJsonService();
 
-    MateriaParcial? parcial1 = null;
-    MateriaParcial? parcial2 = null;
-    MateriaParcial? parcial3 = null;
+        MateriaParcial? parcial1 = null;
+        MateriaParcial? parcial2 = null;
+        MateriaParcial? parcial3 = null;
 
-    if (!string.IsNullOrWhiteSpace(clave))
-    {
-        parcial1 =
-            servicio.ObtenerMateria(
-                $"{clave}_P1");
-
-        parcial2 =
-            servicio.ObtenerMateria(
-                $"{clave}_P2");
-
-        parcial3 =
-            servicio.ObtenerMateria(
-                $"{clave}_P3");
-    }
-
-    // ================================================================
-    // ABRIR MODAL
-    // ================================================================
-
-    var modal =
-        new PorcentajesWindow(
-            parcial1,
-            parcial2,
-            parcial3)
+        if (!string.IsNullOrWhiteSpace(clave))
         {
-            Owner =
-                Window.GetWindow(this)
-        };
+            parcial1 =
+                servicio.ObtenerMateria(
+                    $"{clave}_P1");
 
-    modal.ShowDialog();
-}
+            parcial2 =
+                servicio.ObtenerMateria(
+                    $"{clave}_P2");
+
+            parcial3 =
+                servicio.ObtenerMateria(
+                    $"{clave}_P3");
+        }
+
+        // ================================================================
+        // ABRIR MODAL
+        // ================================================================
+
+        var modal =
+            new PorcentajesWindow(
+                parcial1,
+                parcial2,
+                parcial3)
+            {
+                Owner =
+                    Window.GetWindow(this)
+            };
+
+        modal.ShowDialog();
+    }
 
     // =========================================================
     // INFORMACIÓN DEL ALUMNO
@@ -901,10 +902,10 @@ public partial class ParcialesView : UserControl
                 new Dictionary<
                     string,
                     (
-                        string calif,
-                        string estado,
-                        int faltas,
-                        int totalClases
+                    string calif,
+                    string estado,
+                    int faltas,
+                    int totalClases
                     )>();
 
             var evaluaciones =
@@ -956,9 +957,9 @@ public partial class ParcialesView : UserControl
 
                         if (
                             materia.Calificaciones
-                                .TryGetValue(
-                                    "$CONFIG$",
-                                    out var config))
+                            .TryGetValue(
+                                "$CONFIG$",
+                                out var config))
                         {
                             asistenciaActiva =
                                 config.TryGetValue(
@@ -1098,12 +1099,12 @@ public partial class ParcialesView : UserControl
                 }
 
                 datosParciales[eval] =
-                    (
-                        calif,
-                        estado,
-                        faltas,
-                        totalClases
-                    );
+                (
+                    calif,
+                    estado,
+                    faltas,
+                    totalClases
+                );
             }
 
             var infoWindow =
@@ -1182,6 +1183,137 @@ public partial class ParcialesView : UserControl
                 tb.Text))
         {
             tb.Text = "SC";
+        }
+    }
+
+    private void PuntajesNavegacion_PreviewKeyDown(
+        object sender,
+        KeyEventArgs e)
+    {
+        if (sender is not TextBox actual)
+            return;
+
+        if (DataContext is not ParcialesViewModel vm)
+            return;
+
+        // ============================================================
+        // IZQUIERDA / DERECHA = CAMBIAR DE ALUMNO
+        // ============================================================
+
+        if (e.Key == Key.Left ||
+            e.Key == Key.Right)
+        {
+            int indiceActual =
+                vm.Alumnos.IndexOf(
+                    vm.AlumnoSeleccionado);
+
+            if (indiceActual < 0)
+                return;
+
+            int nuevoIndice =
+                e.Key == Key.Left
+                    ? indiceActual - 1
+                    : indiceActual + 1;
+
+            if (nuevoIndice < 0 ||
+                nuevoIndice >= vm.Alumnos.Count)
+            {
+                e.Handled = true;
+                return;
+            }
+
+            vm.AlumnoSeleccionado =
+                vm.Alumnos[nuevoIndice];
+
+            e.Handled = true;
+            return;
+        }
+
+        // ============================================================
+        // ARRIBA / ABAJO = RECORRER PUNTAJES E INASISTENCIAS
+        // ============================================================
+
+        if (e.Key != Key.Up &&
+            e.Key != Key.Down)
+        {
+            return;
+        }
+
+        var controles =
+            FindVisualChildren<TextBox>(this)
+                .Where(t =>
+                    (string.Equals(
+                         t.Tag?.ToString(),
+                         "NavegacionPuntaje",
+                         StringComparison.Ordinal) ||
+                     string.Equals(
+                         t.Tag?.ToString(),
+                         "NavegacionInasistencia",
+                         StringComparison.Ordinal)) &&
+                    t.IsEnabled &&
+                    t.IsVisible)
+                .ToList();
+
+        if (controles.Count == 0)
+            return;
+
+        int indiceControl =
+            controles.IndexOf(actual);
+
+        if (indiceControl < 0)
+            return;
+
+        int nuevoControl =
+            e.Key == Key.Up
+                ? indiceControl - 1
+                : indiceControl + 1;
+
+        if (nuevoControl < 0 ||
+            nuevoControl >= controles.Count)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        TextBox destino =
+            controles[nuevoControl];
+
+        destino.Focus();
+        destino.SelectAll();
+
+        e.Handled = true;
+    }
+
+
+// ============================================================
+// BUSCAR TEXTBOX DENTRO DEL ÁRBOL VISUAL
+// ============================================================
+
+    private static IEnumerable<T> FindVisualChildren<T>(
+        DependencyObject dependencyObject)
+        where T : DependencyObject
+    {
+        if (dependencyObject == null)
+            yield break;
+
+        for (int i = 0;
+             i < VisualTreeHelper.GetChildrenCount(
+                 dependencyObject);
+             i++)
+        {
+            DependencyObject hijo =
+                VisualTreeHelper.GetChild(
+                    dependencyObject,
+                    i);
+
+            if (hijo is T resultado)
+                yield return resultado;
+
+            foreach (T descendiente in
+                     FindVisualChildren<T>(hijo))
+            {
+                yield return descendiente;
+            }
         }
     }
 }

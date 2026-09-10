@@ -739,7 +739,7 @@
 
                     <ColumnDefinition Width="Auto" />
 
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
 
                 </Grid.ColumnDefinitions>
 
@@ -794,14 +794,14 @@
                     </Grid.ColumnDefinitions>
 
                     <TextBox
-                            Grid.Column="0"
-                            Style="{StaticResource RoundedTextBoxStyle}"
-                            Text="{Binding EvaluacionSeleccionada}"
-                            Height="30"
-                            Margin="0,0,6,0"
-                            IsReadOnly="True"
-                            VerticalContentAlignment="Center" />
-
+                        Grid.Column="0"
+                        Style="{StaticResource RoundedTextBoxStyle}"
+                        Text="{Binding NombreEvaluacionSeleccionada, Mode=OneWay}"
+                        Height="30"
+                        Margin="0,0,6,0"
+                        IsReadOnly="True"
+                        VerticalContentAlignment="Center" />
+                    
                     <Button
                             Grid.Column="1"
                             Style="{StaticResource PercentageButtonStyle}"
@@ -814,7 +814,7 @@
 
                             <Path
                                     Data="{StaticResource PercentageGeometry}"
-                                    Stroke="{StaticResource AppRed}"
+                                    Stroke="{StaticResource AppBlue}"
                                     StrokeThickness="2.2"
                                     StrokeStartLineCap="Round"
                                     StrokeEndLineCap="Round"
@@ -868,30 +868,29 @@
                 <!-- ================================================= -->
 
                 <Button
-                        Grid.Column="5"
-                        Style="{StaticResource WhiteButtonStyle}"
-                        Height="30"
-                        Width="36"
-                        Padding="0"
-                        Margin="0,0,4,0"
-                        ToolTip="Configuración"
-                        Click="Configuracion_Click"
-                        HorizontalContentAlignment="Center"
-                        VerticalContentAlignment="Center">
+                    Grid.Column="5"
+                    Style="{StaticResource WhiteButtonStyle}"
+                    Height="30"
+                    Width="36"
+                    Padding="0"
+                    Margin="0,0,4,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    ToolTip="Configuración"
+                    Click="Configuracion_Click">
 
                     <Viewbox
-                            Width="17"
-                            Height="17">
+                        Width="17"
+                        Height="17">
 
                         <Path
-                                Data="{StaticResource SettingsGeometry}"
-                                Fill="{StaticResource AppBlue}"
-                                Stretch="Uniform" />
+                            Data="{StaticResource SettingsGeometry}"
+                            Fill="{StaticResource AppBlue}"
+                            Stretch="Uniform" />
 
                     </Viewbox>
 
                 </Button>
-
             </Grid>
 
         </Border>
