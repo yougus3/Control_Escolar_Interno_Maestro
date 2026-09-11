@@ -462,7 +462,7 @@
                                                              FontWeight="Black"
                                                              HorizontalContentAlignment="Center"
                                                              VerticalContentAlignment="Center"
-                                                             MaxLength="1"
+                                                             MaxLength="2"
                                                              ToolTip="Calificación PRE de 0 a 6"
                                                              PreviewTextInput="PreTextBox_PreviewTextInput"
                                                              PreviewKeyDown="PreTextBox_PreviewKeyDown"

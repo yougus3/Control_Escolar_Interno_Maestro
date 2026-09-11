@@ -38,9 +38,6 @@ public partial class ConfiguracionParcialesWindow :
         _evaluacionesGlobalesDisponibles =
             new();
 
-    // La ruta/configuración global ahora se gestiona exclusivamente en parciales.db
-    // mediante ConfiguracionParcialesService. No usar archivos en AppData.
-
     private bool _isGlobalComboEnabled = true;
 
     private bool _cargandoDatos;
@@ -444,20 +441,6 @@ public partial class ConfiguracionParcialesWindow :
             ?.Trim()
             ?? string.Empty;
 
-    // ============================================================
-    // CORREO DEL PROFESOR
-    //
-    // El dato viene de:
-    //
-    // configuracion.bin
-    //      ↓
-    // LiteDbService
-    //      ↓
-    // ProfesorConfigurado.EMAIL
-    //
-    // No se lee CONFIG_DOCENTE directamente aquí.
-    // ============================================================
-
     public string CorreoProfesorSeleccionado =>
         ProfesorSeleccionado?
             .EMAIL
@@ -706,7 +689,6 @@ public partial class ConfiguracionParcialesWindow :
 
         _configuracionService =
             new ConfiguracionParcialesService();
-        // placeholder: configuración inicial cargada
 
         _parserService =
             new CapParserService();
@@ -723,19 +705,14 @@ public partial class ConfiguracionParcialesWindow :
         CargarMateriasDisponibles();
 
         SuscribirCambiosDeSeleccionCaps();
-        // placeholder: subscripción de cambios
 
         CargarProfesores();
 
         ActualizarProfesorDesdeCapsSeleccionados();
 
-        //MostrarDiagnosticoProfesor();
-
-
         VerificarSiCapEsExtra();
 
         CargarEvaluacionesGlobales();
-        // placeholder: evaluaciones globales preparadas
 
         CargarEstadoGlobal();
 
@@ -1080,8 +1057,7 @@ public partial class ConfiguracionParcialesWindow :
         {
             var seleccionados =
                 CapFiles
-                    .Where(
-                        c => c.IsSelected)
+                    .Where(c => c.IsSelected)
                     .ToList();
 
             if (seleccionados.Count == 0)
@@ -1095,97 +1071,189 @@ public partial class ConfiguracionParcialesWindow :
                 return;
             }
 
-            string primerCap =
-                seleccionados
-                    .First()
-                    .FilePath;
+            bool esExtra =
+                seleccionados.All(
+                    c => c.IsExtra);
 
-            if (!File.Exists(
-                    primerCap))
+            string rutaSalida;
+
+            if (esExtra)
             {
-                MessageBox.Show(
-                    "El primer CAP seleccionado ya no existe.",
-                    "Exportar PDF",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                var servicioExtra =
+                    new ReporteExtraordinarioPdfService();
 
-                return;
+                var rutasCap =
+                    seleccionados
+                        .Select(c => c.FilePath)
+                        .Where(File.Exists)
+                        .ToList();
+
+                if (rutasCap.Count == 0)
+                {
+                    MessageBox.Show(
+                        "Ninguno de los CAP seleccionados existe.",
+                        "Exportar PDF",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+
+                    return;
+                }
+
+                byte[] pdf =
+                    servicioExtra.GenerarDiseno(
+                        rutasCap);
+
+                if (pdf.Length == 0)
+                {
+                    MessageBox.Show(
+                        "No se pudo generar el PDF extraordinario.",
+                        "Exportar PDF",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+
+                    return;
+                }
+
+                string codigoGrupo =
+                    LeerDatoCap(
+                        rutasCap.First(),
+                        "CodigoGrupo");
+
+                if (string.IsNullOrWhiteSpace(
+                        codigoGrupo))
+                {
+                    codigoGrupo =
+                        "SIN_GRUPO";
+                }
+
+                string ciclo =
+                    ObtenerCicloEscolarDesdeCap(
+                        rutasCap.First());
+
+                if (string.IsNullOrWhiteSpace(
+                        ciclo))
+                {
+                    ciclo =
+                        "SIN_CICLO";
+                }
+
+                string documentos =
+                    Environment.GetFolderPath(
+                        Environment.SpecialFolder.MyDocuments);
+
+                string carpetaDestino =
+                    Path.Combine(
+                        documentos,
+                        LimpiarNombreArchivo(ciclo));
+
+                Directory.CreateDirectory(
+                    carpetaDestino);
+
+                string nombreArchivoExtra =
+                    $"{LimpiarNombreArchivo(codigoGrupo)}_" +
+                    $"{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+                rutaSalida =
+                    Path.Combine(
+                        carpetaDestino,
+                        nombreArchivoExtra);
+
+                File.WriteAllBytes(
+                    rutaSalida,
+                    pdf);
             }
-
-            string ciclo =
-                ObtenerCicloEscolarDesdeCap(
-                    primerCap);
-
-            if (string.IsNullOrWhiteSpace(
-                    ciclo))
+            else
             {
-                ciclo =
-                    "SIN_CICLO";
-            }
+                string primerCap =
+                    seleccionados
+                        .First()
+                        .FilePath;
 
-            string nombreProfesor =
-                seleccionados
-                    .Select(
-                        c =>
+                if (!File.Exists(primerCap))
+                {
+                    MessageBox.Show(
+                        "El primer CAP seleccionado ya no existe.",
+                        "Exportar PDF",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+
+                    return;
+                }
+
+                string ciclo =
+                    ObtenerCicloEscolarDesdeCap(
+                        primerCap);
+
+                if (string.IsNullOrWhiteSpace(
+                        ciclo))
+                {
+                    ciclo =
+                        "SIN_CICLO";
+                }
+
+                string nombreProfesor =
+                    seleccionados
+                        .Select(c =>
                             c.NombreProfesor?.Trim())
-                    .FirstOrDefault(
-                        n =>
-                            !string.IsNullOrWhiteSpace(n))
-                    ?? string.Empty;
+                        .FirstOrDefault(
+                            n =>
+                                !string.IsNullOrWhiteSpace(n))
+                        ?? string.Empty;
 
-            if (string.IsNullOrWhiteSpace(
-                    nombreProfesor))
-            {
-                nombreProfesor =
-                    NombreProfesorSeleccionado;
+                if (string.IsNullOrWhiteSpace(
+                        nombreProfesor))
+                {
+                    nombreProfesor =
+                        NombreProfesorSeleccionado;
+                }
+
+                if (string.IsNullOrWhiteSpace(
+                        nombreProfesor))
+                {
+                    nombreProfesor =
+                        "PROFESOR";
+                }
+
+                string documentos =
+                    Environment.GetFolderPath(
+                        Environment.SpecialFolder.MyDocuments);
+
+                string carpetaDestino =
+                    Path.Combine(
+                        documentos,
+                        LimpiarNombreArchivo(ciclo));
+
+                Directory.CreateDirectory(
+                    carpetaDestino);
+
+                string nombreArchivoNormal =
+                    $"{LimpiarNombreArchivo(nombreProfesor)}_" +
+                    $"{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+                rutaSalida =
+                    Path.Combine(
+                        carpetaDestino,
+                        nombreArchivoNormal);
+
+                byte[] pdf =
+                    GenerarPdfCombinado(
+                        seleccionados);
+
+                if (pdf.Length == 0)
+                {
+                    MessageBox.Show(
+                        "No se pudo generar el PDF.",
+                        "Exportar PDF",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+
+                    return;
+                }
+
+                File.WriteAllBytes(
+                    rutaSalida,
+                    pdf);
             }
-
-            if (string.IsNullOrWhiteSpace(
-                    nombreProfesor))
-            {
-                nombreProfesor =
-                    "PROFESOR";
-            }
-
-            string documentos =
-                Environment.GetFolderPath(
-                    Environment.SpecialFolder.MyDocuments);
-
-            string carpetaDestino =
-                Path.Combine(
-                    documentos,
-                    LimpiarNombreArchivo(
-                        ciclo));
-
-            Directory.CreateDirectory(
-                carpetaDestino);
-
-            string nombreArchivo =
-                $"{LimpiarNombreArchivo(nombreProfesor)}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-
-            string rutaSalida =
-                Path.Combine(
-                    carpetaDestino,
-                    nombreArchivo);
-
-            byte[] pdf =
-                GenerarPdfCombinado(
-                    seleccionados);
-
-            if (pdf.Length == 0)
-            {
-                MessageBox.Show(
-                    "No se pudo generar el PDF.",
-                    "Exportar PDF",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-
-                return;
-            }
-
-            File.WriteAllBytes(
-                rutaSalida,
-                pdf);
 
             ArchivoPdfActual =
                 rutaSalida;
@@ -1398,19 +1466,90 @@ public partial class ConfiguracionParcialesWindow :
             EstadoCorreo =
                 "Generando reporte PDF...";
 
-            byte[] pdf =
-                GenerarPdfCombinado(
-                    seleccionados);
+            bool esExtra =
+                seleccionados.All(
+                    c => c.IsExtra);
+
+            byte[] pdf;
+
+            string nombreArchivo;
+
+            if (esExtra)
+            {
+                var servicioExtra =
+                    new ReporteExtraordinarioPdfService();
+
+                var rutasCap =
+                    seleccionados
+                        .Select(c => c.FilePath)
+                        .Where(File.Exists)
+                        .ToList();
+
+                if (rutasCap.Count == 0)
+                {
+                    throw new InvalidOperationException(
+                        "Ninguno de los CAP seleccionados existe.");
+                }
+
+                pdf =
+                    servicioExtra.GenerarDiseno(
+                        rutasCap);
+
+                string codigoGrupo =
+                    LeerDatoCap(
+                        rutasCap.First(),
+                        "CodigoGrupo");
+
+                if (string.IsNullOrWhiteSpace(
+                        codigoGrupo))
+                {
+                    codigoGrupo =
+                        "SIN_GRUPO";
+                }
+
+                nombreArchivo =
+                    $"{LimpiarNombreArchivo(codigoGrupo)}_" +
+                    $"{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+            }
+            else
+            {
+                pdf =
+                    GenerarPdfCombinado(
+                        seleccionados);
+
+                string nombreProfesorPdf =
+                    seleccionados
+                        .Select(c =>
+                            c.NombreProfesor?.Trim())
+                        .FirstOrDefault(
+                            n =>
+                                !string.IsNullOrWhiteSpace(n))
+                    ?? string.Empty;
+
+                if (string.IsNullOrWhiteSpace(
+                        nombreProfesorPdf))
+                {
+                    nombreProfesorPdf =
+                        NombreProfesorSeleccionado;
+                }
+
+                if (string.IsNullOrWhiteSpace(
+                        nombreProfesorPdf))
+                {
+                    nombreProfesorPdf =
+                        "PROFESOR";
+                }
+
+                nombreArchivo =
+                    $"{LimpiarNombreArchivo(nombreProfesorPdf)}_" +
+                    $"{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+            }
 
             if (pdf.Length == 0)
             {
                 throw new InvalidOperationException(
                     "No se pudo generar ninguna página del PDF.");
             }
-
-            // ====================================================
-            // EL NOMBRE DEL ADJUNTO ES EL MISMO QUE EL LOCAL
-            // ====================================================
 
             string primerCap =
                 seleccionados
@@ -1428,7 +1567,11 @@ public partial class ConfiguracionParcialesWindow :
                     "SIN_CICLO";
             }
 
-            string nombreProfesor =
+            // ====================================================
+            // PROFESOR USADO PARA EL ASUNTO DEL CORREO
+            // ====================================================
+
+            string nombreProfesorCorreo =
                 seleccionados
                     .Select(
                         c =>
@@ -1439,21 +1582,18 @@ public partial class ConfiguracionParcialesWindow :
                     ?? string.Empty;
 
             if (string.IsNullOrWhiteSpace(
-                    nombreProfesor))
+                    nombreProfesorCorreo))
             {
-                nombreProfesor =
+                nombreProfesorCorreo =
                     NombreProfesorSeleccionado;
             }
 
             if (string.IsNullOrWhiteSpace(
-                    nombreProfesor))
+                    nombreProfesorCorreo))
             {
-                nombreProfesor =
+                nombreProfesorCorreo =
                     "PROFESOR";
             }
-
-            string nombreArchivo =
-                $"{LimpiarNombreArchivo(nombreProfesor)}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
 
             // ====================================================
             // CARPETA TEMPORAL
@@ -1483,10 +1623,10 @@ public partial class ConfiguracionParcialesWindow :
                 $"Enviando a {destinatario}...";
 
             string asunto =
-                $"Reporte de calificaciones - {nombreProfesor}";
+                $"Reporte de calificaciones - {nombreProfesorCorreo}";
 
             string cuerpo =
-                $"Buen día, {nombreProfesor}.\r\n\r\n" +
+                $"Buen día, {nombreProfesorCorreo}.\r\n\r\n" +
                 "Se adjunta el reporte de calificaciones correspondiente.\r\n\r\n" +
                 "Este correo fue enviado automáticamente desde CEIM.";
 
@@ -1643,38 +1783,57 @@ public partial class ConfiguracionParcialesWindow :
     {
         try
         {
-            var cfg = _configuracionService.ObtenerConfiguracion();
+            var cfg =
+                _configuracionService
+                    .ObtenerConfiguracion();
 
             if (cfg != null)
             {
-                if (!string.IsNullOrWhiteSpace(cfg.EvaluacionGlobal) &&
-                    !string.Equals(cfg.EvaluacionGlobal, "EXTRA", StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrWhiteSpace(
+                        cfg.EvaluacionGlobal) &&
+                    !string.Equals(
+                        cfg.EvaluacionGlobal,
+                        "EXTRA",
+                        StringComparison.OrdinalIgnoreCase))
                 {
-                    _evaluacionGlobalSeleccionada = cfg.EvaluacionGlobal;
+                    _evaluacionGlobalSeleccionada =
+                        cfg.EvaluacionGlobal;
                 }
                 else
                 {
-                    // Fallback: determinar a partir de los flags
-                    if (cfg.Parcial1Habilitado) _evaluacionGlobalSeleccionada = "P1";
-                    else if (cfg.Parcial2Habilitado) _evaluacionGlobalSeleccionada = "P2";
-                    else if (cfg.Parcial3Habilitado) _evaluacionGlobalSeleccionada = "P3";
-                    else if (cfg.SemestralHabilitado) _evaluacionGlobalSeleccionada = "SEM";
-                    else _evaluacionGlobalSeleccionada = cfg.EvaluacionGlobal ?? "P1";
+                    if (cfg.Parcial1Habilitado)
+                        _evaluacionGlobalSeleccionada = "P1";
+
+                    else if (cfg.Parcial2Habilitado)
+                        _evaluacionGlobalSeleccionada = "P2";
+
+                    else if (cfg.Parcial3Habilitado)
+                        _evaluacionGlobalSeleccionada = "P3";
+
+                    else if (cfg.SemestralHabilitado)
+                        _evaluacionGlobalSeleccionada = "SEM";
+
+                    else
+                        _evaluacionGlobalSeleccionada =
+                            cfg.EvaluacionGlobal ?? "P1";
                 }
             }
             else
             {
-                _evaluacionGlobalSeleccionada = "P1";
+                _evaluacionGlobalSeleccionada =
+                    "P1";
             }
         }
         catch
         {
-            _evaluacionGlobalSeleccionada = "P1";
+            _evaluacionGlobalSeleccionada =
+                "P1";
         }
 
         AplicarConfiguracionGlobal();
 
-        OnPropertyChanged(nameof(EvaluacionGlobalSeleccionada));
+        OnPropertyChanged(
+            nameof(EvaluacionGlobalSeleccionada));
     }
 
     // ============================================================
@@ -1763,18 +1922,52 @@ public partial class ConfiguracionParcialesWindow :
 
         try
         {
-            var cfg = _configuracionService.ObtenerConfiguracion() ?? new ConfiguracionParciales();
+            var cfg =
+                _configuracionService
+                    .ObtenerConfiguracion()
+                ?? new ConfiguracionParciales();
 
-            // Ajustar flags según la evaluación seleccionada
-            cfg.Parcial1Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P1", StringComparison.OrdinalIgnoreCase);
-            cfg.Parcial2Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P2", StringComparison.OrdinalIgnoreCase);
-            cfg.Parcial3Habilitado = string.Equals(EvaluacionGlobalSeleccionada, "P3", StringComparison.OrdinalIgnoreCase);
-            cfg.SemestralHabilitado = string.Equals(EvaluacionGlobalSeleccionada, "SEM", StringComparison.OrdinalIgnoreCase);
-            cfg.PreExtraordinarioHabilitado = string.Equals(EvaluacionGlobalSeleccionada, "PREEXTRAORDINARIO", StringComparison.OrdinalIgnoreCase);
-            cfg.ExtraHabilitado = false; // La evaluación global nunca será EXTRA
-            cfg.EvaluacionGlobal = EvaluacionGlobalSeleccionada ?? "P1";
+            cfg.Parcial1Habilitado =
+                string.Equals(
+                    EvaluacionGlobalSeleccionada,
+                    "P1",
+                    StringComparison.OrdinalIgnoreCase);
 
-            _configuracionService.GuardarConfiguracion("", cfg);
+            cfg.Parcial2Habilitado =
+                string.Equals(
+                    EvaluacionGlobalSeleccionada,
+                    "P2",
+                    StringComparison.OrdinalIgnoreCase);
+
+            cfg.Parcial3Habilitado =
+                string.Equals(
+                    EvaluacionGlobalSeleccionada,
+                    "P3",
+                    StringComparison.OrdinalIgnoreCase);
+
+            cfg.SemestralHabilitado =
+                string.Equals(
+                    EvaluacionGlobalSeleccionada,
+                    "SEM",
+                    StringComparison.OrdinalIgnoreCase);
+
+            cfg.PreExtraordinarioHabilitado =
+                string.Equals(
+                    EvaluacionGlobalSeleccionada,
+                    "PREEXTRAORDINARIO",
+                    StringComparison.OrdinalIgnoreCase);
+
+            cfg.ExtraHabilitado =
+                false;
+
+            cfg.EvaluacionGlobal =
+                EvaluacionGlobalSeleccionada
+                ?? "P1";
+
+            _configuracionService
+                .GuardarConfiguracion(
+                    "",
+                    cfg);
 
             AplicarConfiguracionGlobal();
         }
@@ -2498,6 +2691,7 @@ public partial class ConfiguracionParcialesWindow :
             new PropertyChangedEventArgs(
                 nombrePropiedad));
     }
+
     private void MostrarDiagnosticoProfesor()
     {
         try

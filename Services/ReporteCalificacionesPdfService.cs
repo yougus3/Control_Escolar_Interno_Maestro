@@ -286,7 +286,7 @@ public class ReporteCalificacionesPdfService
 
         var estado =
             _preService.ObtenerEstadoPre(
-                _capBaseName,
+                _claveAsignatura,
                 alumno.Matricula);
 
         return estado.TienePRE ? "*" : "";

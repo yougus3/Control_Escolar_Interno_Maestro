@@ -819,12 +819,46 @@ public class PreExtraordinarioService
                     m3);
             }
 
-            if (alumno != null &&
-                !string.IsNullOrWhiteSpace(
-                    semOriginal))
+            if (alumno != null)
             {
-                alumno.Calificación["SEM"] =
-                    semOriginal;
+                if (!string.IsNullOrWhiteSpace(
+                        semOriginal))
+                {
+                    alumno.Calificación["SEM"] =
+                        semOriginal;
+                }
+
+                var m2Restaurado =
+                    _parcialJsonService.ObtenerMateria(
+                        $"{claveMateriaBase}_P2");
+
+                if (m2Restaurado != null)
+                {
+                    double p2Original =
+                        CalcularCalificacionDesdeMateria(
+                            m2Restaurado,
+                            matricula);
+
+                    alumno.Calificación["P2"] =
+                        FormatearCalificacion(
+                            p2Original);
+                }
+
+                var m3Restaurado =
+                    _parcialJsonService.ObtenerMateria(
+                        $"{claveMateriaBase}_P3");
+
+                if (m3Restaurado != null)
+                {
+                    double p3Original =
+                        CalcularCalificacionDesdeMateria(
+                            m3Restaurado,
+                            matricula);
+
+                    alumno.Calificación["P3"] =
+                        FormatearCalificacion(
+                            p3Original);
+                }
             }
 
             if (eliminarRegistroPre &&

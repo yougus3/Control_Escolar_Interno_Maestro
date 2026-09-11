@@ -234,16 +234,40 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             if (sender is not TextBox textBox)
                 return;
 
-            string resultado =
-                ObtenerTextoResultante(
-                    textBox,
-                    e.Text);
+            string entrada =
+                e.Text?.Trim().ToUpperInvariant()
+                ?? string.Empty;
 
-            e.Handled =
-                !Regex.IsMatch(
-                    resultado,
-                    "^[0-6]$");
+            // ============================================================
+            // ESCRIBIR N
+            // ============================================================
+            // Al escribir N se completa automáticamente a NP.
+            // ============================================================
+
+            if (entrada == "N")
+            {
+                textBox.Text = "NP";
+                textBox.CaretIndex = textBox.Text.Length;
+
+                e.Handled = true;
+                return;
+            }
+
+            // ============================================================
+            // ESCRIBIR 0 A 6
+            // ============================================================
+
+            if (entrada.Length == 1 &&
+                entrada[0] >= '0' &&
+                entrada[0] <= '6')
+            {
+                e.Handled = false;
+                return;
+            }
+
+            e.Handled = true;
         }
+
 
         private void PreTextBox_PreviewKeyDown(
             object sender,
@@ -294,7 +318,6 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                     textBox);
             }
         }
-
         private void PreTextBox_Pasting(
             object sender,
             DataObjectPastingEventArgs e)
@@ -311,12 +334,37 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                     DataFormats.Text) as string
                 ?? string.Empty;
 
-            if (!Regex.IsMatch(
-                    texto.Trim(),
-                    "^[0-6]$"))
+            texto =
+                texto.Trim()
+                    .ToUpperInvariant();
+
+            if (texto == "N")
             {
                 e.CancelCommand();
+
+                if (sender is TextBox textBox)
+                {
+                    textBox.Text = "NP";
+                    textBox.CaretIndex =
+                        textBox.Text.Length;
+                }
+
+                return;
             }
+
+            if (texto == "NP")
+            {
+                return;
+            }
+
+            if (texto.Length == 1 &&
+                texto[0] >= '0' &&
+                texto[0] <= '6')
+            {
+                return;
+            }
+
+            e.CancelCommand();
         }
 
         private static string ObtenerTextoResultante(

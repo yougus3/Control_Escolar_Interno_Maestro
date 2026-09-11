@@ -67,10 +67,10 @@
 		<Resource Include="logo.jpg">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Resource>
-	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="Data\" />
+		<None Remove="Data\public.key" />
+
+		<Resource Include="Data\public.key" />
 	</ItemGroup>
 
 	<ItemGroup>
