@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using QuestPDF.Infrastructure;
@@ -14,7 +13,14 @@ public partial class App : Application
         StartupEventArgs e)
     {
         base.OnStartup(e);
-        QuestPDF.Settings.License = LicenseType.Community;
+
+        // ========================================================
+        // QUESTPDF
+        // ========================================================
+
+        QuestPDF.Settings.License =
+            LicenseType.Community;
+
         try
         {
             // ========================================================
@@ -52,92 +58,6 @@ public partial class App : Application
         }
 
         // ========================================================
-        // LICENCIA
-        // ========================================================
-
-        string dataFolder =
-            Path.Combine(
-                AppContext.BaseDirectory,
-                "Data");
-
-        string licensePath =
-            Path.Combine(
-                dataFolder,
-                "LICENCIA_GMS.lic");
-
-        // ========================================================
-        // COMPROBAR QUE EXISTA LA LICENCIA
-        // ========================================================
-
-        if (!File.Exists(licensePath))
-        {
-            MostrarErrorLicencia(
-                "No se encontró el archivo de licencia.\n\n" +
-                "Coloca LICENCIA_GMS.lic dentro de la carpeta Data.");
-
-            Shutdown();
-            return;
-        }
-
-        // ========================================================
-        // LEER LICENCIA
-        // ========================================================
-
-        string licencia;
-
-        try
-        {
-            licencia =
-                File.ReadAllText(
-                    licensePath)
-                .Trim();
-        }
-        catch (Exception ex)
-        {
-            MostrarErrorLicencia(
-                "No se pudo leer el archivo de licencia.\n\n" +
-                ex.Message);
-
-            Shutdown();
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(licencia))
-        {
-            MostrarErrorLicencia(
-                "El archivo de licencia está vacío.");
-
-            Shutdown();
-            return;
-        }
-
-        // ========================================================
-        // MOSTRAR INFORMACIÓN TEMPORAL
-        //
-        // TODAVÍA NO SE VERIFICA LA FIRMA AQUÍ.
-        // Primero estamos comprobando que CEIM pueda localizar
-        // y leer correctamente LICENCIA_GMS.lic.
-        // ========================================================
-
-        System.Diagnostics.Debug.WriteLine(
-            "======================================");
-
-        System.Diagnostics.Debug.WriteLine(
-            "LICENCIA GMS");
-
-        System.Diagnostics.Debug.WriteLine(
-            $"Ruta: {licensePath}");
-
-        System.Diagnostics.Debug.WriteLine(
-            $"Longitud: {licencia.Length}");
-
-        System.Diagnostics.Debug.WriteLine(
-            $"Contenido: {licencia}");
-
-        System.Diagnostics.Debug.WriteLine(
-            "======================================");
-
-        // ========================================================
         // CONFIGURACIÓN
         // ========================================================
 
@@ -161,19 +81,9 @@ public partial class App : Application
         }
         */
 
-        MainWindow =    
+        MainWindow =
             mainWindow;
 
         mainWindow.Show();
-    }
-
-    private static void MostrarErrorLicencia(
-        string mensaje)
-    {
-        MessageBox.Show(
-            mensaje,
-            "Licencia GMS",
-            MessageBoxButton.OK,
-            MessageBoxImage.Error);
     }
 }

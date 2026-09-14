@@ -1,0 +1,12 @@
+﻿using System.Collections.Generic;
+
+namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
+
+public class PreOriginalData
+{
+    // Capturas originales del alumno para P2
+    public Dictionary<string, double> CapturasP2 { get; set; } = new();
+
+    // Capturas originales del alumno para P3
+    public Dictionary<string, double> CapturasP3 { get; set; } = new();
+}

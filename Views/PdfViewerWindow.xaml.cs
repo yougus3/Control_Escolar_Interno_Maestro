@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Windows;
+// IMPORTANTE: Asegúrate de tener este using para manejar el entorno de WebView2
+using Microsoft.Web.WebView2.Core; 
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views;
 
@@ -8,51 +10,45 @@ public partial class PdfViewerWindow : Window
 {
     private readonly string _rutaPdf;
 
-    public PdfViewerWindow(
-        string rutaPdf)
+    public PdfViewerWindow(string rutaPdf)
     {
         InitializeComponent();
 
-        _rutaPdf =
-            rutaPdf
-            ?? string.Empty;
+        _rutaPdf = rutaPdf ?? string.Empty;
 
-        TxtNombreArchivo.Text =
-            Path.GetFileName(
-                _rutaPdf);
+        TxtNombreArchivo.Text = Path.GetFileName(_rutaPdf);
 
-        Loaded +=
-            PdfViewerWindow_Loaded;
+        Loaded += PdfViewerWindow_Loaded;
     }
 
-    private async void PdfViewerWindow_Loaded(
-        object sender,
-        RoutedEventArgs e)
+    private async void PdfViewerWindow_Loaded(object sender, RoutedEventArgs e)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(
-                    _rutaPdf))
+            if (string.IsNullOrWhiteSpace(_rutaPdf))
             {
-                throw new InvalidOperationException(
-                    "La ruta del PDF está vacía.");
+                throw new InvalidOperationException("La ruta del PDF está vacía.");
             }
 
-            if (!File.Exists(
-                    _rutaPdf))
+            if (!File.Exists(_rutaPdf))
             {
-                throw new FileNotFoundException(
-                    "No se encontró el archivo PDF.",
-                    _rutaPdf);
+                throw new FileNotFoundException("No se encontró el archivo PDF.", _rutaPdf);
             }
 
-            await PdfWebView
-                .EnsureCoreWebView2Async();
+            // =========================================================================
+            // CONFIGURACIÓN PORTÁTIL PARA EVITAR LA CARPETA CLON .WebView2 Y APPDATA
+            // =========================================================================
+            // Redirige la caché de Edge de forma oculta a la carpeta temporal de Windows de la PC cliente
+            string cacheTemporalMaquina = Path.Combine(Path.GetTempPath(), "RegistroCalificaciones_PDF_Cache");
 
-            PdfWebView.Source =
-                new Uri(
-                    Path.GetFullPath(
-                        _rutaPdf));
+            // Creamos el entorno seguro apuntando a esa carpeta temporal externa a la USB
+            var entorno = await CoreWebView2Environment.CreateAsync(userDataFolder: cacheTemporalMaquina);
+
+            // Pasamos el entorno al WebView2 antes de inicializarlo por completo
+            await PdfWebView.EnsureCoreWebView2Async(entorno);
+            // =========================================================================
+
+            PdfWebView.Source = new Uri(Path.GetFullPath(_rutaPdf));
         }
         catch (Exception ex)
         {
@@ -66,9 +62,7 @@ public partial class PdfViewerWindow : Window
         }
     }
 
-    private void Cerrar_Click(
-        object sender,
-        RoutedEventArgs e)
+    private void Cerrar_Click(object sender, RoutedEventArgs e)
     {
         Close();
     }

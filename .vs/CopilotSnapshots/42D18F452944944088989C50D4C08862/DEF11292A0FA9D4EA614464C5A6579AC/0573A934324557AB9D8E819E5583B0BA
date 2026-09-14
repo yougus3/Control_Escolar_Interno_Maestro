@@ -1,0 +1,62 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
+
+namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
+
+public class PreExtraordinarioService
+{
+    public PreExtraordinarioService()
+    {
+    }
+
+    // Genera y guarda un JSON con los alumnos que tienen derecho a presentar el preextraordinario.
+    // Formato: [ ["matricula","grupo"], ... ]
+    public List<(string Matricula, string Grupo)> GenerarListadoElegibles(IEnumerable<Alumno> alumnos)
+    {
+        var lista = new List<(string Matricula, string Grupo)>();
+
+        foreach (var alumno in alumnos)
+        {
+            if (alumno == null) continue;
+
+            // Debe tener calificaciones en P1,P2,P3 y SEM
+            if (string.IsNullOrWhiteSpace(alumno.Calificación["P1"]) ||
+                string.IsNullOrWhiteSpace(alumno.Calificación["P2"]) ||
+                string.IsNullOrWhiteSpace(alumno.Calificación["P3"]) ||
+                string.IsNullOrWhiteSpace(alumno.Calificación["SEM"]))
+            {
+                continue;
+            }
+
+            // Tomar la semestral como referencia para determinar si está entre 0.00 y 5.99
+            if (!double.TryParse(alumno.Calificación["SEM"]?.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double sem))
+                continue;
+
+            if (sem >= 0.0 && sem <= 5.99)
+            {
+                lista.Add((alumno.Matricula ?? string.Empty, alumno.Grupo ?? string.Empty));
+            }
+        }
+
+        return lista;
+    }
+
+    public void GuardarListadoAArchivo(IEnumerable<(string Matricula, string Grupo)> lista, string rutaSalida)
+    {
+        try
+        {
+            var arrays = lista.Select(x => new[] { x.Matricula ?? string.Empty, x.Grupo ?? string.Empty }).ToArray();
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            var json = JsonSerializer.Serialize(arrays, options);
+            File.WriteAllText(rutaSalida, json);
+        }
+        catch
+        {
+            // no lanzar excepciones en este servicio, el caller puede manejar
+        }
+    }
+}

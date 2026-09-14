@@ -1,0 +1,72 @@
+﻿using System.Windows;
+using System.Windows.Media;
+using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.ViewModels;
+
+namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views;
+
+public partial class MainWindow : Window
+{
+    public MainWindow()
+    {
+        InitializeComponent();
+        DataContext = new MainViewModel();
+        RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.Fant);
+        this.MouseLeftButtonDown += MainWindow_MouseLeftButtonDown;
+    }
+
+    private void Configuracion_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm)
+            return;
+    
+        var login = new PasswordWindow
+        {
+            Owner = this
+        };
+    
+        if (login.ShowDialog() == true)
+        {
+            var ventana = new ConfiguracionParcialesWindow(vm)
+            {
+                Owner = this
+            };
+    
+            ventana.ShowDialog();
+        }
+    }
+
+    private void Minimizar_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void Cerrar_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void MainWindow_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        DragMove();
+    }
+
+    private void PorcentajeInfo_Click(object sender, RoutedEventArgs e)
+    {
+        var ventana = new Views.Modals.PorcentajesWindow(0, 0, 0, 0, 0, 0)
+        {
+            Owner = this
+        };
+        ventana.ShowDialog();
+    }
+
+    // Abre la ventana de no evaluados delegando en ParcialesVm
+    private void MainWindow_WarningNoEvaluados_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm && vm.ParcialesVm != null && vm.ParcialesVm.FaltanPorEvaluar)
+        {
+            var modal = new Views.Modals.NoEvaluadosWindow(vm.ParcialesVm.ListaNoEvaluados);
+            modal.Owner = this;
+            modal.ShowDialog();
+        }
+    }
+}

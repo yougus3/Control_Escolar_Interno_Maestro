@@ -1,0 +1,28 @@
+﻿using System;
+using System.Globalization;
+
+namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
+{
+    public static class NumberUtils
+    {
+        public static double TruncateOneDecimal(double value)
+        {
+            return Math.Truncate(value * 10.0) / 10.0;
+        }
+
+        public static decimal TruncateOneDecimal(decimal value)
+        {
+            return Math.Truncate(value * 10m) / 10m;
+        }
+
+        public static string ToOneDecimalString(double value)
+        {
+            return TruncateOneDecimal(value).ToString("0.0", CultureInfo.InvariantCulture);
+        }
+
+        public static string ToOneDecimalString(decimal value)
+        {
+            return TruncateOneDecimal(value).ToString("0.0", CultureInfo.InvariantCulture);
+        }
+    }
+}

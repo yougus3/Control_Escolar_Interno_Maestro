@@ -1,0 +1,173 @@
+﻿using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
+
+namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
+{
+    public partial class ConfiguracionParcialesWindow : Window, INotifyPropertyChanged
+    {
+        private readonly MainViewModel _mainVm;
+        private readonly FileScannerService _scannerService;
+        private readonly CapParserService _parserService;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public ObservableCollection<string> EvaluacionesGlobalesDisponibles { get; } = new()
+        {
+            "P1",
+            "P2",
+            "P3",
+            "SEM",
+            "PREEXTRAORDINARIO"
+        };
+
+        private string? _evaluacionGlobalSeleccionada = "P1";
+        public string? EvaluacionGlobalSeleccionada
+        {
+            get => _evaluacionGlobalSeleccionada;
+            set
+            {
+                if (_evaluacionGlobalSeleccionada == value) return;
+                _evaluacionGlobalSeleccionada = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EvaluacionGlobalSeleccionada)));
+            }
+        }
+
+        public ObservableCollection<ConfigCapItem> CapFiles { get; } = new();
+
+        public ConfiguracionParcialesWindow(MainViewModel mainVm)
+        {
+            InitializeComponent();
+
+            _mainVm = mainVm ?? throw new ArgumentNullException(nameof(mainVm));
+
+            _scannerService = new FileScannerService();
+            _parserService = new CapParserService();
+
+            DataContext = this;
+
+            LoadCapsFromFolder();
+        }
+
+        public class ConfigCapItem : INotifyPropertyChanged
+        {
+            private bool _isChecked;
+            public string FilePath { get; set; } = string.Empty;
+            public string DisplayName { get; set; } = string.Empty;
+            public string Profesor { get; set; } = string.Empty;
+
+            public bool IsChecked
+            {
+                get => _isChecked;
+                set
+                {
+                    if (_isChecked == value) return;
+                    _isChecked = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsChecked)));
+                }
+            }
+
+            public event PropertyChangedEventHandler? PropertyChanged;
+        }
+
+        private void LoadCapsFromFolder()
+        {
+            CapFiles.Clear();
+
+            string ruta = _mainVm?.RutaUsb ?? string.Empty;
+
+            try
+            {
+                var archivos = _scannerService.ObtenerArchivosCap(ruta);
+
+                foreach (var archivo in archivos)
+                {
+                    try
+                    {
+                        var info = _parserService.ObtenerInfoParaCombo(archivo);
+                        string display = info.NombreBase;
+                        if (!string.IsNullOrWhiteSpace(info.GrupoCap)) display += $" ({info.GrupoCap})";
+                        CapFiles.Add(new ConfigCapItem
+                        {
+                            FilePath = archivo,
+                            DisplayName = display,
+                            Profesor = info.NombreProfesor ?? string.Empty,
+                            IsChecked = true
+                        });
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+        }
+
+        private void SelectAll_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var it in CapFiles) it.IsChecked = true;
+        }
+
+        private void DeselectAll_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var it in CapFiles) it.IsChecked = false;
+        }
+
+        private void GenerateSelected_Click(object sender, RoutedEventArgs e)
+        {
+            var seleccionados = CapFiles.Where(c => c.IsChecked).ToList();
+            if (!seleccionados.Any())
+            {
+                MessageBox.Show("No hay CAPs seleccionados.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            int exitos = 0, fallos = 0;
+            var errores = new System.Collections.Generic.List<string>();
+
+            foreach (var item in seleccionados)
+            {
+                try
+                {
+                    string profesor = item.Profesor;
+                    if (string.IsNullOrWhiteSpace(profesor))
+                    {
+                        var info = _parserService.ObtenerInfoParaCombo(item.FilePath);
+                        profesor = info.NombreProfesor ?? string.Empty;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(profesor)) profesor = Path.GetFileNameWithoutExtension(item.FilePath);
+
+                    var invalid = Path.GetInvalidFileNameChars();
+                    foreach (var c in invalid) profesor = profesor.Replace(c, '_');
+
+                    string carpeta = Path.GetDirectoryName(item.FilePath) ?? Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    string baseSalida = Path.Combine(carpeta, profesor);
+                    string salida = baseSalida + ".pdf";
+                    int idx = 1;
+                    while (File.Exists(salida)) { salida = baseSalida + "_" + idx.ToString(System.Globalization.CultureInfo.InvariantCulture) + ".pdf"; idx++; }
+
+                    var service = new ReporteCalificacionesPdfService(item.FilePath);
+                    var bytes = service.GenerarDiseno();
+                    File.WriteAllBytes(salida, bytes);
+
+                    exitos++;
+                }
+                catch (Exception ex)
+                {
+                    fallos++;
+                    errores.Add($"{Path.GetFileName(item.FilePath)}: {ex.Message}");
+                }
+            }
+
+            var mensaje = $"Generación completada. Éxitos: {exitos}. Fallos: {fallos}.";
+            if (errores.Any()) mensaje += "\n\nErrores:\n" + string.Join("\n", errores);
+            MessageBox.Show(mensaje, "Generar PDFs", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void Close_Click(object sender, RoutedEventArgs e) => Close();
+    }
+}

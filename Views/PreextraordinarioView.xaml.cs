@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -21,7 +22,8 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
         private bool _cargando;
         private bool _guardando;
 
-        public ObservableCollection<AlumnoPreItem> AlumnosPre { get; } = new();
+        public ObservableCollection<AlumnoPreItem> AlumnosPre { get; } =
+            new();
 
         public PreextraordinarioView()
         {
@@ -107,39 +109,51 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 AlumnosPre.Clear();
 
                 // ====================================================
-                // USAR CLAVEASIGNATURA REAL DEL CAP
+                // CLAVE REAL DEL REGISTRO PRE
+                //
+                // SE OBTIENE DEL NOMBRE BASE DEL CAP:
+                //
+                // CALIF001.CAP
+                //      ↓
+                // CALIF001
+                //      ↓
+                // CALIF001_PRE
+                //
+                // NO SE USA CLAVEASIGNATURA AQUÍ.
                 // ====================================================
 
-                string claveAsignatura =
+                string claveMateria =
                     ObtenerClaveMateria();
 
                 if (string.IsNullOrWhiteSpace(
-                        claveAsignatura))
+                        claveMateria))
                 {
                     System.Diagnostics.Debug.WriteLine(
-                        "[PRE] No se pudo obtener CLAVEASIGNATURA del CAP.");
+                        "[PRE] No se pudo obtener la clave base del CAP.");
 
                     return;
                 }
 
                 System.Diagnostics.Debug.WriteLine(
-                    $"[PRE] CLAVEASIGNATURA usada para PRE = '{claveAsignatura}'");
+                    $"[PRE] Clave base CAP usada para PRE = '{claveMateria}'");
 
                 // ====================================================
                 // OBTENER ALUMNOS BASE
                 //
-                // El servicio YA NO decide quién tiene derecho.
-                // Aquí solamente prepara los datos de los alumnos.
+                // Aquí se utiliza la MISMA clave que P1/P2/P3.
                 // ====================================================
 
                 var alumnos =
                     _preService.ObtenerAlumnosParaPre(
-                        claveAsignatura,
+                        claveMateria,
                         _mainVm.Alumnos);
 
                 // ====================================================
                 // FILTRO REAL:
                 // configuracion.bin -> PRE
+                //
+                // ESTA COMPROBACIÓN SÍ USA CLAVEASIGNATURA,
+                // porque aquí estamos verificando DERECHO a PRE.
                 // ====================================================
 
                 int candidatos =
@@ -204,7 +218,19 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
         }
 
         // ============================================================
-        // CLAVEASIGNATURA DESDE CAP
+        // CLAVE BASE DEL CAP
+        //
+        // IMPORTANTE:
+        //
+        // CALIF001.CAP
+        //      ↓
+        // CALIF001
+        //
+        // NO:
+        // 3-6-111
+        //
+        // 3-6-111 es CLAVEASIGNATURA y se utiliza únicamente
+        // en MainViewModel.AlumnoTieneDerechoPre().
         // ============================================================
 
         private string ObtenerClaveMateria()
@@ -212,15 +238,39 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             if (_mainVm == null)
                 return string.Empty;
 
+            string? rutaCap =
+                _mainVm.ArchivoCompletoActual;
+
             if (string.IsNullOrWhiteSpace(
-                    _mainVm.ArchivoCompletoActual))
+                    rutaCap) ||
+                !File.Exists(
+                    rutaCap))
             {
                 return string.Empty;
             }
 
-            return
-                MainViewModel.ObtenerClaveAsignaturaDesdeCap(
-                    _mainVm.ArchivoCompletoActual);
+            try
+            {
+                string nombreArchivo =
+                    Path.GetFileNameWithoutExtension(
+                        rutaCap);
+
+                if (string.IsNullOrWhiteSpace(
+                        nombreArchivo))
+                {
+                    return string.Empty;
+                }
+
+                return nombreArchivo
+                    .Trim()
+                    .Replace(
+                        ' ',
+                        '_');
+            }
+            catch
+            {
+                return string.Empty;
+            }
         }
 
         // ============================================================
@@ -267,7 +317,6 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
 
             e.Handled = true;
         }
-
 
         private void PreTextBox_PreviewKeyDown(
             object sender,
@@ -318,6 +367,7 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                     textBox);
             }
         }
+
         private void PreTextBox_Pasting(
             object sender,
             DataObjectPastingEventArgs e)
@@ -468,6 +518,16 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             if (_mainVm == null)
                 return;
 
+            // ============================================================
+            // AQUÍ YA OBTENEMOS:
+            //
+            // CALIF001.CAP -> CALIF001
+            //
+            // Por lo tanto PreExtraordinarioService guardará:
+            //
+            // CALIF001_PRE
+            // ============================================================
+
             string claveMateria =
                 ObtenerClaveMateria();
 
@@ -512,21 +572,19 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
 
                 ActualizarItemDesdeAlumno(
                     item);
-
-                if (resultado == 6)
-                {
+                
                     bool guardado =
                         _mainVm.GuardarResultadosPreEnCap();
 
                     if (!guardado)
                     {
                         MessageBox.Show(
-                            "El PRE fue procesado en LiteDB, pero no fue posible actualizar P2, P3 y SEM en el CAP.",
+                            "El PRE fue procesado en SQLite, pero no fue posible actualizar P2, P3 y SEM en el CAP.",
                             "Advertencia",
                             MessageBoxButton.OK,
                             MessageBoxImage.Warning);
                     }
-                }
+                
 
                 ActualizarTodosDesdeMainVm();
             }

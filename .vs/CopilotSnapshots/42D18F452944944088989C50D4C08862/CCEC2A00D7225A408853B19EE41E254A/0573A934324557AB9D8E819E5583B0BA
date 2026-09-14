@@ -1,0 +1,175 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
+
+namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
+
+public class PreExtraordinarioService
+{
+    public PreExtraordinarioService()
+    {
+    }
+
+    // Aplica los ajustes directamente sobre los parciales (P2 y P3) para los alumnos elegibles.
+    // - claveMateriaBase: clave base de la materia (sin sufijo _P1/_P2/_P3)
+    // - alumnos: lista completa de Alumno (se usará para leer P1 y SEM)
+    // - actividades: cantidad de actividades que el docente indica (1..4)
+    // - marcarPre: si true marca en las capturas la bandera "__pre__" = 1
+    public void AplicarAjusteParciales(string claveMateriaBase, IEnumerable<Alumno> alumnos, int actividades = 4, bool marcarPre = true)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(claveMateriaBase)) return;
+            if (actividades < 1) actividades = 1;
+            if (actividades > 4) actividades = 4;
+
+            var json = new ParcialJsonService();
+
+            var m1 = json.ObtenerMateria($"{claveMateriaBase}_P1");
+            var m2 = json.ObtenerMateria($"{claveMateriaBase}_P2");
+            var m3 = json.ObtenerMateria($"{claveMateriaBase}_P3");
+
+            if (m1 == null || m2 == null || m3 == null) return;
+
+            foreach (var alumno in alumnos ?? Enumerable.Empty<Alumno>())
+            {
+                if (alumno == null) continue;
+
+                // Debe ser elegible (se usaba SEM entre 0.00 y 5.99)
+                if (string.IsNullOrWhiteSpace(alumno.Calificación["SEM"])) continue;
+                if (!double.TryParse(alumno.Calificación["SEM"]?.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double sem))
+                    continue;
+                if (!(sem >= 0.0 && sem <= 5.99)) continue;
+
+                // Obtener P1 para cálculo
+                if (string.IsNullOrWhiteSpace(alumno.Calificación["P1"])) continue;
+                if (!double.TryParse(alumno.Calificación["P1"]?.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double p1))
+                    continue;
+
+                // Calcular p2 y p3 necesarios para que (p1+p2+p3)/3 == 6
+                double objetivoSumaP2P3 = 18.0 - p1;
+                double valorP2 = objetivoSumaP2P3 / 2.0;
+                double valorP3 = valorP2;
+
+                // Limitar a rango 0..10
+                valorP2 = Math.Max(0.0, Math.Min(10.0, valorP2));
+                valorP3 = Math.Max(0.0, Math.Min(10.0, valorP3));
+
+                // Asegurar actividades en m2 y m3
+                EnsureActividades(m2, actividades);
+                EnsureActividades(m3, actividades);
+
+                // Preparar capturas para P2
+                if (!m2.Calificaciones.TryGetValue(alumno.Matricula, out var cap2) || cap2 == null)
+                    cap2 = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+
+                cap2["__CAPTURA_DIRECTA__"] = 1.0;
+                cap2["__CALIF_DIRECTA__"] = valorP2;
+                cap2["__Inasistencias__"] = cap2.ContainsKey("__Inasistencias__") ? cap2["__Inasistencias__"] : -1;
+                cap2["__pre__"] = marcarPre ? 1.0 : 0.0;
+
+                // Opcional: marcar valores por actividad (se guardan solo si existen nombres)
+                for (int i = 0; i < actividades; i++)
+                {
+                    var nombre = string.IsNullOrWhiteSpace(m2.Actividades[i].Nombre) ? $"Act{i + 1}" : m2.Actividades[i].Nombre.Trim();
+                    cap2[nombre] = valorP2; // simplificación: asignar la nota directa al campo de actividad
+                }
+
+                m2.Calificaciones[alumno.Matricula] = cap2;
+
+                // Preparar capturas para P3
+                if (!m3.Calificaciones.TryGetValue(alumno.Matricula, out var cap3) || cap3 == null)
+                    cap3 = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+
+                cap3["__CAPTURA_DIRECTA__"] = 1.0;
+                cap3["__CALIF_DIRECTA__"] = valorP3;
+                cap3["__Inasistencias__"] = cap3.ContainsKey("__Inasistencias__") ? cap3["__Inasistencias__"] : -1;
+                cap3["__pre__"] = marcarPre ? 1.0 : 0.0;
+
+                for (int i = 0; i < actividades; i++)
+                {
+                    var nombre = string.IsNullOrWhiteSpace(m3.Actividades[i].Nombre) ? $"Act{i + 1}" : m3.Actividades[i].Nombre.Trim();
+                    cap3[nombre] = valorP3;
+                }
+
+                m3.Calificaciones[alumno.Matricula] = cap3;
+            }
+
+            // Guardar cambios
+            json.GuardarMateria($"{claveMateriaBase}_P2", m2);
+            json.GuardarMateria($"{claveMateriaBase}_P3", m3);
+        }
+        catch
+        {
+            // no propagar excepciones desde este servicio
+        }
+    }
+
+    private void EnsureActividades(MateriaParcial m, int cantidad)
+    {
+        if (m == null) return;
+        m.Actividades ??= new List<ActividadParcial>();
+        if (m.Actividades.Count == cantidad) return;
+
+        // Si hay menos, completar con entradas en blanco; si hay más, truncar.
+        if (m.Actividades.Count > cantidad)
+            m.Actividades = m.Actividades.Take(cantidad).ToList();
+        else
+        {
+            for (int i = m.Actividades.Count; i < cantidad; i++)
+            {
+                m.Actividades.Add(new ActividadParcial { Nombre = $"Act{i + 1}", Porcentaje = 0.0, PuntajeMaximo = 10.0 });
+            }
+        }
+    }
+
+    // Genera y guarda un JSON con los alumnos que tienen derecho a presentar el preextraordinario.
+    // Formato: [ ["matricula","grupo"], ... ]
+    public List<(string Matricula, string Grupo)> GenerarListadoElegibles(IEnumerable<Alumno> alumnos)
+    {
+        var lista = new List<(string Matricula, string Grupo)>();
+
+        foreach (var alumno in alumnos)
+        {
+            if (alumno == null) continue;
+
+            // Debe tener calificaciones en P1,P2,P3 y SEM
+            if (string.IsNullOrWhiteSpace(alumno.Calificación["P1"]) ||
+                string.IsNullOrWhiteSpace(alumno.Calificación["P2"]) ||
+                string.IsNullOrWhiteSpace(alumno.Calificación["P3"]) ||
+                string.IsNullOrWhiteSpace(alumno.Calificación["SEM"]))
+            {
+                continue;
+            }
+
+            // Tomar la semestral como referencia para determinar si está entre 0.00 y 5.99
+            if (!double.TryParse(alumno.Calificación["SEM"]?.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double sem))
+                continue;
+
+            if (sem >= 0.0 && sem <= 5.99)
+            {
+                lista.Add((alumno.Matricula ?? string.Empty, alumno.Grupo ?? string.Empty));
+            }
+        }
+
+        return lista;
+    }
+
+    public void GuardarListadoAArchivo(IEnumerable<(string Matricula, string Grupo)> lista, string rutaSalida)
+    {
+        try
+        {
+            var arrays = lista.Select(x => new[] { x.Matricula ?? string.Empty, x.Grupo ?? string.Empty }).ToArray();
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            var json = JsonSerializer.Serialize(arrays, options);
+            File.WriteAllText(rutaSalida, json);
+        }
+        catch
+        {
+            // no lanzar excepciones en este servicio, el caller puede manejar
+        }
+    }
+}

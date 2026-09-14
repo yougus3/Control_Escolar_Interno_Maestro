@@ -1,0 +1,25 @@
+﻿using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
+
+namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.ViewModels;
+
+public partial class PreextraordinarioViewModel : ObservableObject
+{
+    private readonly MainViewModel _main;
+
+    public ObservableCollection<Alumno> Alumnos => _main.Alumnos;
+    public MainViewModel Main => _main;
+
+    public PreextraordinarioViewModel(MainViewModel main)
+    {
+        _main = main;
+    }
+
+    [RelayCommand]
+    private void GuardarPre()
+    {
+        _main.AplicarPreYGuardar();
+    }
+}

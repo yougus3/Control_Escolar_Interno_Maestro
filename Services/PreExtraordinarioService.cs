@@ -95,6 +95,19 @@ public class PreExtraordinarioService
     }
 
     // =========================================================================
+    // CLAVE DEL REGISTRO PRE
+    //
+    // EJEMPLO:
+    // CALIF__PRE
+    // =========================================================================
+
+    private static string ObtenerClavePre(
+        string capBaseName)
+    {
+        return $"{capBaseName.Trim()}_PRE";
+    }
+
+    // =========================================================================
     // ALUMNOS DE PRE
     // =========================================================================
 
@@ -127,20 +140,6 @@ public class PreExtraordinarioService
             {
                 continue;
             }
-
-            // =========================================================
-            // IMPORTANTE:
-            //
-            // AQUÍ YA NO FILTRAMOS POR SEM.
-            //
-            // La autorización para presentar PRE se decide
-            // exclusivamente en PreextraordinarioView mediante:
-            //
-            // configuracion.bin -> PRE
-            //
-            // Esto permite que un alumno autorizado siga apareciendo
-            // aunque actualmente su SEM no esté reprobada.
-            // =========================================================
 
             var estado =
                 ObtenerEstadoPre(
@@ -213,7 +212,8 @@ public class PreExtraordinarioService
         {
             var materiaPre =
                 _parcialJsonService.ObtenerMateria(
-                    $"{claveMateriaBase}_PRE");
+                    ObtenerClavePre(
+                        claveMateriaBase));
 
             if (materiaPre?.Calificaciones == null)
                 return new PreEstado();
@@ -235,7 +235,8 @@ public class PreExtraordinarioService
             if (!hizoPre)
                 return new PreEstado();
 
-            int? calificacion = null;
+            int? calificacion =
+                null;
 
             if (registro.TryGetValue(
                     PreCalificacion,
@@ -279,7 +280,7 @@ public class PreExtraordinarioService
     }
 
     // =========================================================================
-    // GUARDAR PRE
+    // GUARDAR RESULTADO PRE
     // =========================================================================
 
     public PreOperacionResultado GuardarResultadoPre(
@@ -309,6 +310,11 @@ public class PreExtraordinarioService
                     "No se pudo determinar la matrícula."
             };
         }
+
+        // =====================================================================
+        // PRE SOLO ADMITE 0 A 6.
+        // NP CANCELADO.
+        // =====================================================================
 
         if (resultado < 0 ||
             resultado > 6)
@@ -345,39 +351,72 @@ public class PreExtraordinarioService
             string claveAlumno =
                 matricula.Trim();
 
-            // -------------------------------------------------------------
-            // SI YA HABÍA PRE, PRIMERO RESTAURAR EL ESTADO ANTERIOR
-            // -------------------------------------------------------------
+            string clavePre =
+                ObtenerClavePre(
+                    claveMateriaBase);
 
             var estadoAnterior =
                 ObtenerEstadoPre(
                     claveMateriaBase,
                     claveAlumno);
 
-            if (estadoAnterior.TienePRE)
-            {
-                var restauracion =
-                    RestaurarOriginalesDePre(
-                        claveMateriaBase,
-                        claveAlumno,
-                        alumno,
-                        eliminarRegistroPre: true);
-
-                if (!restauracion.Exito)
-                    return restauracion;
-            }
+            // =====================================================================
+            // CARGAR PRE
+            // =====================================================================
 
             var materiaPre =
                 _parcialJsonService.ObtenerMateria(
-                    $"{claveMateriaBase}_PRE");
+                    clavePre);
 
             materiaPre.Calificaciones ??=
                 new Dictionary<string, Dictionary<string, double>>(
                     StringComparer.OrdinalIgnoreCase);
 
-            // -------------------------------------------------------------
+            // =====================================================================
+            // SI EL PRE YA EXISTÍA Y CAMBIAMOS DE PA A PR:
+            //
+            // PRIMERO RESTAURAMOS EL ESTADO ORIGINAL PERSISTENTE.
+            // =====================================================================
+
+            if (estadoAnterior.TienePRE &&
+                estadoAnterior.Aprobado &&
+                resultado < 6)
+            {
+                var restauracion =
+                    RestaurarOriginalesPersistidos(
+                        claveMateriaBase,
+                        claveAlumno,
+                        alumno);
+
+                if (!restauracion.Exito)
+                    return restauracion;
+
+                // IMPORTANTE:
+                // NO destruimos PreOriginals.
+                // Se conserva porque el alumno sigue teniendo PRE,
+                // ahora como PR.
+                //
+                // Solo actualizamos su registro PRE.
+                LimpiarRegistroPre(
+                    materiaPre,
+                    claveAlumno);
+            }
+            else if (estadoAnterior.TienePRE)
+            {
+                // Si simplemente cambia de PR 3 a PR 5,
+                // no tocamos P1/P2/P3.
+                //
+                // Solo reemplazamos el registro PRE.
+                LimpiarRegistroPre(
+                    materiaPre,
+                    claveAlumno);
+            }
+
+            // =====================================================================
             // PRE REPROBADO: 0 A 5
-            // -------------------------------------------------------------
+            //
+            // LAS CALIFICACIONES ORIGINALES YA QUEDARON RESTAURADAS.
+            // =====================================================================
 
             if (resultado < 6)
             {
@@ -393,24 +432,24 @@ public class PreExtraordinarioService
                     aprobado: false);
 
                 _parcialJsonService.GuardarMateria(
-                    $"{claveMateriaBase}_PRE",
+                    clavePre,
                     materiaPre);
 
                 return new PreOperacionResultado
                 {
                     Exito = true,
                     Mensaje =
-                        "PRE registrado como PR. P2, P3 y SEM permanecen sin cambios."
+                        "PRE registrado como PR y se restauró el estado original del alumno."
                 };
             }
 
-            // -------------------------------------------------------------
+            // =====================================================================
             // PRE APROBADO = 6
-            // -------------------------------------------------------------
+            // =====================================================================
 
             if (!TryObtenerDouble(
                     alumno.Calificación["P1"],
-                    out double p1))
+                    out _))
             {
                 return new PreOperacionResultado
                 {
@@ -432,22 +471,21 @@ public class PreExtraordinarioService
                 _parcialJsonService.ObtenerMateria(
                     $"{claveMateriaBase}_P3");
 
-            if (m2 == null ||
+            if (m1 == null ||
+                m2 == null ||
                 m3 == null)
             {
                 return new PreOperacionResultado
                 {
                     Exito = false,
                     Mensaje =
-                        "No se pudieron cargar P2 y P3 desde LiteDB."
+                        "No se pudieron cargar P1, P2 y P3 desde LiteDB."
                 };
             }
 
-            m2.Actividades ??=
-                new List<ActividadParcial>();
-
-            m3.Actividades ??=
-                new List<ActividadParcial>();
+            m1.Calificaciones ??=
+                new Dictionary<string, Dictionary<string, double>>(
+                    StringComparer.OrdinalIgnoreCase);
 
             m2.Calificaciones ??=
                 new Dictionary<string, Dictionary<string, double>>(
@@ -457,132 +495,84 @@ public class PreExtraordinarioService
                 new Dictionary<string, Dictionary<string, double>>(
                     StringComparer.OrdinalIgnoreCase);
 
-            // -------------------------------------------------------------
-            // RESPALDAR P2 Y P3 ANTES DE TOCARLOS
-            // -------------------------------------------------------------
+            // =====================================================================
+            // RESPALDAR P1, P2 Y P3 EN PreOriginals
+            //
+            // ESTA ES LA PARTE IMPORTANTE QUE FALTABA.
+            // =====================================================================
 
-            m2.PreOriginals ??=
-                new Dictionary<string, PreOriginalData>(
-                    StringComparer.OrdinalIgnoreCase);
+            RespaldarOriginal(
+                m1,
+                claveAlumno);
 
-            m3.PreOriginals ??=
-                new Dictionary<string, PreOriginalData>(
-                    StringComparer.OrdinalIgnoreCase);
+            RespaldarOriginal(
+                m2,
+                claveAlumno);
 
-            if (!m2.PreOriginals.ContainsKey(
-                    claveAlumno))
-            {
-                m2.PreOriginals[claveAlumno] =
-                    new PreOriginalData
-                    {
-                        CapturasOriginal =
-                            ObtenerCapturasOriginales(
-                                m2,
-                                claveAlumno)
-                    };
-            }
+            RespaldarOriginal(
+                m3,
+                claveAlumno);
 
-            if (!m3.PreOriginals.ContainsKey(
-                    claveAlumno))
-            {
-                m3.PreOriginals[claveAlumno] =
-                    new PreOriginalData
-                    {
-                        CapturasOriginal =
-                            ObtenerCapturasOriginales(
-                                m3,
-                                claveAlumno)
-                    };
-            }
-
-            // -------------------------------------------------------------
-            // RESPALDAR SEM ORIGINAL
-            // -------------------------------------------------------------
+            // =====================================================================
+            // GUARDAR SEM ORIGINAL
+            // =====================================================================
 
             GuardarSemOriginalEnRegistroPre(
                 materiaPre,
                 claveAlumno,
                 alumno.Calificación["SEM"]);
 
-            // -------------------------------------------------------------
-            // FIJAR P1, P2 Y P3 EN 6.0
-            // -------------------------------------------------------------
+            // =====================================================================
+            // P1
+            // =====================================================================
 
-            foreach (var materia in
-                     new[] { m1, m2, m3 })
-            {
-                if (materia == null)
-                    continue;
+            AplicarSeisAlParcial(
+                m1,
+                claveAlumno);
 
-                materia.Calificaciones ??=
-                    new Dictionary<string, Dictionary<string, double>>(
-                        StringComparer.OrdinalIgnoreCase);
+            MarcarPreEnCaptura(
+                m1,
+                claveAlumno);
 
-                if (!materia.Calificaciones.TryGetValue(
-                        claveAlumno,
-                        out var captura) ||
-                    captura == null)
-                {
-                    captura =
-                        new Dictionary<string, double>(
-                            StringComparer.OrdinalIgnoreCase);
+            _parcialJsonService.GuardarMateria(
+                $"{claveMateriaBase}_P1",
+                m1);
 
-                    materia.Calificaciones[
-                        claveAlumno] =
-                        captura;
-                }
+            // =====================================================================
+            // P2
+            // =====================================================================
 
-                var actividadesActivas =
-                    materia.Actividades?
-                        .Where(
-                            a =>
-                                a != null &&
-                                a.Activa &&
-                                a.PuntajeMaximo > 0)
-                        .Take(4)
-                        .ToList()
-                    ?? new List<ActividadParcial>();
+            AplicarSeisAlParcial(
+                m2,
+                claveAlumno);
 
-                foreach (var actividad
-                         in actividadesActivas)
-                {
-                    string nombre =
-                        actividad.Nombre?.Trim()
-                        ?? string.Empty;
+            MarcarPreEnCaptura(
+                m2,
+                claveAlumno);
 
-                    if (string.IsNullOrWhiteSpace(
-                            nombre))
-                    {
-                        continue;
-                    }
+            _parcialJsonService.GuardarMateria(
+                $"{claveMateriaBase}_P2",
+                m2);
 
-                    double valor =
-                        actividad.PuntajeMaximo *
-                        0.6;
+            // =====================================================================
+            // P3
+            // =====================================================================
 
-                    captura[nombre] =
-                        valor;
-                }
+            AplicarSeisAlParcial(
+                m3,
+                claveAlumno);
 
-                MarcarPreEnCaptura(
-                    materia,
-                    claveAlumno);
+            MarcarPreEnCaptura(
+                m3,
+                claveAlumno);
 
-                string sufijo =
-                    ReferenceEquals(
-                        materia,
-                        m2)
-                        ? "P2"
-                        : "P3";
+            _parcialJsonService.GuardarMateria(
+                $"{claveMateriaBase}_P3",
+                m3);
 
-                _parcialJsonService.GuardarMateria(
-                    $"{claveMateriaBase}_{sufijo}",
-                    materia);
-            }
-
-            // -------------------------------------------------------------
-            // ACTUALIZAR MAINVIEWMODEL
-            // -------------------------------------------------------------
+            // =====================================================================
+            // ACTUALIZAR ALUMNO EN MEMORIA
+            // =====================================================================
 
             alumno.Calificación["P1"] =
                 "6.0";
@@ -596,9 +586,9 @@ public class PreExtraordinarioService
             alumno.Calificación["SEM"] =
                 "6";
 
-            // -------------------------------------------------------------
+            // =====================================================================
             // REGISTRAR PRE APROBADO
-            // -------------------------------------------------------------
+            // =====================================================================
 
             RegistrarEstadoPre(
                 materiaPre,
@@ -607,14 +597,14 @@ public class PreExtraordinarioService
                 aprobado: true);
 
             _parcialJsonService.GuardarMateria(
-                $"{claveMateriaBase}_PRE",
+                clavePre,
                 materiaPre);
 
             return new PreOperacionResultado
             {
                 Exito = true,
                 Mensaje =
-                    "PRE aprobado. P1, P2 y P3 fijados a 6.0; SEM = 6; Estado = PA."
+                    "PRE aprobado. Se respaldaron P1, P2 y P3 y se aplicó 6.0."
             };
         }
         catch (Exception ex)
@@ -629,7 +619,256 @@ public class PreExtraordinarioService
     }
 
     // =========================================================================
-    // REVERTIR PRE
+    // RESPALDAR ORIGINAL EN PreOriginals
+    // =========================================================================
+
+    private void RespaldarOriginal(
+        MateriaParcial materia,
+        string matricula)
+    {
+        materia.PreOriginals ??=
+            new Dictionary<string, PreOriginalData>(
+                StringComparer.OrdinalIgnoreCase);
+
+        // No sobrescribir jamás el original.
+        if (materia.PreOriginals.ContainsKey(
+                matricula))
+        {
+            return;
+        }
+
+        materia.PreOriginals[
+            matricula] =
+            new PreOriginalData
+            {
+                CapturasOriginal =
+                    ObtenerCapturasOriginales(
+                        materia,
+                        matricula)
+            };
+    }
+
+    // =========================================================================
+    // APLICAR 6 AL PARCIAL
+    // =========================================================================
+
+    private void AplicarSeisAlParcial(
+        MateriaParcial materia,
+        string matricula)
+    {
+        if (materia == null)
+            return;
+
+        materia.Calificaciones ??=
+            new Dictionary<string, Dictionary<string, double>>(
+                StringComparer.OrdinalIgnoreCase);
+
+        if (!materia.Calificaciones.TryGetValue(
+                matricula,
+                out var capturas) ||
+            capturas == null)
+        {
+            capturas =
+                new Dictionary<string, double>(
+                    StringComparer.OrdinalIgnoreCase);
+
+            materia.Calificaciones[
+                matricula] =
+                capturas;
+        }
+
+        var actividades =
+            materia.Actividades?
+                .Where(
+                    a =>
+                        a != null &&
+                        a.Activa &&
+                        !string.IsNullOrWhiteSpace(
+                            a.Nombre) &&
+                        a.PuntajeMaximo > 0)
+                .Take(4)
+                .ToList()
+            ?? new List<ActividadParcial>();
+
+        foreach (var actividad in actividades)
+        {
+            capturas[
+                actividad.Nombre.Trim()] =
+                actividad.PuntajeMaximo *
+                0.6;
+        }
+    }
+
+    // =========================================================================
+    // RESTAURAR ORIGINALES PERSISTIDOS
+    // =========================================================================
+
+    private PreOperacionResultado RestaurarOriginalesPersistidos(
+        string claveMateriaBase,
+        string matricula,
+        Alumno alumno)
+    {
+        try
+        {
+            var materiaP1 =
+                _parcialJsonService.ObtenerMateria(
+                    $"{claveMateriaBase}_P1");
+
+            var materiaP2 =
+                _parcialJsonService.ObtenerMateria(
+                    $"{claveMateriaBase}_P2");
+
+            var materiaP3 =
+                _parcialJsonService.ObtenerMateria(
+                    $"{claveMateriaBase}_P3");
+
+            if (materiaP1 == null ||
+                materiaP2 == null ||
+                materiaP3 == null)
+            {
+                return new PreOperacionResultado
+                {
+                    Exito = false,
+                    Mensaje =
+                        "No se pudieron cargar P1, P2 y P3 para restaurar el estado original."
+                };
+            }
+
+            bool p1Restaurado =
+                RestaurarDesdePreOriginals(
+                    materiaP1,
+                    matricula);
+
+            bool p2Restaurado =
+                RestaurarDesdePreOriginals(
+                    materiaP2,
+                    matricula);
+
+            bool p3Restaurado =
+                RestaurarDesdePreOriginals(
+                    materiaP3,
+                    matricula);
+
+            if (p1Restaurado)
+            {
+                _parcialJsonService.GuardarMateria(
+                    $"{claveMateriaBase}_P1",
+                    materiaP1);
+
+                alumno.Calificación["P1"] =
+                    FormatearCalificacion(
+                        CalcularCalificacionDesdeMateria(
+                            materiaP1,
+                            matricula));
+            }
+
+            if (p2Restaurado)
+            {
+                _parcialJsonService.GuardarMateria(
+                    $"{claveMateriaBase}_P2",
+                    materiaP2);
+
+                alumno.Calificación["P2"] =
+                    FormatearCalificacion(
+                        CalcularCalificacionDesdeMateria(
+                            materiaP2,
+                            matricula));
+            }
+
+            if (p3Restaurado)
+            {
+                _parcialJsonService.GuardarMateria(
+                    $"{claveMateriaBase}_P3",
+                    materiaP3);
+
+                alumno.Calificación["P3"] =
+                    FormatearCalificacion(
+                        CalcularCalificacionDesdeMateria(
+                            materiaP3,
+                            matricula));
+            }
+
+            // =====================================================================
+            // SEM ORIGINAL
+            // =====================================================================
+
+            var materiaPre =
+                _parcialJsonService.ObtenerMateria(
+                    ObtenerClavePre(
+                        claveMateriaBase));
+
+            if (materiaPre?.Calificaciones != null &&
+                materiaPre.Calificaciones.TryGetValue(
+                    matricula,
+                    out var registroPre) &&
+                registroPre != null)
+            {
+                if (registroPre.TryGetValue(
+                        PreSemOriginalValido,
+                        out double valido) &&
+                    valido > 0 &&
+                    registroPre.TryGetValue(
+                        PreSemOriginal,
+                        out double semOriginal))
+                {
+                    alumno.Calificación["SEM"] =
+                        FormatearCalificacion(
+                            semOriginal);
+                }
+            }
+
+            return new PreOperacionResultado
+            {
+                Exito = true,
+                Mensaje =
+                    "P1, P2, P3 y SEM fueron restaurados desde los respaldos originales."
+            };
+        }
+        catch (Exception ex)
+        {
+            return new PreOperacionResultado
+            {
+                Exito = false,
+                Mensaje =
+                    $"Error restaurando originales: {ex.Message}"
+            };
+        }
+    }
+
+    // =========================================================================
+    // RESTAURAR MateriaParcial DESDE PreOriginals
+    // =========================================================================
+
+    private bool RestaurarDesdePreOriginals(
+        MateriaParcial materia,
+        string matricula)
+    {
+        if (materia?.PreOriginals == null)
+            return false;
+
+        if (!materia.PreOriginals.TryGetValue(
+                matricula,
+                out var original) ||
+            original == null)
+        {
+            return false;
+        }
+
+        materia.Calificaciones ??=
+            new Dictionary<string, Dictionary<string, double>>(
+                StringComparer.OrdinalIgnoreCase);
+
+        materia.Calificaciones[
+            matricula] =
+            new Dictionary<string, double>(
+                original.CapturasOriginal,
+                StringComparer.OrdinalIgnoreCase);
+
+        return true;
+    }
+
+    // =========================================================================
+    // REVERTIR PRE POR ALUMNO
     // =========================================================================
 
     public PreOperacionResultado RevertirPrePorAlumno(
@@ -673,50 +912,79 @@ public class PreExtraordinarioService
                             claveAlumno,
                             StringComparison.OrdinalIgnoreCase));
 
+            var estado =
+                ObtenerEstadoPre(
+                    claveMateriaBase,
+                    claveAlumno);
+
+            if (!estado.TienePRE)
+            {
+                return new PreOperacionResultado
+                {
+                    Exito = true,
+                    Mensaje =
+                        "El alumno no tiene un PRE registrado."
+                };
+            }
+
             var resultado =
-                RestaurarOriginalesDePre(
+                RestaurarOriginalesPersistidos(
                     claveMateriaBase,
                     claveAlumno,
-                    alumno,
-                    eliminarRegistroPre: true);
+                    alumno ??
+                    new Alumno
+                    {
+                        Matricula =
+                            claveAlumno
+                    });
 
             if (!resultado.Exito)
                 return resultado;
 
-            if (alumno != null)
+            // =====================================================================
+            // ELIMINAR REGISTRO PRE POR COMPLETO
+            //
+            // Esto es para "quitar PRE", no para PA -> PR.
+            // =====================================================================
+
+            var materiaPre =
+                _parcialJsonService.ObtenerMateria(
+                    ObtenerClavePre(
+                        claveMateriaBase));
+
+            if (materiaPre?.Calificaciones != null)
             {
-                var m2 =
-                    _parcialJsonService.ObtenerMateria(
-                        $"{claveMateriaBase}_P2");
+                materiaPre.Calificaciones.Remove(
+                    claveAlumno);
 
-                if (m2 != null)
-                {
-                    alumno.Calificación["P2"] =
-                        FormatearCalificacion(
-                            CalcularCalificacionDesdeMateria(
-                                m2,
-                                claveAlumno));
-                }
-
-                var m3 =
-                    _parcialJsonService.ObtenerMateria(
-                        $"{claveMateriaBase}_P3");
-
-                if (m3 != null)
-                {
-                    alumno.Calificación["P3"] =
-                        FormatearCalificacion(
-                            CalcularCalificacionDesdeMateria(
-                                m3,
-                                claveAlumno));
-                }
+                _parcialJsonService.GuardarMateria(
+                    ObtenerClavePre(
+                        claveMateriaBase),
+                    materiaPre);
             }
+
+            // =====================================================================
+            // AHORA SÍ ELIMINAMOS PreOriginals
+            // PORQUE EL PRE FUE ELIMINADO COMPLETAMENTE.
+            // =====================================================================
+
+            EliminarPreOriginal(
+                $"{claveMateriaBase}_P1",
+                claveAlumno);
+
+            EliminarPreOriginal(
+                $"{claveMateriaBase}_P2",
+                claveAlumno);
+
+            EliminarPreOriginal(
+                $"{claveMateriaBase}_P3",
+                claveAlumno);
 
             return new PreOperacionResultado
             {
                 Exito = true,
                 Mensaje =
-                    "PRE eliminado. P2, P3 y SEM fueron restaurados a sus valores originales."
+                    "PRE eliminado. P1, P2, P3, SEM y actividades fueron restaurados."
             };
         }
         catch (Exception ex)
@@ -730,168 +998,55 @@ public class PreExtraordinarioService
         }
     }
 
-    private PreOperacionResultado RestaurarOriginalesDePre(
-        string claveMateriaBase,
-        string matricula,
-        Alumno? alumno,
-        bool eliminarRegistroPre)
+    // =========================================================================
+    // ELIMINAR PreOriginals SOLO CUANDO EL PRE YA NO EXISTE
+    // =========================================================================
+
+    private void EliminarPreOriginal(
+        string claveMateria,
+        string matricula)
     {
-        try
+        var materia =
+            _parcialJsonService.ObtenerMateria(
+                claveMateria);
+
+        if (materia?.PreOriginals == null)
+            return;
+
+        if (!materia.PreOriginals.Remove(
+                matricula))
         {
-            var materiaPre =
-                _parcialJsonService.ObtenerMateria(
-                    $"{claveMateriaBase}_PRE");
-
-            string semOriginal =
-                string.Empty;
-
-            if (materiaPre?.Calificaciones != null &&
-                materiaPre.Calificaciones.TryGetValue(
-                    matricula,
-                    out var registroPre) &&
-                registroPre != null)
-            {
-                if (registroPre.TryGetValue(
-                        PreSemOriginalValido,
-                        out double valido) &&
-                    valido > 0 &&
-                    registroPre.TryGetValue(
-                        PreSemOriginal,
-                        out double semOriginalDouble))
-                {
-                    semOriginal =
-                        FormatearCalificacion(
-                            semOriginalDouble);
-                }
-            }
-
-            var m2 =
-                _parcialJsonService.ObtenerMateria(
-                    $"{claveMateriaBase}_P2");
-
-            if (m2?.PreOriginals != null &&
-                m2.PreOriginals.TryGetValue(
-                    matricula,
-                    out var original2) &&
-                original2 != null)
-            {
-                RestaurarMateriaParcial(
-                    m2,
-                    matricula,
-                    original2);
-
-                m2.PreOriginals.Remove(
-                    matricula);
-
-                if (m2.PreOriginals.Count == 0)
-                    m2.PreOriginals =
-                        null;
-
-                _parcialJsonService.GuardarMateria(
-                    $"{claveMateriaBase}_P2",
-                    m2);
-            }
-
-            var m3 =
-                _parcialJsonService.ObtenerMateria(
-                    $"{claveMateriaBase}_P3");
-
-            if (m3?.PreOriginals != null &&
-                m3.PreOriginals.TryGetValue(
-                    matricula,
-                    out var original3) &&
-                original3 != null)
-            {
-                RestaurarMateriaParcial(
-                    m3,
-                    matricula,
-                    original3);
-
-                m3.PreOriginals.Remove(
-                    matricula);
-
-                if (m3.PreOriginals.Count == 0)
-                    m3.PreOriginals =
-                        null;
-
-                _parcialJsonService.GuardarMateria(
-                    $"{claveMateriaBase}_P3",
-                    m3);
-            }
-
-            if (alumno != null)
-            {
-                if (!string.IsNullOrWhiteSpace(
-                        semOriginal))
-                {
-                    alumno.Calificación["SEM"] =
-                        semOriginal;
-                }
-
-                var m2Restaurado =
-                    _parcialJsonService.ObtenerMateria(
-                        $"{claveMateriaBase}_P2");
-
-                if (m2Restaurado != null)
-                {
-                    double p2Original =
-                        CalcularCalificacionDesdeMateria(
-                            m2Restaurado,
-                            matricula);
-
-                    alumno.Calificación["P2"] =
-                        FormatearCalificacion(
-                            p2Original);
-                }
-
-                var m3Restaurado =
-                    _parcialJsonService.ObtenerMateria(
-                        $"{claveMateriaBase}_P3");
-
-                if (m3Restaurado != null)
-                {
-                    double p3Original =
-                        CalcularCalificacionDesdeMateria(
-                            m3Restaurado,
-                            matricula);
-
-                    alumno.Calificación["P3"] =
-                        FormatearCalificacion(
-                            p3Original);
-                }
-            }
-
-            if (eliminarRegistroPre &&
-                materiaPre?.Calificaciones != null)
-            {
-                materiaPre.Calificaciones.Remove(
-                    matricula);
-
-                _parcialJsonService.GuardarMateria(
-                    $"{claveMateriaBase}_PRE",
-                    materiaPre);
-            }
-
-            return new PreOperacionResultado
-            {
-                Exito = true,
-                Mensaje =
-                    "Valores originales restaurados correctamente."
-            };
+            return;
         }
-        catch (Exception ex)
+
+        if (materia.PreOriginals.Count == 0)
         {
-            return new PreOperacionResultado
-            {
-                Exito = false,
-                Mensaje =
-                    $"Error restaurando PRE: {ex.Message}"
-            };
+            materia.PreOriginals =
+                null;
         }
+
+        _parcialJsonService.GuardarMateria(
+            claveMateria,
+            materia);
     }
 
     // =========================================================================
-    // REGISTRO PRE
+    // LIMPIAR SOLO EL REGISTRO PRE
+    // =========================================================================
+
+    private void LimpiarRegistroPre(
+        MateriaParcial materiaPre,
+        string matricula)
+    {
+        if (materiaPre.Calificaciones == null)
+            return;
+
+        materiaPre.Calificaciones.Remove(
+            matricula);
+    }
+
+    // =========================================================================
+    // REGISTRAR ESTADO PRE
     // =========================================================================
 
     private void RegistrarEstadoPre(
@@ -929,6 +1084,10 @@ public class PreExtraordinarioService
                 ? 1.0
                 : 0.0;
     }
+
+    // =========================================================================
+    // GUARDAR SEM ORIGINAL
+    // =========================================================================
 
     private void GuardarSemOriginalEnRegistroPre(
         MateriaParcial materiaPre,
@@ -977,6 +1136,10 @@ public class PreExtraordinarioService
         }
     }
 
+    // =========================================================================
+    // MARCAR PRE EN CAPTURA
+    // =========================================================================
+
     private void MarcarPreEnCaptura(
         MateriaParcial materia,
         string matricula)
@@ -1004,78 +1167,7 @@ public class PreExtraordinarioService
     }
 
     // =========================================================================
-    // AJUSTAR ACTIVIDADES
-    // =========================================================================
-
-    private bool AjustarActividadesParaCalificacion(
-        MateriaParcial materia,
-        string matricula,
-        double calificacionObjetivo)
-    {
-        if (materia == null)
-            return false;
-
-        var actividadesActivas =
-            materia.Actividades?
-                .Where(
-                    a =>
-                        a != null &&
-                        a.Activa &&
-                        !string.IsNullOrWhiteSpace(
-                            a.Nombre) &&
-                        a.PuntajeMaximo > 0)
-                .Take(4)
-                .ToList()
-            ?? new List<ActividadParcial>();
-
-        if (actividadesActivas.Count == 0)
-            return false;
-
-        materia.Calificaciones ??=
-            new Dictionary<string, Dictionary<string, double>>(
-                StringComparer.OrdinalIgnoreCase);
-
-        if (!materia.Calificaciones.TryGetValue(
-                matricula,
-                out var capturas) ||
-            capturas == null)
-        {
-            capturas =
-                new Dictionary<string, double>(
-                    StringComparer.OrdinalIgnoreCase);
-
-            materia.Calificaciones[
-                matricula] =
-                capturas;
-        }
-
-        double proporcion =
-            calificacionObjetivo / 10.0;
-
-        foreach (var actividad in
-                 actividadesActivas)
-        {
-            double nuevoPuntaje =
-                actividad.PuntajeMaximo *
-                proporcion;
-
-            nuevoPuntaje =
-                Math.Max(
-                    0.0,
-                    Math.Min(
-                        actividad.PuntajeMaximo,
-                        nuevoPuntaje));
-
-            capturas[
-                actividad.Nombre.Trim()] =
-                nuevoPuntaje;
-        }
-
-        return true;
-    }
-
-    // =========================================================================
-    // CALCULAR PARCIAL DESDE LAS ACTIVIDADES
+    // CALCULAR CALIFICACIÓN DESDE ACTIVIDADES
     // =========================================================================
 
     private double CalcularCalificacionDesdeMateria(
@@ -1159,62 +1251,13 @@ public class PreExtraordinarioService
                 porcentajeNormalizado;
         }
 
-        decimal calificacion =
-            acumulado /
-            10m;
-
-        return (double)calificacion;
+        return (double)(
+            acumulado / 10m);
     }
 
     // =========================================================================
-    // RESTAURAR ACTIVIDADES
+    // CAPTURAS ORIGINALES
     // =========================================================================
-
-    private void RestaurarMateriaParcial(
-        MateriaParcial materia,
-        string matricula,
-        PreOriginalData original)
-    {
-        if (materia == null ||
-            original == null)
-        {
-            return;
-        }
-
-        materia.Calificaciones ??=
-            new Dictionary<string, Dictionary<string, double>>(
-                StringComparer.OrdinalIgnoreCase);
-
-        materia.Calificaciones[
-            matricula] =
-            new Dictionary<string, double>(
-                original.CapturasOriginal,
-                StringComparer.OrdinalIgnoreCase);
-    }
-
-    private void RestaurarMateriaParcial(
-        MateriaParcial materia,
-        string matricula)
-    {
-        if (materia == null)
-            return;
-
-        if (materia.PreOriginals == null)
-            return;
-
-        if (!materia.PreOriginals.TryGetValue(
-                matricula,
-                out var original) ||
-            original == null)
-        {
-            return;
-        }
-
-        RestaurarMateriaParcial(
-            materia,
-            matricula,
-            original);
-    }
 
     private Dictionary<string, double>
         ObtenerCapturasOriginales(
@@ -1252,7 +1295,8 @@ public class PreExtraordinarioService
         {
             var materiaPre =
                 _parcialJsonService.ObtenerMateria(
-                    $"{claveMateriaBase}_PRE");
+                    ObtenerClavePre(
+                        claveMateriaBase));
 
             if (materiaPre?.Calificaciones == null)
                 return;
@@ -1267,18 +1311,27 @@ public class PreExtraordinarioService
                                 StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
-            foreach (var matricula
-                     in matriculas)
+            foreach (var matricula in
+                     matriculas)
             {
                 RevertirPrePorAlumno(
                     claveMateriaBase,
                     matricula);
             }
 
+            materiaPre =
+                _parcialJsonService.ObtenerMateria(
+                    ObtenerClavePre(
+                        claveMateriaBase));
+
+            if (materiaPre?.Calificaciones == null)
+                return;
+
             materiaPre.Calificaciones.Clear();
 
             _parcialJsonService.GuardarMateria(
-                $"{claveMateriaBase}_PRE",
+                ObtenerClavePre(
+                    claveMateriaBase),
                 materiaPre);
         }
         catch
@@ -1288,6 +1341,8 @@ public class PreExtraordinarioService
 
     // =========================================================================
     // COMPATIBILIDAD
+    //
+    // NO convierte nuevamente en 6 a alguien que ya tiene PRE.
     // =========================================================================
 
     public void AplicarAjusteParciales(
@@ -1306,6 +1361,20 @@ public class PreExtraordinarioService
             if (alumno == null)
                 continue;
 
+            if (string.IsNullOrWhiteSpace(
+                    alumno.Matricula))
+            {
+                continue;
+            }
+
+            var estadoPre =
+                ObtenerEstadoPre(
+                    claveMateriaBase,
+                    alumno.Matricula);
+
+            if (estadoPre.TienePRE)
+                continue;
+
             if (!EsSemestralReprobada(
                     alumno.Calificación["SEM"]))
             {
@@ -1321,7 +1390,161 @@ public class PreExtraordinarioService
     }
 
     // =========================================================================
-    // LISTADO DE ELEGIBLES
+    // APLICAR ESTADO PRE PERSISTIDO AL CARGAR
+    //
+    // Este método NO elimina PRE y NO cambia la estructura del JSON.
+    //
+    // PA:
+    //   se conservan los 6 ya persistidos.
+    //
+    // PR:
+    //   se restauran P1/P2/P3 desde PreOriginals y SEM desde
+    //   __PRE_SEM_ORIGINAL__.
+    // =========================================================================
+
+    public void AplicarEstadoPersistido(
+        string claveMateriaBase,
+        IEnumerable<Alumno> alumnos)
+    {
+        if (string.IsNullOrWhiteSpace(
+                claveMateriaBase))
+        {
+            return;
+        }
+
+        foreach (var alumno in
+                 alumnos ??
+                 Enumerable.Empty<Alumno>())
+        {
+            if (alumno == null ||
+                string.IsNullOrWhiteSpace(
+                    alumno.Matricula))
+            {
+                continue;
+            }
+
+            var estado =
+                ObtenerEstadoPre(
+                    claveMateriaBase,
+                    alumno.Matricula);
+
+            if (!estado.TienePRE)
+                continue;
+
+            if (estado.Aprobado &&
+                estado.Calificacion == 6)
+            {
+                alumno.Calificación["P1"] =
+                    "6.0";
+
+                alumno.Calificación["P2"] =
+                    "6.0";
+
+                alumno.Calificación["P3"] =
+                    "6.0";
+
+                alumno.Calificación["SEM"] =
+                    "6";
+
+                continue;
+            }
+
+            if (estado.Reprobado)
+            {
+                AplicarOriginalesPersistidosSinEliminarPRE(
+                    claveMateriaBase,
+                    alumno);
+            }
+        }
+    }
+
+    // =========================================================================
+    // APLICAR ORIGINALES SIN BORRAR PRE
+    // =========================================================================
+
+    private void AplicarOriginalesPersistidosSinEliminarPRE(
+        string claveMateriaBase,
+        Alumno alumno)
+    {
+        string matricula =
+            alumno.Matricula;
+
+        var materiaP1 =
+            _parcialJsonService.ObtenerMateria(
+                $"{claveMateriaBase}_P1");
+
+        var materiaP2 =
+            _parcialJsonService.ObtenerMateria(
+                $"{claveMateriaBase}_P2");
+
+        var materiaP3 =
+            _parcialJsonService.ObtenerMateria(
+                $"{claveMateriaBase}_P3");
+
+        if (materiaP1 != null &&
+            RestaurarDesdePreOriginals(
+                materiaP1,
+                matricula))
+        {
+            alumno.Calificación["P1"] =
+                FormatearCalificacion(
+                    CalcularCalificacionDesdeMateria(
+                        materiaP1,
+                        matricula));
+        }
+
+        if (materiaP2 != null &&
+            RestaurarDesdePreOriginals(
+                materiaP2,
+                matricula))
+        {
+            alumno.Calificación["P2"] =
+                FormatearCalificacion(
+                    CalcularCalificacionDesdeMateria(
+                        materiaP2,
+                        matricula));
+        }
+
+        if (materiaP3 != null &&
+            RestaurarDesdePreOriginals(
+                materiaP3,
+                matricula))
+        {
+            alumno.Calificación["P3"] =
+                FormatearCalificacion(
+                    CalcularCalificacionDesdeMateria(
+                        materiaP3,
+                        matricula));
+        }
+
+        var materiaPre =
+            _parcialJsonService.ObtenerMateria(
+                ObtenerClavePre(
+                    claveMateriaBase));
+
+        if (materiaPre?.Calificaciones != null &&
+            materiaPre.Calificaciones.TryGetValue(
+                matricula,
+                out var registroPre) &&
+            registroPre != null)
+        {
+            if (registroPre.TryGetValue(
+                    PreSemOriginalValido,
+                    out double valido) &&
+                valido > 0 &&
+                registroPre.TryGetValue(
+                    PreSemOriginal,
+                    out double semOriginal))
+            {
+                alumno.Calificación["SEM"] =
+                    FormatearCalificacion(
+                        semOriginal);
+            }
+        }
+    }
+
+    // =========================================================================
+    // LISTADO ELEGIBLES
     // =========================================================================
 
     public List<(string Matricula, string Grupo)>
@@ -1373,6 +1596,10 @@ public class PreExtraordinarioService
 
         return lista;
     }
+
+    // =========================================================================
+    // GUARDAR LISTADO
+    // =========================================================================
 
     public void GuardarListadoAArchivo(
         IEnumerable<(string Matricula, string Grupo)> lista,

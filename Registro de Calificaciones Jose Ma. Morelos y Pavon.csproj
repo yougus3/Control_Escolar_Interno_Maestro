@@ -13,20 +13,21 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 
-		<!-- Windows 32 bits -->
+		<!-- Windows 32 bits portátil -->
 		<PlatformTarget>x86</PlatformTarget>
 		<RuntimeIdentifier>win-x86</RuntimeIdentifier>
-
-
 
 		<!-- Publicación independiente de .NET -->
 		<SelfContained>true</SelfContained>
 
-		<!-- Todo dentro de un solo EXE -->
+		<!-- Todo dentro de un solo EXE puro -->
 		<PublishSingleFile>true</PublishSingleFile>
 
-		<!-- Incluye las DLL nativas dentro del EXE -->
+		<!-- Incluye las DLL nativas de WebView2 dentro del EXE -->
 		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+
+		<!-- BLOQUEA LA CARPETA LATOFONT EXTERNA DE QUESTPDF -->
+		<QuestPDF_Runtime_ExtractFonts>false</QuestPDF_Runtime_ExtractFonts>
 
 		<!-- Recursos -->
 		<SatelliteResourceLanguages>none</SatelliteResourceLanguages>
@@ -51,25 +52,12 @@
 		<PackageReference Include="PdfSharpCore" Version="1.3.40" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<None Update="Data\**\*">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
-
+	<!-- Eliminamos por completo las instrucciones que antes clonaban o copiaban físicamente la carpeta Data -->
 	<ItemGroup>
 		<None Remove="logo.jpg" />
-
-		<Content Include="logo.ico">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</Content>
-
-		<Resource Include="logo.jpg">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</Resource>
-
+		<Content Include="logo.ico" />
+		<Resource Include="logo.jpg" />
 		<None Remove="Data\public.key" />
-
 		<Resource Include="Data\public.key" />
 	</ItemGroup>
 

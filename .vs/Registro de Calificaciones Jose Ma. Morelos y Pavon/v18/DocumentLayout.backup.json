@@ -1,0 +1,466 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\views\\passwordwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:views\\passwordwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\views\\parcialesview.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:views\\parcialesview.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\viewmodels\\mainviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:viewmodels\\mainviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\views\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:views\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\views\\passwordwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:views\\passwordwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\views\\parcialesview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:views\\parcialesview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Gustavo\\AppData\\Local\\Temp\\.vsdbgsrc\\5777f8f58c79eefc910c22f36dc6e3ab0978bdf3164b059da877268b9413cda6\\XamlReader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\viewmodels\\parcialesviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:viewmodels\\parcialesviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\services\\datasyncservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:services\\datasyncservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\services\\configuracionparcialesservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:services\\configuracionparcialesservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\services\\sqliteservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:services\\sqliteservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\services\\preextraordinarioservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:services\\preextraordinarioservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\views\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:views\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Gustavo\\.copilot\\plans\\plan-mover-configuracin-global-a-parciales.db.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|MarkdownSecurePreview"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\services\\capparserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:services\\capparserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Gustavo\\.copilot\\plans\\plan-aadir-icono-de-porcentaje-y-ventana-modal-noevaluadoswindow.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|MarkdownSecurePreview"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\views\\modals\\porcentajeswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:views\\modals\\porcentajeswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\views\\preextraordinarioview.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:views\\preextraordinarioview.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\views\\configuracionparcialeswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:views\\configuracionparcialeswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\services\\reportecalificacionespdfservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:services\\reportecalificacionespdfservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\views\\preextraordinarioview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:views\\preextraordinarioview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\views\\semestralview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:views\\semestralview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\utilities\\numberutils.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:utilities\\numberutils.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\views\\configuracionparcialeswindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:views\\configuracionparcialeswindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Data\\grupo.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Data\\grupo.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\views\\modals\\porcentajeswindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:views\\modals\\porcentajeswindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|c:\\users\\gustavo\\documents\\control_escolar_interno_maestro\\models\\configuracionparciales.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D300BBE-A03D-4984-8080-200E50A43A60}|Registro de Calificaciones Jose Ma. Morelos y Pavon.csproj|solutionrelative:models\\configuracionparciales.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ParcialesView.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\ParcialesView.xaml.cs",
+              "RelativeDocumentMoniker": "Views\\ParcialesView.xaml.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\ParcialesView.xaml.cs",
+              "RelativeToolTip": "Views\\ParcialesView.xaml.cs",
+              "ViewState": "AgIAADsCAAAAAAAAAIAwwHMEAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-24T14:48:07.438Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "PasswordWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\PasswordWindow.xaml.cs",
+              "RelativeDocumentMoniker": "Views\\PasswordWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\PasswordWindow.xaml.cs*",
+              "RelativeToolTip": "Views\\PasswordWindow.xaml.cs*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAABlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-08T20:08:47.293Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "MainViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\ViewModels\\MainViewModel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\MainViewModel.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\ViewModels\\MainViewModel.cs",
+              "RelativeToolTip": "ViewModels\\MainViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-07T18:36:23.495Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "Views\\MainWindow.xaml",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\MainWindow.xaml",
+              "RelativeToolTip": "Views\\MainWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-08-21T17:11:26.863Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "PasswordWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\PasswordWindow.xaml",
+              "RelativeDocumentMoniker": "Views\\PasswordWindow.xaml",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\PasswordWindow.xaml",
+              "RelativeToolTip": "Views\\PasswordWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-09-08T20:08:41.587Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ParcialesView.xaml",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\ParcialesView.xaml",
+              "RelativeDocumentMoniker": "Views\\ParcialesView.xaml",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\ParcialesView.xaml",
+              "RelativeToolTip": "Views\\ParcialesView.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-08-24T14:48:52.068Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "XamlReader.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\AppData\\Local\\Temp\\.vsdbgsrc\\5777f8f58c79eefc910c22f36dc6e3ab0978bdf3164b059da877268b9413cda6\\XamlReader.cs",
+              "RelativeDocumentMoniker": "..\\..\\AppData\\Local\\Temp\\.vsdbgsrc\\5777f8f58c79eefc910c22f36dc6e3ab0978bdf3164b059da877268b9413cda6\\XamlReader.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\AppData\\Local\\Temp\\.vsdbgsrc\\5777f8f58c79eefc910c22f36dc6e3ab0978bdf3164b059da877268b9413cda6\\XamlReader.cs [Solo lectura]",
+              "RelativeToolTip": "..\\..\\AppData\\Local\\Temp\\.vsdbgsrc\\5777f8f58c79eefc910c22f36dc6e3ab0978bdf3164b059da877268b9413cda6\\XamlReader.cs [Solo lectura]",
+              "ViewState": "AgIAAPIBAAAAAAAAAAAlwAECAAACAAAAAQAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-08T19:04:29.371Z",
+              "EditorCaption": " [Solo lectura]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "ParcialesViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\ViewModels\\ParcialesViewModel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\ParcialesViewModel.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\ViewModels\\ParcialesViewModel.cs",
+              "RelativeToolTip": "ViewModels\\ParcialesViewModel.cs",
+              "ViewState": "AgIAAMgGAAAAAAAAAAAAAP4FAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-24T14:40:51.8Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "DataSyncService.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Services\\DataSyncService.cs",
+              "RelativeDocumentMoniker": "Services\\DataSyncService.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Services\\DataSyncService.cs",
+              "RelativeToolTip": "Services\\DataSyncService.cs",
+              "ViewState": "AgIAAAEAAAAAAAAAAAAawAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-07T18:35:12.285Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "ConfiguracionParcialesService.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Services\\ConfiguracionParcialesService.cs",
+              "RelativeDocumentMoniker": "Services\\ConfiguracionParcialesService.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Services\\ConfiguracionParcialesService.cs",
+              "RelativeToolTip": "Services\\ConfiguracionParcialesService.cs",
+              "ViewState": "AgIAAAIAAAAAAAAAAAASwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-07T17:53:36.219Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "SqliteService.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Services\\SqliteService.cs",
+              "RelativeDocumentMoniker": "Services\\SqliteService.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Services\\SqliteService.cs",
+              "RelativeToolTip": "Services\\SqliteService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAJAAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-07T18:05:53.675Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "PreExtraordinarioService.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Services\\PreExtraordinarioService.cs",
+              "RelativeDocumentMoniker": "Services\\PreExtraordinarioService.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Services\\PreExtraordinarioService.cs",
+              "RelativeToolTip": "Services\\PreExtraordinarioService.cs",
+              "ViewState": "AgIAAIACAAAAAAAAAAAAAHwFAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-21T15:10:08.751Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "Views\\MainWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\MainWindow.xaml.cs",
+              "RelativeToolTip": "Views\\MainWindow.xaml.cs",
+              "ViewState": "AgIAADMAAAAAAAAAAAAAADMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-21T17:18:32.015Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "CapParserService.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Services\\CapParserService.cs",
+              "RelativeDocumentMoniker": "Services\\CapParserService.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Services\\CapParserService.cs",
+              "RelativeToolTip": "Services\\CapParserService.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAhwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-07T18:30:12.388Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "plan-mover-configuracin-global-a-parciales.db.md [Versi\u00F3n preliminar]",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\.copilot\\plans\\plan-mover-configuracin-global-a-parciales.db.md",
+              "RelativeDocumentMoniker": "..\\..\\.copilot\\plans\\plan-mover-configuracin-global-a-parciales.db.md",
+              "ToolTip": "C:\\Users\\Gustavo\\.copilot\\plans\\plan-mover-configuracin-global-a-parciales.db.md [Versi\u00F3n preliminar]",
+              "RelativeToolTip": "..\\..\\.copilot\\plans\\plan-mover-configuracin-global-a-parciales.db.md [Versi\u00F3n preliminar]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-09-08T05:19:52.142Z",
+              "EditorCaption": " [Versi\u00F3n preliminar]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "ConfiguracionParciales.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Models\\ConfiguracionParciales.cs",
+              "RelativeDocumentMoniker": "Models\\ConfiguracionParciales.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Models\\ConfiguracionParciales.cs",
+              "RelativeToolTip": "Models\\ConfiguracionParciales.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAIBQwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-07T17:53:13.186Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "grupo.json",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Data\\grupo.json",
+              "RelativeDocumentMoniker": "Data\\grupo.json",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Data\\grupo.json",
+              "RelativeToolTip": "Data\\grupo.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-09-02T14:57:57.447Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "plan-aadir-icono-de-porcentaje-y-ventana-modal-noevaluadoswindow.md [Versi\u00F3n preliminar]",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\.copilot\\plans\\plan-aadir-icono-de-porcentaje-y-ventana-modal-noevaluadoswindow.md",
+              "RelativeDocumentMoniker": "..\\..\\.copilot\\plans\\plan-aadir-icono-de-porcentaje-y-ventana-modal-noevaluadoswindow.md",
+              "ToolTip": "C:\\Users\\Gustavo\\.copilot\\plans\\plan-aadir-icono-de-porcentaje-y-ventana-modal-noevaluadoswindow.md [Versi\u00F3n preliminar]",
+              "RelativeToolTip": "..\\..\\.copilot\\plans\\plan-aadir-icono-de-porcentaje-y-ventana-modal-noevaluadoswindow.md [Versi\u00F3n preliminar]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-09-03T16:31:28.914Z",
+              "EditorCaption": " [Versi\u00F3n preliminar]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "PorcentajesWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\Modals\\PorcentajesWindow.xaml",
+              "RelativeDocumentMoniker": "Views\\Modals\\PorcentajesWindow.xaml",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\Modals\\PorcentajesWindow.xaml",
+              "RelativeToolTip": "Views\\Modals\\PorcentajesWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-09-03T16:30:18.24Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "PorcentajesWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\Modals\\PorcentajesWindow.xaml.cs",
+              "RelativeDocumentMoniker": "Views\\Modals\\PorcentajesWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\Modals\\PorcentajesWindow.xaml.cs",
+              "RelativeToolTip": "Views\\Modals\\PorcentajesWindow.xaml.cs",
+              "ViewState": "AgIAACAAAAAAAAAAAIBJwCIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-03T16:30:25.755Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "PreextraordinarioView.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\PreextraordinarioView.xaml.cs",
+              "RelativeDocumentMoniker": "Views\\PreextraordinarioView.xaml.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\PreextraordinarioView.xaml.cs",
+              "RelativeToolTip": "Views\\PreextraordinarioView.xaml.cs",
+              "ViewState": "AgIAAOEDAAAAAAAAAADwv/oDAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-21T16:47:30.611Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "ConfiguracionParcialesWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\ConfiguracionParcialesWindow.xaml",
+              "RelativeDocumentMoniker": "Views\\ConfiguracionParcialesWindow.xaml",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\ConfiguracionParcialesWindow.xaml",
+              "RelativeToolTip": "Views\\ConfiguracionParcialesWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-09-01T21:03:37.396Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "ReporteCalificacionesPdfService.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Services\\ReporteCalificacionesPdfService.cs",
+              "RelativeDocumentMoniker": "Services\\ReporteCalificacionesPdfService.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Services\\ReporteCalificacionesPdfService.cs",
+              "RelativeToolTip": "Services\\ReporteCalificacionesPdfService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAHkGAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-01T16:10:12.521Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "ConfiguracionParcialesWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\ConfiguracionParcialesWindow.xaml.cs",
+              "RelativeDocumentMoniker": "Views\\ConfiguracionParcialesWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\ConfiguracionParcialesWindow.xaml.cs",
+              "RelativeToolTip": "Views\\ConfiguracionParcialesWindow.xaml.cs",
+              "ViewState": "AgIAANMFAAAAAAAAAIBJwK4FAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-01T21:04:11.984Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "NumberUtils.cs",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Utilities\\NumberUtils.cs",
+              "RelativeDocumentMoniker": "Utilities\\NumberUtils.cs",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Utilities\\NumberUtils.cs",
+              "RelativeToolTip": "Utilities\\NumberUtils.cs",
+              "ViewState": "AgIAADQAAAAAAAAAAIBJwFIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-01T17:00:51.036Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "PreextraordinarioView.xaml",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\PreextraordinarioView.xaml",
+              "RelativeDocumentMoniker": "Views\\PreextraordinarioView.xaml",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\PreextraordinarioView.xaml",
+              "RelativeToolTip": "Views\\PreextraordinarioView.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-08-21T16:57:08.714Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "SemestralView.xaml",
+              "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\SemestralView.xaml",
+              "RelativeDocumentMoniker": "Views\\SemestralView.xaml",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\SemestralView.xaml",
+              "RelativeToolTip": "Views\\SemestralView.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-08-21T15:19:59.079Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+﻿using System.Windows;
+
+namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals
+{
+    public partial class PorcentajesWindow : Window
+    {
+        public PorcentajesWindow(decimal sumaPorcentajes, double maxPuntaje)
+        {
+            InitializeComponent();
+
+            TbSumaPorcentajes.Text = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0}%", sumaPorcentajes);
+            TbMaxPuntaje.Text = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.##}", maxPuntaje);
+        }
+
+        private void Cerrar_Click(object sender, RoutedEventArgs e)
+        {
+            this.DialogResult = true;
+            this.Close();
+        }
+    }
+}
