@@ -142,6 +142,193 @@ public class ReporteCalificacionesPdfService
             });
         }).GeneratePdf();
     }
+    
+    // ============================================================
+// GENERAR DATOS PARA EXPORTACIÓN JSON
+//
+// Utiliza exactamente la misma lógica del PDF para:
+//
+// P1
+// P2
+// P3
+// SEM
+// PREEXTRAORDINARIO
+//
+// NO modifica la lógica existente del PDF.
+// ============================================================
+public ExportacionMateriaJson GenerarDatosExportacionJson()
+{
+    CargarDatos();
+
+    var materia =
+        new ExportacionMateriaJson
+        {
+            ArchivoCap =
+                Path.GetFileName(
+                    _capFilePath),
+
+            ClaveMateria =
+                !string.IsNullOrWhiteSpace(
+                    _claveAsignatura)
+                    ? _claveAsignatura
+                    : _capBaseName
+        };
+
+    foreach (Alumno alumno in _alumnos)
+    {
+        if (alumno == null)
+            continue;
+
+        string matricula =
+            alumno.Matricula?
+                .Trim()
+            ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(
+                matricula))
+        {
+            continue;
+        }
+
+        string nombreAlumno =
+            alumno.Nombre?
+                .Trim()
+            ?? string.Empty;
+
+        // ========================================================
+        // P1
+        // ========================================================
+
+        string p1 =
+            ObtenerCalificacionParcialReporte(
+                alumno,
+                _parcialP1,
+                "P1");
+
+        AgregarAlumnoSiTieneCalificacion(
+            materia.Evaluaciones.P1,
+            matricula,
+            nombreAlumno,
+            p1);
+
+        // ========================================================
+        // P2
+        // ========================================================
+
+        string p2 =
+            ObtenerCalificacionParcialReporte(
+                alumno,
+                _parcialP2,
+                "P2");
+
+        AgregarAlumnoSiTieneCalificacion(
+            materia.Evaluaciones.P2,
+            matricula,
+            nombreAlumno,
+            p2);
+
+        // ========================================================
+        // P3
+        // ========================================================
+
+        string p3 =
+            ObtenerCalificacionParcialReporte(
+                alumno,
+                _parcialP3,
+                "P3");
+
+        AgregarAlumnoSiTieneCalificacion(
+            materia.Evaluaciones.P3,
+            matricula,
+            nombreAlumno,
+            p3);
+
+        // ========================================================
+        // SEM
+        //
+        // Usa exactamente ObtenerSemReporte().
+        // ========================================================
+
+        string sem =
+            ObtenerSemReporte(
+                alumno);
+
+        AgregarAlumnoSiTieneCalificacion(
+            materia.Evaluaciones.SEM,
+            matricula,
+            nombreAlumno,
+            sem);
+
+        // ========================================================
+        // PREEXTRAORDINARIO
+        //
+        // PRE solamente maneja valores numéricos.
+        // No se exporta NP.
+        // ========================================================
+
+        PreEstado estadoPre =
+            ObtenerEstadoPre(
+                matricula);
+
+        if (estadoPre.TienePRE &&
+            estadoPre.Calificacion.HasValue)
+        {
+            materia
+                .Evaluaciones
+                .PREEXTRAORDINARIO
+                .Add(
+                    new ExportacionAlumnoJson
+                    {
+                        Matricula =
+                            matricula,
+
+                        NombreAlumno =
+                            nombreAlumno,
+
+                        Calificacion =
+                            estadoPre.Calificacion.Value
+                    });
+        }
+    }
+
+    return materia;
+}
+
+// ============================================================
+// AGREGAR ALUMNO CON CALIFICACIÓN
+// ============================================================
+private void AgregarAlumnoSiTieneCalificacion(
+    List<ExportacionAlumnoJson> destino,
+    string matricula,
+    string nombreAlumno,
+    string valor)
+{
+    if (string.IsNullOrWhiteSpace(
+            valor))
+    {
+        return;
+    }
+
+    if (!TryObtenerDouble(
+            valor,
+            out double calificacion))
+    {
+        return;
+    }
+
+    destino.Add(
+        new ExportacionAlumnoJson
+        {
+            Matricula =
+                matricula,
+
+            NombreAlumno =
+                nombreAlumno,
+
+            Calificacion =
+                calificacion
+        });
+}
 
     // ============================================================
     // CARGAR DATOS
@@ -1982,6 +2169,7 @@ public class ReporteCalificacionesPdfService
             "\n",
             texto.ToCharArray());
     }
+    
 
     // ============================================================
     // PIE

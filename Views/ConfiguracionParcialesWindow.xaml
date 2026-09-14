@@ -1324,14 +1324,21 @@
                                         Style="{StaticResource PrimaryButtonStyle}" />
 
                                     <Button
+                                        Content="EXPORTAR JSON"
+                                        Width="160"
+                                        Height="44"
+                                        Margin="0,0,10,0"
+                                        Click="ExportarJson_Click"
+                                        Style="{StaticResource SecondaryButtonStyle}" />
+
+                                    <Button
                                         Content="ENVIAR CALIFICACIONES"
                                         Width="230"
                                         Height="44"
                                         Click="EnviarCalificaciones_Click"
                                         IsEnabled="{Binding PuedeEnviarCorreo,
-                                                            Mode=OneWay}"
+                        Mode=OneWay}"
                                         Style="{StaticResource SuccessButtonStyle}" />
-
                                 </StackPanel>
 
                             </Grid>

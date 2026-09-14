@@ -1,69 +1,69 @@
-﻿<Window x:Class="Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.PdfViewerWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
-        Title="Vista previa del PDF"
-        WindowState="Maximized"
-        Width="1100"
-        Height="760"
-        MinWidth="900"
-        MinHeight="600"
-        WindowStartupLocation="CenterOwner"
-        Background="#E5E7EB">
+﻿    <Window x:Class="Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.PdfViewerWindow"
+            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+            Title="Vista previa del PDF"
+            WindowState="Maximized"
+            Width="1100"
+            Height="760"
+            MinWidth="900"
+            MinHeight="600"
+            WindowStartupLocation="CenterOwner"
+            Background="#E5E7EB">
 
-    <Grid>
+        <Grid>
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="50"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <Border
-            Grid.Row="0"
-            Background="White"
-            BorderBrush="#D7DEE8"
-            BorderThickness="0,0,0,1">
+            <Border
+                Grid.Row="0"
+                Background="White"
+                BorderBrush="#D7DEE8"
+                BorderThickness="0,0,0,1">
 
-            <Grid Margin="14,0">
+                <Grid Margin="14,0">
 
-                <StackPanel
-                    Orientation="Horizontal"
-                    VerticalAlignment="Center">
+                    <StackPanel
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center">
 
-                    <TextBlock
-                        Text="Vista previa del PDF"
-                        FontSize="16"
-                        FontWeight="SemiBold"
-                        Foreground="#1B365D"
-                        VerticalAlignment="Center"/>
+                        <TextBlock
+                            Text="Vista previa del PDF"
+                            FontSize="16"
+                            FontWeight="SemiBold"
+                            Foreground="#1B365D"
+                            VerticalAlignment="Center"/>
 
-                    <TextBlock
-                        x:Name="TxtNombreArchivo"
-                        Margin="14,0,0,0"
-                        FontSize="11"
-                        Foreground="#64748B"
-                        VerticalAlignment="Center"
-                        TextTrimming="CharacterEllipsis"/>
+                        <TextBlock
+                            x:Name="TxtNombreArchivo"
+                            Margin="14,0,0,0"
+                            FontSize="11"
+                            Foreground="#64748B"
+                            VerticalAlignment="Center"
+                            TextTrimming="CharacterEllipsis"/>
 
-                </StackPanel>
-             
+                    </StackPanel>
+                 
 
-            </Grid>
+                </Grid>
 
-        </Border>
+            </Border>
 
-        <Border
-            Grid.Row="1"
-            Margin="8"
-            Background="#CBD5E1"
-            CornerRadius="6"
-            ClipToBounds="True">
+            <Border
+                Grid.Row="1"
+                Margin="8"
+                Background="#CBD5E1"
+                CornerRadius="6"
+                ClipToBounds="True">
 
-            <wv2:WebView2
-                x:Name="PdfWebView"/>
+                <wv2:WebView2
+                    x:Name="PdfWebView"/>
 
-        </Border>
+            </Border>
 
-    </Grid>
+        </Grid>
 
-</Window>
+    </Window>
