@@ -12,7 +12,8 @@
         Height="700"
         ResizeMode="CanMinimize"
         WindowStartupLocation="CenterScreen"
-        Background="#F1F5F9">
+        Background="#F1F5F9" 
+        Closing="Window_Closing">
 
     <Window.Resources>
 

@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Windows;
 using System.Windows.Media;
+using System.ComponentModel;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.ViewModels;
@@ -21,7 +22,50 @@ public partial class MainWindow : Window
 
         //this.MouseLeftButtonDown += MainWindow_MouseLeftButtonDown;
     }
+// ============================================================
+// CERRAR VENTANA CON CAMBIOS SIN GUARDAR
+// ============================================================
 
+    private void Window_Closing(
+        object? sender,
+        CancelEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm)
+            return;
+
+        var parcialesVm =
+            vm.ParcialesVm;
+
+        if (!parcialesVm.TieneCambios)
+            return;
+
+        var resultado =
+            MessageBox.Show(
+                "Hay cambios sin guardar. ¿Deseas guardar antes de salir?\n\n" +
+                "Sí = Guardar y salir\n" +
+                "No = Salir sin guardar\n" +
+                "Cancelar = Permanecer en la aplicación.",
+                "Cambios sin guardar",
+                MessageBoxButton.YesNoCancel,
+                MessageBoxImage.Warning);
+
+        if (resultado ==
+            MessageBoxResult.Cancel)
+        {
+            e.Cancel = true;
+            return;
+        }
+
+        if (resultado ==
+            MessageBoxResult.Yes)
+        {
+            parcialesVm.PrepararGuardado();
+            return;
+        }
+
+        // No = cerrar sin guardar
+    }
+    
     private void Configuracion_Click(
         object sender,
         RoutedEventArgs e)

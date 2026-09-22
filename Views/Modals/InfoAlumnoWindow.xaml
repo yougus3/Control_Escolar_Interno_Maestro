@@ -237,7 +237,7 @@
                                 <StackPanel>
 
                                     <TextBlock Text="{Binding Nombre}"
-                                               FontSize="16"
+                                               FontSize="18"
                                                FontWeight="Bold"
                                                Foreground="#1B365D"
                                                TextWrapping="Wrap"
@@ -256,13 +256,13 @@
                                                    Text="Matrícula:"
                                                    FontWeight="SemiBold"
                                                    Foreground="#64748B"
-                                                   FontSize="15" />
+                                                   FontSize="18" />
 
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Matricula}"
                                                    FontWeight="Bold"
                                                    Foreground="#334155"
-                                                   FontSize="15" />
+                                                   FontSize="18" />
 
                                     </Grid>
 
@@ -277,13 +277,13 @@
                                                    Text="Grupo:"
                                                    FontWeight="SemiBold"
                                                    Foreground="#64748B"
-                                                   FontSize="15" />
+                                                   FontSize="18" />
 
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Grupo}"
                                                    FontWeight="Bold"
                                                    Foreground="#334155"
-                                                   FontSize="15" />
+                                                   FontSize="18" />
 
                                     </Grid>
 
@@ -474,12 +474,12 @@
                                                 VerticalAlignment="Center">
 
                                         <TextBlock Text="{Binding P2Calif}"
-                                                   FontSize="15"
+                                                   FontSize="18"
                                                    FontWeight="SemiBold"
                                                    VerticalAlignment="Center" />
 
                                         <TextBlock Text="{Binding P2LeyendaFaltas}"
-                                                   FontSize="14"
+                                                   FontSize="18"
                                                    FontWeight="Bold"
                                                    Foreground="#D97706"
                                                    Margin="6,0,0,0"
@@ -515,7 +515,7 @@
                                                Text="{Binding P2Asistencia}"
                                                FontSize="18"
                                                Foreground="#475569"
-                                               Padding="12"
+                                               Padding="15"
                                                VerticalAlignment="Center" />
 
                                     <Border Grid.Row="2"
@@ -550,12 +550,12 @@
                                                 VerticalAlignment="Center">
 
                                         <TextBlock Text="{Binding P3Calif}"
-                                                   FontSize="15"
+                                                   FontSize="18"
                                                    FontWeight="SemiBold"
                                                    VerticalAlignment="Center" />
 
                                         <TextBlock Text="{Binding P3LeyendaFaltas}"
-                                                   FontSize="14"
+                                                   FontSize="18"
                                                    FontWeight="Bold"
                                                    Foreground="#D97706"
                                                    Margin="6,0,0,0"
@@ -623,7 +623,7 @@
                                     <TextBlock Grid.Row="4"
                                                Grid.Column="1"
                                                Text="{Binding PromedioParciales}"
-                                               FontSize="15"
+                                               FontSize="18"
                                                FontWeight="Bold"
                                                Foreground="#1B365D"
                                                Padding="12"
