@@ -840,7 +840,7 @@
                         Padding="20,0"
                         MinWidth="140"
                         Margin="15,0,12,0"
-                        ToolTip="Guardar calificaciones en el archivo JSON local"
+                        ToolTip="Guardar calificaciones"
                         HorizontalContentAlignment="Center"
                         VerticalContentAlignment="Center">
 

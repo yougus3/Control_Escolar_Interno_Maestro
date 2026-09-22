@@ -1300,7 +1300,8 @@
                                         Content="Evaluar asistencia en este parcial"
                                         FontSize="12"
                                         IsChecked="{Binding AsistenciaActiva, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                        Margin="0,0,0,6" />
+                                        Margin="0,0,0,6" 
+                                        Checked="AsistenciaActiva_Checked"/>
 
                                     <WrapPanel
                                         Orientation="Horizontal"
@@ -2083,6 +2084,33 @@
                                         Height="27"
                                         Margin="0,1">
 
+                                        <Grid.Style>
+
+                                            <Style
+                                                TargetType="Grid">
+
+                                                <Setter
+                                                    Property="Visibility"
+                                                    Value="Visible" />
+
+                                                <Style.Triggers>
+
+                                                    <DataTrigger
+                                                        Binding="{Binding AsistenciaActiva}"
+                                                        Value="False">
+
+                                                        <Setter
+                                                            Property="Visibility"
+                                                            Value="Collapsed" />
+
+                                                    </DataTrigger>
+
+                                                </Style.Triggers>
+
+                                            </Style>
+
+                                        </Grid.Style>
+
                                         <Grid.ColumnDefinitions>
 
                                             <ColumnDefinition Width="140" />
@@ -2100,16 +2128,23 @@
                                             FontSize="12"
                                             TextTrimming="CharacterEllipsis" />
 
-                                        <TextBox Grid.Column="1"
-                                                 Text="{Binding Inasistencias, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                 Height="22" VerticalContentAlignment="Center"
-                                                 HorizontalContentAlignment="Center" FontSize="12" Margin="2,0"
-                                                 MaxLength="3" Tag="NavegacionInasistencia"
-                                                 PreviewTextInput="NumerosEnteros_PreviewTextInput"
-                                                 DataObject.Pasting="Numeros_Pasting" KeyDown="PuntajeObtenido_KeyDown"
-                                                 PreviewKeyDown="PuntajesNavegacion_PreviewKeyDown"
-                                                 TextChanged="Puntaje_TextChanged" GotFocus="CampoSc_GotFocus"
-                                                 LostFocus="CampoSc_LostFocus">
+                                        <TextBox
+                                            Grid.Column="1"
+                                            Text="{Binding Inasistencias, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            Height="22"
+                                            VerticalContentAlignment="Center"
+                                            HorizontalContentAlignment="Center"
+                                            FontSize="12"
+                                            Margin="2,0"
+                                            MaxLength="3"
+                                            Tag="NavegacionInasistencia"
+                                            PreviewTextInput="NumerosEnteros_PreviewTextInput"
+                                            DataObject.Pasting="Numeros_Pasting"
+                                            KeyDown="PuntajeObtenido_KeyDown"
+                                            PreviewKeyDown="PuntajesNavegacion_PreviewKeyDown"
+                                            TextChanged="Puntaje_TextChanged"
+                                            GotFocus="CampoSc_GotFocus"
+                                            LostFocus="CampoSc_LostFocus">
 
                                             <TextBox.Style>
 
@@ -2142,7 +2177,6 @@
                                         </TextBox>
 
                                     </Grid>
-
                                     <!-- ======================================= -->
                                     <!-- LEYENDA                                  -->
                                     <!-- ======================================= -->

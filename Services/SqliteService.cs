@@ -47,10 +47,10 @@ public class SqliteService : IDisposable
         true;
 
     private const string SmtpUser =
-        "gustavomiranda@prefecotemixco.edu.mx";
+        "calificacionesautomaticas@prefecotemixco.edu.mx";
 
     private const string SmtpAppPassword =
-        "qiwv kanr twxa arxk";
+        "oycg anqn yewl fojp\n";
 
     // ============================================================
     // CLAVE CONFIGURACION.BIN

@@ -285,9 +285,103 @@ public partial class ParcialesViewModel : ObservableObject
     partial void OnAsistenciaActivaChanged(
         bool value)
     {
+        // ============================================================
+        // SOLO AL ACTIVAR ASISTENCIA MANUALMENTE:
+        // llenar con 0 las inasistencias que estén vacías.
+        //
+        // Durante la carga de un parcial NO se ejecuta esto.
+        // ============================================================
+
+        if (
+            value &&
+            !_cargando &&
+            _cargasActivas == 0 &&
+            !_suspendUserEditMarking)
+        {
+            InicializarInasistenciasVacias();
+        }
+
         RecalcularTodo(
             guardarJson: false);
     }
+    
+    private void InicializarInasistenciasVacias()
+{
+    foreach (var alumno in Alumnos)
+    {
+        if (alumno == null ||
+            string.IsNullOrWhiteSpace(alumno.Matricula))
+        {
+            continue;
+        }
+
+        // =========================================================
+        // OBTENER LAS CAPTURAS DEL ALUMNO
+        // =========================================================
+
+        if (
+            !_materia.Calificaciones.TryGetValue(
+                alumno.Matricula,
+                out var capturas))
+        {
+            capturas =
+                new Dictionary<string, double>(
+                    StringComparer.OrdinalIgnoreCase);
+
+            _materia.Calificaciones[
+                alumno.Matricula] =
+                capturas;
+        }
+
+        // =========================================================
+        // VACÍO = FALTA LA CAPTURA
+        //
+        // - No existe la clave
+        // - Tiene -1
+        //
+        // En cualquiera de esos casos ponemos 0.
+        // =========================================================
+
+        bool estaVacia =
+            !capturas.TryGetValue(
+                "__Inasistencias__",
+                out double valor) ||
+            valor < 0;
+
+        if (!estaVacia)
+            continue;
+
+        capturas[
+            "__Inasistencias__"] =
+            0.0;
+    }
+
+    // =========================================================
+    // ACTUALIZAR INMEDIATAMENTE EL ALUMNO QUE ESTÁ EN PANTALLA
+    // =========================================================
+
+    if (AlumnoSeleccionado != null &&
+        !string.IsNullOrWhiteSpace(
+            AlumnoSeleccionado.Matricula))
+    {
+        if (
+            _materia.Calificaciones.TryGetValue(
+                AlumnoSeleccionado.Matricula,
+                out var capturasActual) &&
+            capturasActual.TryGetValue(
+                "__Inasistencias__",
+                out double valorActual) &&
+            valorActual >= 0)
+        {
+            Inasistencias =
+                ((int)valorActual).ToString();
+        }
+        else
+        {
+            Inasistencias = "0";
+        }
+    }
+}
 
     partial void OnClasesTotalesChanged(
         string value)
@@ -2484,9 +2578,32 @@ public partial class ActividadParcialEditor : ObservableObject
             return raw;
         }
 
+        string texto =
+            raw.Trim();
+
+        // =========================================================
+        // PERMITIR DECIMAL INCOMPLETO DURANTE LA CAPTURA
+        //
+        // Ejemplo:
+        // 5
+        // 5.
+        // 5.5
+        //
+        // No convertir "5." a double todavía porque eso haría
+        // desaparecer el punto antes de que el usuario escriba
+        // el siguiente decimal.
+        // =========================================================
+
+        if (texto.EndsWith(
+                ".",
+                StringComparison.Ordinal))
+        {
+            return texto;
+        }
+
         if (
             double.TryParse(
-                raw,
+                texto,
                 System.Globalization.NumberStyles.Any,
                 CultureInfo.InvariantCulture,
                 out double d))

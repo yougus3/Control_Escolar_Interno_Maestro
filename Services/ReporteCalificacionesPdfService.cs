@@ -142,7 +142,7 @@ public class ReporteCalificacionesPdfService
             });
         }).GeneratePdf();
     }
-    
+
     // ============================================================
 // GENERAR DATOS PARA EXPORTACIÓN JSON
 //
@@ -156,179 +156,179 @@ public class ReporteCalificacionesPdfService
 //
 // NO modifica la lógica existente del PDF.
 // ============================================================
-public ExportacionMateriaJson GenerarDatosExportacionJson()
-{
-    CargarDatos();
-
-    var materia =
-        new ExportacionMateriaJson
-        {
-            ArchivoCap =
-                Path.GetFileName(
-                    _capFilePath),
-
-            ClaveMateria =
-                !string.IsNullOrWhiteSpace(
-                    _claveAsignatura)
-                    ? _claveAsignatura
-                    : _capBaseName
-        };
-
-    foreach (Alumno alumno in _alumnos)
+    public ExportacionMateriaJson GenerarDatosExportacionJson()
     {
-        if (alumno == null)
-            continue;
+        CargarDatos();
 
-        string matricula =
-            alumno.Matricula?
-                .Trim()
-            ?? string.Empty;
+        var materia =
+            new ExportacionMateriaJson
+            {
+                ArchivoCap =
+                    Path.GetFileName(
+                        _capFilePath),
 
-        if (string.IsNullOrWhiteSpace(
-                matricula))
+                ClaveMateria =
+                    !string.IsNullOrWhiteSpace(
+                        _claveAsignatura)
+                        ? _claveAsignatura
+                        : _capBaseName
+            };
+
+        foreach (Alumno alumno in _alumnos)
         {
-            continue;
+            if (alumno == null)
+                continue;
+
+            string matricula =
+                alumno.Matricula?
+                    .Trim()
+                ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(
+                    matricula))
+            {
+                continue;
+            }
+
+            string nombreAlumno =
+                alumno.Nombre?
+                    .Trim()
+                ?? string.Empty;
+
+            // ========================================================
+            // P1
+            // ========================================================
+
+            string p1 =
+                ObtenerCalificacionParcialReporte(
+                    alumno,
+                    _parcialP1,
+                    "P1");
+
+            AgregarAlumnoSiTieneCalificacion(
+                materia.Evaluaciones.P1,
+                matricula,
+                nombreAlumno,
+                p1);
+
+            // ========================================================
+            // P2
+            // ========================================================
+
+            string p2 =
+                ObtenerCalificacionParcialReporte(
+                    alumno,
+                    _parcialP2,
+                    "P2");
+
+            AgregarAlumnoSiTieneCalificacion(
+                materia.Evaluaciones.P2,
+                matricula,
+                nombreAlumno,
+                p2);
+
+            // ========================================================
+            // P3
+            // ========================================================
+
+            string p3 =
+                ObtenerCalificacionParcialReporte(
+                    alumno,
+                    _parcialP3,
+                    "P3");
+
+            AgregarAlumnoSiTieneCalificacion(
+                materia.Evaluaciones.P3,
+                matricula,
+                nombreAlumno,
+                p3);
+
+            // ========================================================
+            // SEM
+            //
+            // Usa exactamente ObtenerSemReporte().
+            // ========================================================
+
+            string sem =
+                ObtenerSemReporte(
+                    alumno);
+
+            AgregarAlumnoSiTieneCalificacion(
+                materia.Evaluaciones.SEM,
+                matricula,
+                nombreAlumno,
+                sem);
+
+            // ========================================================
+            // PREEXTRAORDINARIO
+            //
+            // PRE solamente maneja valores numéricos.
+            // No se exporta NP.
+            // ========================================================
+
+            PreEstado estadoPre =
+                ObtenerEstadoPre(
+                    matricula);
+
+            if (estadoPre.TienePRE &&
+                estadoPre.Calificacion.HasValue)
+            {
+                materia
+                    .Evaluaciones
+                    .PREEXTRAORDINARIO
+                    .Add(
+                        new ExportacionAlumnoJson
+                        {
+                            Matricula =
+                                matricula,
+
+                            NombreAlumno =
+                                nombreAlumno,
+
+                            Calificacion =
+                                estadoPre.Calificacion.Value
+                        });
+            }
         }
 
-        string nombreAlumno =
-            alumno.Nombre?
-                .Trim()
-            ?? string.Empty;
-
-        // ========================================================
-        // P1
-        // ========================================================
-
-        string p1 =
-            ObtenerCalificacionParcialReporte(
-                alumno,
-                _parcialP1,
-                "P1");
-
-        AgregarAlumnoSiTieneCalificacion(
-            materia.Evaluaciones.P1,
-            matricula,
-            nombreAlumno,
-            p1);
-
-        // ========================================================
-        // P2
-        // ========================================================
-
-        string p2 =
-            ObtenerCalificacionParcialReporte(
-                alumno,
-                _parcialP2,
-                "P2");
-
-        AgregarAlumnoSiTieneCalificacion(
-            materia.Evaluaciones.P2,
-            matricula,
-            nombreAlumno,
-            p2);
-
-        // ========================================================
-        // P3
-        // ========================================================
-
-        string p3 =
-            ObtenerCalificacionParcialReporte(
-                alumno,
-                _parcialP3,
-                "P3");
-
-        AgregarAlumnoSiTieneCalificacion(
-            materia.Evaluaciones.P3,
-            matricula,
-            nombreAlumno,
-            p3);
-
-        // ========================================================
-        // SEM
-        //
-        // Usa exactamente ObtenerSemReporte().
-        // ========================================================
-
-        string sem =
-            ObtenerSemReporte(
-                alumno);
-
-        AgregarAlumnoSiTieneCalificacion(
-            materia.Evaluaciones.SEM,
-            matricula,
-            nombreAlumno,
-            sem);
-
-        // ========================================================
-        // PREEXTRAORDINARIO
-        //
-        // PRE solamente maneja valores numéricos.
-        // No se exporta NP.
-        // ========================================================
-
-        PreEstado estadoPre =
-            ObtenerEstadoPre(
-                matricula);
-
-        if (estadoPre.TienePRE &&
-            estadoPre.Calificacion.HasValue)
-        {
-            materia
-                .Evaluaciones
-                .PREEXTRAORDINARIO
-                .Add(
-                    new ExportacionAlumnoJson
-                    {
-                        Matricula =
-                            matricula,
-
-                        NombreAlumno =
-                            nombreAlumno,
-
-                        Calificacion =
-                            estadoPre.Calificacion.Value
-                    });
-        }
+        return materia;
     }
-
-    return materia;
-}
 
 // ============================================================
 // AGREGAR ALUMNO CON CALIFICACIÓN
 // ============================================================
-private void AgregarAlumnoSiTieneCalificacion(
-    List<ExportacionAlumnoJson> destino,
-    string matricula,
-    string nombreAlumno,
-    string valor)
-{
-    if (string.IsNullOrWhiteSpace(
-            valor))
+    private void AgregarAlumnoSiTieneCalificacion(
+        List<ExportacionAlumnoJson> destino,
+        string matricula,
+        string nombreAlumno,
+        string valor)
     {
-        return;
-    }
-
-    if (!TryObtenerDouble(
-            valor,
-            out double calificacion))
-    {
-        return;
-    }
-
-    destino.Add(
-        new ExportacionAlumnoJson
+        if (string.IsNullOrWhiteSpace(
+                valor))
         {
-            Matricula =
-                matricula,
+            return;
+        }
 
-            NombreAlumno =
-                nombreAlumno,
+        if (!TryObtenerDouble(
+                valor,
+                out double calificacion))
+        {
+            return;
+        }
 
-            Calificacion =
-                calificacion
-        });
-}
+        destino.Add(
+            new ExportacionAlumnoJson
+            {
+                Matricula =
+                    matricula,
+
+                NombreAlumno =
+                    nombreAlumno,
+
+                Calificacion =
+                    calificacion
+            });
+    }
 
     // ============================================================
     // CARGAR DATOS
@@ -702,45 +702,44 @@ private void AgregarAlumnoSiTieneCalificacion(
             .AlignCenter()
             .Table(table =>
             {
-                table.ColumnsDefinition(
-                    columns =>
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.ConstantColumn(
+                        NumberColumnWidth);
+
+                    columns.ConstantColumn(
+                        NameColumnWidth);
+
+                    for (int i = 0; i < 5; i++)
                     {
                         columns.ConstantColumn(
-                            NumberColumnWidth);
+                            NumericColumnWidth);
+                    }
 
-                        columns.ConstantColumn(
-                            NameColumnWidth);
-
-                        for (int i = 0; i < 5; i++)
-                        {
-                            columns.ConstantColumn(
-                                NumericColumnWidth);
-                        }
-
-                        for (int i = 0; i < 5; i++)
-                        {
-                            columns.ConstantColumn(
-                                NumericColumnWidth);
-                        }
-
-                        for (int i = 0; i < 5; i++)
-                        {
-                            columns.ConstantColumn(
-                                NumericColumnWidth);
-                        }
-
+                    for (int i = 0; i < 5; i++)
+                    {
                         columns.ConstantColumn(
                             NumericColumnWidth);
+                    }
 
+                    for (int i = 0; i < 5; i++)
+                    {
                         columns.ConstantColumn(
-                            FinalColumnWidth);
+                            NumericColumnWidth);
+                    }
 
-                        columns.ConstantColumn(
-                            FinalColumnWidth);
+                    columns.ConstantColumn(
+                        NumericColumnWidth);
 
-                        columns.ConstantColumn(
-                            FinalColumnWidth);
-                    });
+                    columns.ConstantColumn(
+                        FinalColumnWidth);
+
+                    columns.ConstantColumn(
+                        FinalColumnWidth);
+
+                    columns.ConstantColumn(
+                        FinalColumnWidth);
+                });
 
                 table.Header(header =>
                 {
@@ -787,12 +786,11 @@ private void AgregarAlumnoSiTieneCalificacion(
             .Padding(0)
             .Table(nestedTable =>
             {
-                nestedTable.ColumnsDefinition(
-                    columns =>
-                    {
-                        columns.RelativeColumn();
-                        columns.RelativeColumn();
-                    });
+                nestedTable.ColumnsDefinition(columns =>
+                {
+                    columns.RelativeColumn();
+                    columns.RelativeColumn();
+                });
 
                 nestedTable.Cell()
                     .ColumnSpan(2)
@@ -1456,13 +1454,12 @@ private void AgregarAlumnoSiTieneCalificacion(
 
         var actividades =
             materia.Actividades?
-                .Where(
-                    a =>
-                        a != null &&
-                        a.Activa &&
-                        !string.IsNullOrWhiteSpace(
-                            a.Nombre) &&
-                        a.PuntajeMaximo > 0)
+                .Where(a =>
+                    a != null &&
+                    a.Activa &&
+                    !string.IsNullOrWhiteSpace(
+                        a.Nombre) &&
+                    a.PuntajeMaximo > 0)
                 .Take(4)
                 .ToList()
             ?? new List<ActividadParcial>();
@@ -1715,9 +1712,9 @@ private void AgregarAlumnoSiTieneCalificacion(
             return "";
 
         return alumno.Calificación[
-                evaluacion]
-            ?.Trim()
-            ?? "";
+                       evaluacion]
+                   ?.Trim()
+               ?? "";
     }
 
     // ============================================================
@@ -2071,8 +2068,8 @@ private void AgregarAlumnoSiTieneCalificacion(
                 decimales);
 
         return Math.Truncate(
-            valor * factor)
-            / factor;
+                   valor * factor)
+               / factor;
     }
 
     // ============================================================
@@ -2169,7 +2166,7 @@ private void AgregarAlumnoSiTieneCalificacion(
             "\n",
             texto.ToCharArray());
     }
-    
+
 
     // ============================================================
     // PIE

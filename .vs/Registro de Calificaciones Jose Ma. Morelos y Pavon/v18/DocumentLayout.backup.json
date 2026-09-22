@@ -131,8 +131,7 @@
               "RelativeToolTip": "Views\\ParcialesView.xaml.cs",
               "ViewState": "AgIAADsCAAAAAAAAAIAwwHMEAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-24T14:48:07.438Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-24T14:48:07.438Z"
             },
             {
               "$type": "Document",
@@ -140,9 +139,9 @@
               "Title": "PasswordWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\PasswordWindow.xaml.cs",
               "RelativeDocumentMoniker": "Views\\PasswordWindow.xaml.cs",
-              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\PasswordWindow.xaml.cs*",
-              "RelativeToolTip": "Views\\PasswordWindow.xaml.cs*",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAABlAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\PasswordWindow.xaml.cs",
+              "RelativeToolTip": "Views\\PasswordWindow.xaml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAABmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-09-08T20:08:47.293Z",
               "EditorCaption": ""
@@ -157,8 +156,7 @@
               "RelativeToolTip": "ViewModels\\MainViewModel.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-07T18:36:23.495Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-07T18:36:23.495Z"
             },
             {
               "$type": "Document",
@@ -169,8 +167,7 @@
               "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\MainWindow.xaml",
               "RelativeToolTip": "Views\\MainWindow.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-08-21T17:11:26.863Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-21T17:11:26.863Z"
             },
             {
               "$type": "Document",
@@ -181,8 +178,7 @@
               "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\PasswordWindow.xaml",
               "RelativeToolTip": "Views\\PasswordWindow.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-09-08T20:08:41.587Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-08T20:08:41.587Z"
             },
             {
               "$type": "Document",
@@ -193,8 +189,7 @@
               "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\ParcialesView.xaml",
               "RelativeToolTip": "Views\\ParcialesView.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-08-24T14:48:52.068Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-24T14:48:52.068Z"
             },
             {
               "$type": "Document",
@@ -219,8 +214,7 @@
               "RelativeToolTip": "ViewModels\\ParcialesViewModel.cs",
               "ViewState": "AgIAAMgGAAAAAAAAAAAAAP4FAAAkAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-24T14:40:51.8Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-24T14:40:51.8Z"
             },
             {
               "$type": "Document",
@@ -232,8 +226,7 @@
               "RelativeToolTip": "Services\\DataSyncService.cs",
               "ViewState": "AgIAAAEAAAAAAAAAAAAawAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-07T18:35:12.285Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-07T18:35:12.285Z"
             },
             {
               "$type": "Document",
@@ -245,8 +238,7 @@
               "RelativeToolTip": "Services\\ConfiguracionParcialesService.cs",
               "ViewState": "AgIAAAIAAAAAAAAAAAASwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-07T17:53:36.219Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-07T17:53:36.219Z"
             },
             {
               "$type": "Document",
@@ -258,8 +250,7 @@
               "RelativeToolTip": "Services\\SqliteService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAJAAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-07T18:05:53.675Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-07T18:05:53.675Z"
             },
             {
               "$type": "Document",
@@ -271,8 +262,7 @@
               "RelativeToolTip": "Services\\PreExtraordinarioService.cs",
               "ViewState": "AgIAAIACAAAAAAAAAAAAAHwFAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-21T15:10:08.751Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-21T15:10:08.751Z"
             },
             {
               "$type": "Document",
@@ -284,8 +274,7 @@
               "RelativeToolTip": "Views\\MainWindow.xaml.cs",
               "ViewState": "AgIAADMAAAAAAAAAAAAAADMAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-21T17:18:32.015Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-21T17:18:32.015Z"
             },
             {
               "$type": "Document",
@@ -297,8 +286,7 @@
               "RelativeToolTip": "Services\\CapParserService.cs",
               "ViewState": "AgIAABMAAAAAAAAAAAAhwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-07T18:30:12.388Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-07T18:30:12.388Z"
             },
             {
               "$type": "Document",
@@ -320,10 +308,9 @@
               "RelativeDocumentMoniker": "Models\\ConfiguracionParciales.cs",
               "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Models\\ConfiguracionParciales.cs",
               "RelativeToolTip": "Models\\ConfiguracionParciales.cs",
-              "ViewState": "AgIAAA4AAAAAAAAAAIBQwAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAUAAAAAAAAAAGBuwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-07T17:53:13.186Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-07T17:53:13.186Z"
             },
             {
               "$type": "Document",
@@ -358,8 +345,7 @@
               "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\Modals\\PorcentajesWindow.xaml",
               "RelativeToolTip": "Views\\Modals\\PorcentajesWindow.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-09-03T16:30:18.24Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-03T16:30:18.24Z"
             },
             {
               "$type": "Document",
@@ -394,8 +380,7 @@
               "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\ConfiguracionParcialesWindow.xaml",
               "RelativeToolTip": "Views\\ConfiguracionParcialesWindow.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-09-01T21:03:37.396Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-01T21:03:37.396Z"
             },
             {
               "$type": "Document",
@@ -417,10 +402,9 @@
               "RelativeDocumentMoniker": "Views\\ConfiguracionParcialesWindow.xaml.cs",
               "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\ConfiguracionParcialesWindow.xaml.cs",
               "RelativeToolTip": "Views\\ConfiguracionParcialesWindow.xaml.cs",
-              "ViewState": "AgIAANMFAAAAAAAAAIBJwK4FAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAM0FAAAAAAAAACBjwK4FAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-01T21:04:11.984Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-01T21:04:11.984Z"
             },
             {
               "$type": "Document",
@@ -443,8 +427,7 @@
               "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\PreextraordinarioView.xaml",
               "RelativeToolTip": "Views\\PreextraordinarioView.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-08-21T16:57:08.714Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-21T16:57:08.714Z"
             },
             {
               "$type": "Document",
@@ -455,8 +438,7 @@
               "ToolTip": "C:\\Users\\Gustavo\\Documents\\Control_Escolar_Interno_Maestro\\Views\\SemestralView.xaml",
               "RelativeToolTip": "Views\\SemestralView.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-08-21T15:19:59.079Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-21T15:19:59.079Z"
             }
           ]
         }

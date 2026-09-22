@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -247,12 +248,12 @@ public partial class ParcialesView : UserControl
                 firstDot -
                 1;
 
-            if (decimals > 1)
+            if (decimals > 2)
             {
                 s =
                     s.Substring(
                         0,
-                        firstDot + 2);
+                        firstDot + 3);
             }
         }
 
@@ -1316,6 +1317,76 @@ public partial class ParcialesView : UserControl
 
         e.Handled = true;
     }
+    
+    private void AsistenciaActiva_Checked(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (DataContext is not ParcialesViewModel vm)
+            return;
+
+        foreach (var alumno in vm.Alumnos)
+        {
+            if (alumno == null)
+                continue;
+
+            PropertyInfo? propiedad =
+                alumno.GetType().GetProperty("Inasistencias");
+
+            if (propiedad == null ||
+                !propiedad.CanRead ||
+                !propiedad.CanWrite)
+            {
+                continue;
+            }
+
+            object? valorActual =
+                propiedad.GetValue(alumno);
+
+            // =========================================================
+            // SOLO ASIGNAR 0 CUANDO EL CAMPO ESTÁ VACÍO
+            // =========================================================
+
+            bool estaVacio =
+                valorActual == null ||
+                string.IsNullOrWhiteSpace(
+                    Convert.ToString(valorActual));
+
+            if (!estaVacio)
+                continue;
+
+            Type tipoPropiedad =
+                Nullable.GetUnderlyingType(
+                    propiedad.PropertyType)
+                ?? propiedad.PropertyType;
+
+            object? nuevoValor = null;
+
+            if (tipoPropiedad == typeof(string))
+            {
+                nuevoValor = "0";
+            }
+            else if (tipoPropiedad == typeof(int))
+            {
+                nuevoValor = 0;
+            }
+            else if (tipoPropiedad == typeof(double))
+            {
+                nuevoValor = 0d;
+            }
+            else if (tipoPropiedad == typeof(decimal))
+            {
+                nuevoValor = 0m;
+            }
+
+            if (nuevoValor != null)
+            {
+                propiedad.SetValue(
+                    alumno,
+                    nuevoValor);
+            }
+        }
+    }   
 
     // ============================================================
     // BUSCAR TEXTBOX DENTRO DEL ÁRBOL VISUAL
