@@ -37,49 +37,159 @@ public partial class ParcialesView : UserControl
 
     vm.PrepararGuardado();
 
-    var actividad =
-        tb.DataContext as ActividadParcialEditor;
+    // ============================================================
+    // SI ENTER VIENE DE UNA ACTIVIDAD
+    // ============================================================
 
-    int nextIndex = -1;
-
-    // Solo buscamos la siguiente actividad si el campo actual ES de una actividad
-    if (actividad != null)
+    if (tb.DataContext is ActividadParcialEditor actividad)
     {
         int actividadIndex =
             vm.Actividades.IndexOf(actividad);
+
+        // --------------------------------------------------------
+        // BUSCAR LA SIGUIENTE ACTIVIDAD ACTIVA
+        // --------------------------------------------------------
 
         for (
             int i = actividadIndex + 1;
             i < vm.Actividades.Count;
             i++)
         {
-            if (vm.Actividades[i].Activa)
-            {
-                nextIndex = i;
-                break;
-            }
-        }
-    }
+            if (!vm.Actividades[i].Activa)
+                continue;
 
-    // Si hay una siguiente actividad activa, pasa a ella
-    if (nextIndex >= 0)
-    {
-        var container =
-            PuntajesItemsControl
+            var container =
+                PuntajesItemsControl
                     .ItemContainerGenerator
-                    .ContainerFromIndex(nextIndex)
+                    .ContainerFromIndex(i)
                 as FrameworkElement;
 
-        if (container != null)
-        {
-            var nextTb =
-                FindVisualChild<TextBox>(
-                    container);
+            if (container == null)
+                continue;
 
-            if (nextTb != null)
+            // IMPORTANTE:
+            // Buscar EXCLUSIVAMENTE el TextBox de captura,
+            // no cualquier TextBox del alumno/actividad.
+            var siguienteTb =
+                FindVisualChildren<TextBox>(container)
+                    .FirstOrDefault(t =>
+                        string.Equals(
+                            t.Tag?.ToString(),
+                            "NavegacionPuntaje",
+                            StringComparison.Ordinal) &&
+                        t.IsVisible &&
+                        t.IsEnabled);
+
+            if (siguienteTb != null)
             {
-                nextTb.Focus();
-                nextTb.SelectAll();
+                siguienteTb.Focus();
+                siguienteTb.SelectAll();
+
+                e.Handled = true;
+                return;
+            }
+        }
+
+        // ========================================================
+        // YA ES LA ÚLTIMA ACTIVIDAD ACTIVA
+        //
+        // SOLO AQUÍ SE REVISA ASISTENCIA.
+        // ========================================================
+
+        if (vm.AsistenciaActiva)
+        {
+            var asistenciaTb =
+                FindVisualChildren<TextBox>(this)
+                    .FirstOrDefault(t =>
+                        string.Equals(
+                            t.Tag?.ToString(),
+                            "NavegacionInasistencia",
+                            StringComparison.Ordinal) &&
+                        t.IsVisible &&
+                        t.IsEnabled);
+
+            if (asistenciaTb != null)
+            {
+                asistenciaTb.Focus();
+                asistenciaTb.SelectAll();
+
+                e.Handled = true;
+                return;
+            }
+        }
+
+        // ========================================================
+        // SIN ASISTENCIA:
+        // IR DIRECTAMENTE AL SIGUIENTE ALUMNO.
+        //
+        // NO MoveFocus().
+        // NO BUSCAR OTRO CONTROL VISUAL.
+        // ========================================================
+
+        if (
+            vm.AlumnoSeleccionado != null &&
+            vm.Alumnos.Any())
+        {
+            int idx =
+                vm.Alumnos.IndexOf(
+                    vm.AlumnoSeleccionado);
+
+            if (idx < vm.Alumnos.Count - 1)
+            {
+                vm.AlumnoSeleccionado =
+                    vm.Alumnos[idx + 1];
+
+                Dispatcher.BeginInvoke(
+                    new Action(() =>
+                    {
+                        // Esperar a que WPF reconstruya
+                        // los controles del nuevo alumno.
+
+                        for (
+                            int i = 0;
+                            i < vm.Actividades.Count;
+                            i++)
+                        {
+                            if (!vm.Actividades[i].Activa)
+                                continue;
+
+                            var container =
+                                PuntajesItemsControl
+                                    .ItemContainerGenerator
+                                    .ContainerFromIndex(i)
+                                as FrameworkElement;
+
+                            if (container == null)
+                                continue;
+
+                            var primerTb =
+                                FindVisualChildren<TextBox>(
+                                    container)
+                                .FirstOrDefault(t =>
+                                    string.Equals(
+                                        t.Tag?.ToString(),
+                                        "NavegacionPuntaje",
+                                        StringComparison.Ordinal) &&
+                                    t.IsVisible &&
+                                    t.IsEnabled);
+
+                            if (primerTb != null)
+                            {
+                                primerTb.Focus();
+                                primerTb.SelectAll();
+                            }
+
+                            break;
+                        }
+                    }));
+            }
+            else
+            {
+                MessageBox.Show(
+                    "Se evaluaron todos los alumnos.",
+                    "Fin de captura",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
             }
         }
 
@@ -87,74 +197,82 @@ public partial class ParcialesView : UserControl
         return;
     }
 
-    // Si estabas en la última actividad (actividad != null), mueve el foco al siguiente control visual (Inasistencia)
-    if (actividad != null)
-    {
-        if (tb.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next)))
-        {
-            e.Handled = true;
-            return;
-        }
-    }
-
-    // Si estabas en Inasistencia (actividad == null) o si no hubo control siguiente, cambia de alumno:
-    var alumnos =
-        vm.Alumnos;
+    // ============================================================
+    // ENTER EN INASISTENCIAS
+    // ============================================================
 
     if (
-        vm.AlumnoSeleccionado != null &&
-        alumnos.Any())
+        string.Equals(
+            tb.Tag?.ToString(),
+            "NavegacionInasistencia",
+            StringComparison.Ordinal))
     {
-        int idx =
-            alumnos.IndexOf(
-                vm.AlumnoSeleccionado);
-
-        if (idx < alumnos.Count - 1)
+        if (
+            vm.AlumnoSeleccionado != null &&
+            vm.Alumnos.Any())
         {
-            vm.AlumnoSeleccionado =
-                alumnos[idx + 1];
+            int idx =
+                vm.Alumnos.IndexOf(
+                    vm.AlumnoSeleccionado);
 
-            Dispatcher.BeginInvoke(
-                new Action(() =>
-                {
-                    for (
-                        int i = 0;
-                        i < vm.Actividades.Count;
-                        i++)
+            if (idx < vm.Alumnos.Count - 1)
+            {
+                vm.AlumnoSeleccionado =
+                    vm.Alumnos[idx + 1];
+
+                Dispatcher.BeginInvoke(
+                    new Action(() =>
                     {
-                        if (!vm.Actividades[i].Activa)
-                            continue;
+                        for (
+                            int i = 0;
+                            i < vm.Actividades.Count;
+                            i++)
+                        {
+                            if (!vm.Actividades[i].Activa)
+                                continue;
 
-                        var container =
-                            PuntajesItemsControl
+                            var container =
+                                PuntajesItemsControl
                                     .ItemContainerGenerator
                                     .ContainerFromIndex(i)
                                 as FrameworkElement;
 
-                        if (container == null)
-                            continue;
+                            if (container == null)
+                                continue;
 
-                        var tb2 =
-                            FindVisualChild<TextBox>(
-                                container);
+                            var primerTb =
+                                FindVisualChildren<TextBox>(
+                                    container)
+                                .FirstOrDefault(t =>
+                                    string.Equals(
+                                        t.Tag?.ToString(),
+                                        "NavegacionPuntaje",
+                                        StringComparison.Ordinal) &&
+                                    t.IsVisible &&
+                                    t.IsEnabled);
 
-                        if (tb2 != null)
-                        {
-                            tb2.Focus();
-                            tb2.SelectAll();
+                            if (primerTb != null)
+                            {
+                                primerTb.Focus();
+                                primerTb.SelectAll();
+                            }
+
                             break;
                         }
-                    }
-                }));
+                    }));
+            }
+            else
+            {
+                MessageBox.Show(
+                    "Se evaluaron todos los alumnos.",
+                    "Fin de captura",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
         }
-        else
-        {
-            MessageBox.Show(
-                "Se evaluaron todos los alumnos.",
-                "Fin de captura",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-        }
+
+        e.Handled = true;
+        return;
     }
 
     e.Handled = true;
@@ -1328,7 +1446,7 @@ public partial class ParcialesView : UserControl
 
         e.Handled = true;
     }
-    
+
     private void AsistenciaActiva_Checked(
         object sender,
         RoutedEventArgs e)
@@ -1397,7 +1515,7 @@ public partial class ParcialesView : UserControl
                     nuevoValor);
             }
         }
-    }   
+    }
 
     // ============================================================
     // BUSCAR TEXTBOX DENTRO DEL ÁRBOL VISUAL

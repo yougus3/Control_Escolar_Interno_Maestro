@@ -50,7 +50,7 @@ public class SqliteService : IDisposable
         "calificacionesautomaticas@prefecotemixco.edu.mx";
 
     private const string SmtpAppPassword =
-        "oycg anqn yewl fojp\n";
+        "oqsi aonu hevt zfgd";
 
     // ============================================================
     // CLAVE CONFIGURACION.BIN
@@ -299,8 +299,8 @@ VALUES
     // ============================================================
 
     public IEnumerable<(
-        string Key,
-        ConfiguracionParciales Value)>
+            string Key,
+            ConfiguracionParciales Value)>
         GetAllConfiguraciones()
     {
         using var cmd =
@@ -516,17 +516,16 @@ VALUES
         string mat =
             matricula.Trim();
 
-        return lista.Any(
-            e =>
-                e != null &&
-                string.Equals(
-                    e.CLAVEASIGNATURA?.Trim(),
-                    clave,
-                    StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(
-                    e.MATRICULA?.Trim(),
-                    mat,
-                    StringComparison.OrdinalIgnoreCase));
+        return lista.Any(e =>
+            e != null &&
+            string.Equals(
+                e.CLAVEASIGNATURA?.Trim(),
+                clave,
+                StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(
+                e.MATRICULA?.Trim(),
+                mat,
+                StringComparison.OrdinalIgnoreCase));
     }
 
     // ============================================================
@@ -598,7 +597,7 @@ VALUES
                 .ToArray();
 
         return new string(
-            caracteres)
+                caracteres)
             .ToUpperInvariant();
     }
 
@@ -716,20 +715,20 @@ VALUES
         string claveProfesor)
     {
         return GetProfesorPorClave(
-                claveProfesor)
-            ?.EMAIL
-            ?.Trim()
-            ?? string.Empty;
+                       claveProfesor)
+                   ?.EMAIL
+                   ?.Trim()
+               ?? string.Empty;
     }
 
     public string ObtenerNombreProfesor(
         string claveProfesor)
     {
         return GetProfesorPorClave(
-                claveProfesor)
-            ?.NOMBREPROFESOR
-            ?.Trim()
-            ?? string.Empty;
+                       claveProfesor)
+                   ?.NOMBREPROFESOR
+                   ?.Trim()
+               ?? string.Empty;
     }
 
     // ============================================================
@@ -889,7 +888,7 @@ VALUES
             }
 
             _configuracion.Grupos[
-                item.Key.Trim()] =
+                    item.Key.Trim()] =
                 item.Value.Trim();
         }
 
@@ -943,7 +942,7 @@ VALUES
                 ?? string.Empty;
 
             profesoresNormalizados[
-                clave] =
+                    clave] =
                 item.Value;
         }
 
@@ -1096,7 +1095,7 @@ VALUES
                 }
 
                 gruposNormalizados[
-                    matricula] =
+                        matricula] =
                     grupo;
             }
 
@@ -1146,7 +1145,7 @@ VALUES
                     ?? string.Empty;
 
                 profesoresNormalizados[
-                    clave] =
+                        clave] =
                     profesor;
             }
 
@@ -1217,8 +1216,7 @@ VALUES
                 e =>
                     $"{e.CLAVEASIGNATURA}|{e.MATRICULA}",
                 StringComparer.OrdinalIgnoreCase)
-            .Select(
-                g => g.First())
+            .Select(g => g.First())
             .ToList();
     }
 
@@ -1399,36 +1397,20 @@ VALUES
 
     private class ConfiguracionBin
     {
-        public Dictionary<string, string> Grupos
-        {
-            get;
-            set;
-        } =
+        public Dictionary<string, string> Grupos { get; set; } =
             new(
                 StringComparer.OrdinalIgnoreCase);
 
         public Dictionary<
-            string,
-            ProfesorConfigurado>
-            Profesores
-        {
-            get;
-            set;
-        } =
+                string,
+                ProfesorConfigurado>
+            Profesores { get; set; } =
             new(
                 StringComparer.OrdinalIgnoreCase);
 
-        public List<EvaluacionAdicional> PRE
-        {
-            get;
-            set;
-        } = new();
+        public List<EvaluacionAdicional> PRE { get; set; } = new();
 
-        public List<EvaluacionAdicional> EXTRA
-        {
-            get;
-            set;
-        } = new();
+        public List<EvaluacionAdicional> EXTRA { get; set; } = new();
     }
 
     // ============================================================
@@ -1437,17 +1419,9 @@ VALUES
 
     public class EvaluacionAdicional
     {
-        public string CLAVEASIGNATURA
-        {
-            get;
-            set;
-        } = string.Empty;
+        public string CLAVEASIGNATURA { get; set; } = string.Empty;
 
-        public string MATRICULA
-        {
-            get;
-            set;
-        } = string.Empty;
+        public string MATRICULA { get; set; } = string.Empty;
     }
 
     // ============================================================
@@ -1456,23 +1430,11 @@ VALUES
 
     public class ProfesorConfigurado
     {
-        public string CLAVEPROFESOR
-        {
-            get;
-            set;
-        } = string.Empty;
+        public string CLAVEPROFESOR { get; set; } = string.Empty;
 
-        public string EMAIL
-        {
-            get;
-            set;
-        } = string.Empty;
+        public string EMAIL { get; set; } = string.Empty;
 
-        public string NOMBREPROFESOR
-        {
-            get;
-            set;
-        } = string.Empty;
+        public string NOMBREPROFESOR { get; set; } = string.Empty;
 
         public string TextoCombo =>
             string.IsNullOrWhiteSpace(EMAIL)

@@ -65,7 +65,7 @@ public partial class MainWindow : Window
 
         // No = cerrar sin guardar
     }
-    
+
     private void Configuracion_Click(
         object sender,
         RoutedEventArgs e)
