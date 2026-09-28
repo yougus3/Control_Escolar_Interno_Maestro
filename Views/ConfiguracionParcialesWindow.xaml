@@ -1321,24 +1321,24 @@
                                         Height="44"
                                         Margin="0,0,10,0"
                                         Click="ExportarPdf_Click"
-                                        Style="{StaticResource PrimaryButtonStyle}" />
-
+                                       Style="{StaticResource PrimaryButtonStyle}" />
+                                    
                                     <Button
-                                        Content="EXPORTAR JSON"
-                                        Width="160"
-                                        Height="44"
-                                        Margin="0,0,10,0"
-                                        Click="ExportarJson_Click"
-                                        Style="{StaticResource SecondaryButtonStyle}" />
-
-                                    <Button
-                                        Content="ENVIAR CALIFICACIONES"
+                                        Content="ENVIAR CALIFICACIONES POR CORREO"
                                         Width="230"
                                         Height="44"
                                         Click="EnviarCalificaciones_Click"
                                         IsEnabled="{Binding PuedeEnviarCorreo,
-                        Mode=OneWay}"
+                                        Mode=OneWay}"
                                         Style="{StaticResource SuccessButtonStyle}" />
+                                    <Button
+                                        Content="ENVIAR CALIFICACIONES A WEB"
+                                        Width="180"
+                                        Height="44"
+                                        Margin="10,0,10,0"
+                                        Click="EnviarCalificacionesWeb_Click"
+                                        Style="{StaticResource SecondaryButtonStyle}" />
+
                                 </StackPanel>
 
                             </Grid>

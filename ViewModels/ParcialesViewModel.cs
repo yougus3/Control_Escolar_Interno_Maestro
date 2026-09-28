@@ -304,84 +304,84 @@ public partial class ParcialesViewModel : ObservableObject
         RecalcularTodo(
             guardarJson: false);
     }
-    
+
     private void InicializarInasistenciasVacias()
-{
-    foreach (var alumno in Alumnos)
     {
-        if (alumno == null ||
-            string.IsNullOrWhiteSpace(alumno.Matricula))
+        foreach (var alumno in Alumnos)
         {
-            continue;
+            if (alumno == null ||
+                string.IsNullOrWhiteSpace(alumno.Matricula))
+            {
+                continue;
+            }
+
+            // =========================================================
+            // OBTENER LAS CAPTURAS DEL ALUMNO
+            // =========================================================
+
+            if (
+                !_materia.Calificaciones.TryGetValue(
+                    alumno.Matricula,
+                    out var capturas))
+            {
+                capturas =
+                    new Dictionary<string, double>(
+                        StringComparer.OrdinalIgnoreCase);
+
+                _materia.Calificaciones[
+                    alumno.Matricula] =
+                    capturas;
+            }
+
+            // =========================================================
+            // VACÍO = FALTA LA CAPTURA
+            //
+            // - No existe la clave
+            // - Tiene -1
+            //
+            // En cualquiera de esos casos ponemos 0.
+            // =========================================================
+
+            bool estaVacia =
+                !capturas.TryGetValue(
+                    "__Inasistencias__",
+                    out double valor) ||
+                valor < 0;
+
+            if (!estaVacia)
+                continue;
+
+            capturas[
+                "__Inasistencias__"] =
+                0.0;
         }
 
         // =========================================================
-        // OBTENER LAS CAPTURAS DEL ALUMNO
+        // ACTUALIZAR INMEDIATAMENTE EL ALUMNO QUE ESTÁ EN PANTALLA
         // =========================================================
 
-        if (
-            !_materia.Calificaciones.TryGetValue(
-                alumno.Matricula,
-                out var capturas))
+        if (AlumnoSeleccionado != null &&
+            !string.IsNullOrWhiteSpace(
+                AlumnoSeleccionado.Matricula))
         {
-            capturas =
-                new Dictionary<string, double>(
-                    StringComparer.OrdinalIgnoreCase);
-
-            _materia.Calificaciones[
-                alumno.Matricula] =
-                capturas;
+            if (
+                _materia.Calificaciones.TryGetValue(
+                    AlumnoSeleccionado.Matricula,
+                    out var capturasActual) &&
+                capturasActual.TryGetValue(
+                    "__Inasistencias__",
+                    out double valorActual) &&
+                valorActual >= 0)
+            {
+                Inasistencias =
+                    ((int)valorActual).ToString();
+            }
+            else
+            {
+                Inasistencias = "0";
+            }
         }
-
-        // =========================================================
-        // VACÍO = FALTA LA CAPTURA
-        //
-        // - No existe la clave
-        // - Tiene -1
-        //
-        // En cualquiera de esos casos ponemos 0.
-        // =========================================================
-
-        bool estaVacia =
-            !capturas.TryGetValue(
-                "__Inasistencias__",
-                out double valor) ||
-            valor < 0;
-
-        if (!estaVacia)
-            continue;
-
-        capturas[
-            "__Inasistencias__"] =
-            0.0;
     }
-
-    // =========================================================
-    // ACTUALIZAR INMEDIATAMENTE EL ALUMNO QUE ESTÁ EN PANTALLA
-    // =========================================================
-
-    if (AlumnoSeleccionado != null &&
-        !string.IsNullOrWhiteSpace(
-            AlumnoSeleccionado.Matricula))
-    {
-        if (
-            _materia.Calificaciones.TryGetValue(
-                AlumnoSeleccionado.Matricula,
-                out var capturasActual) &&
-            capturasActual.TryGetValue(
-                "__Inasistencias__",
-                out double valorActual) &&
-            valorActual >= 0)
-        {
-            Inasistencias =
-                ((int)valorActual).ToString();
-        }
-        else
-        {
-            Inasistencias = "0";
-        }
-    }
-}
 
     partial void OnClasesTotalesChanged(
         string value)
@@ -1536,6 +1536,147 @@ public partial class ParcialesViewModel : ObservableObject
         _materia.Calificaciones[
             matricula] =
             capturas;
+    }
+
+    // ============================================================
+    // COMPROBAR SI ALGÚN PUNTAJE DE ESTA ACTIVIDAD
+    // SUPERA EL NUEVO PUNTAJE MÁXIMO
+    // ============================================================
+
+    public bool ExistePuntajeFueraDeLimite(
+        ActividadParcialEditor actividad,
+        double nuevoMaximo)
+    {
+        if (_cargando ||
+            _cargasActivas > 0)
+        {
+            return false;
+        }
+
+        if (actividad == null)
+            return false;
+
+        string nombreActividad =
+            actividad.Nombre?
+                .Trim() ??
+            string.Empty;
+
+        if (string.IsNullOrWhiteSpace(
+                nombreActividad))
+        {
+            return false;
+        }
+
+        foreach (
+            var entrada
+            in _materia.Calificaciones)
+        {
+            // =========================================================
+            // $CONFIG$ NO ES UN ALUMNO
+            // =========================================================
+
+            if (
+                string.Equals(
+                    entrada.Key,
+                    "$CONFIG$",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var capturas =
+                entrada.Value;
+
+            if (
+                !capturas.TryGetValue(
+                    nombreActividad,
+                    out double puntaje))
+            {
+                continue;
+            }
+
+            // =========================================================
+            // SC = -1
+            // =========================================================
+
+            if (puntaje < 0)
+                continue;
+
+            if (puntaje > nuevoMaximo)
+                return true;
+        }
+
+        return false;
+    }
+
+    // ============================================================
+    // ELIMINAR LOS PUNTAJES OBTENIDOS DE UNA SOLA ACTIVIDAD
+    // ============================================================
+
+    public void EliminarPuntajesDeActividad(
+        ActividadParcialEditor actividad)
+    {
+        if (actividad == null)
+            return;
+
+        string nombreActividad =
+            actividad.Nombre?
+                .Trim() ??
+            string.Empty;
+
+        if (string.IsNullOrWhiteSpace(
+                nombreActividad))
+        {
+            return;
+        }
+
+        // =========================================================
+        // ELIMINAR ÚNICAMENTE LA CAPTURA DE ESTA ACTIVIDAD
+        // PARA TODOS LOS ALUMNOS.
+        //
+        // NO SE TOCA:
+        // - $CONFIG$
+        // - INASISTENCIAS
+        // - CAPTURA DIRECTA
+        // - CALIFICACIÓN DIRECTA
+        // - OTRAS ACTIVIDADES
+        // =========================================================
+
+        foreach (
+            var entrada
+            in _materia.Calificaciones)
+        {
+            if (
+                string.Equals(
+                    entrada.Key,
+                    "$CONFIG$",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            entrada.Value.Remove(
+                nombreActividad);
+        }
+
+        // =========================================================
+        // EL ALUMNO QUE ESTÁ EN PANTALLA QUEDA SIN CAPTURA
+        // =========================================================
+
+        actividad.EstablecerPuntajeDesdeCarga(
+            actividad.Activa
+                ? "SC"
+                : string.Empty);
+
+        // =========================================================
+        // RECALCULAR SIN GUARDAR FÍSICAMENTE TODAVÍA.
+        // El cambio queda pendiente hasta PrepararGuardado().
+        // =========================================================
+
+        RecalcularTodo(
+            guardarJson: false,
+            esCargaInicial: false,
+            marcarCambios: true);
     }
 
     private void RecalcularTodo(

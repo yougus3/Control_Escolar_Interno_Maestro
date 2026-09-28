@@ -34,25 +34,6 @@ public class SqliteService : IDisposable
         };
 
     // ============================================================
-    // SMTP GMAIL
-    // ============================================================
-
-    private const string SmtpHost =
-        "smtp.gmail.com";
-
-    private const int SmtpPort =
-        587;
-
-    private const bool SmtpEnableSsl =
-        true;
-
-    private const string SmtpUser =
-        "calificacionesautomaticas@prefecotemixco.edu.mx";
-
-    private const string SmtpAppPassword =
-        "oqsi aonu hevt zfgd";
-
-    // ============================================================
     // CLAVE CONFIGURACION.BIN
     // ============================================================
 
@@ -748,23 +729,40 @@ VALUES
                 "No se especificó el correo destinatario.");
         }
 
-        if (string.IsNullOrWhiteSpace(SmtpUser) ||
-            SmtpUser.Contains(
-                "TU_CORREO",
-                StringComparison.OrdinalIgnoreCase))
+        if (_configuracion?.SMTP == null)
         {
             throw new InvalidOperationException(
-                "Debes configurar SmtpUser en SqliteService.");
+                "No existe configuración SMTP en configuracion.bin.");
+        }
+
+        var smtpConfig =
+            _configuracion.SMTP;
+
+        if (string.IsNullOrWhiteSpace(
+                smtpConfig.Servidor))
+        {
+            throw new InvalidOperationException(
+                "El servidor SMTP no está configurado.");
+        }
+
+        if (smtpConfig.Puerto <= 0)
+        {
+            throw new InvalidOperationException(
+                "El puerto SMTP no está configurado correctamente.");
         }
 
         if (string.IsNullOrWhiteSpace(
-                SmtpAppPassword) ||
-            SmtpAppPassword.Contains(
-                "TU_CONTRASENA",
-                StringComparison.OrdinalIgnoreCase))
+                smtpConfig.Usuario))
         {
             throw new InvalidOperationException(
-                "Debes configurar la contraseña de aplicación de Gmail en SqliteService.");
+                "El usuario SMTP no está configurado.");
+        }
+
+        if (string.IsNullOrWhiteSpace(
+                smtpConfig.Contrasena))
+        {
+            throw new InvalidOperationException(
+                "La contraseña SMTP no está configurada.");
         }
 
         using var mensaje =
@@ -772,7 +770,7 @@ VALUES
 
         mensaje.From =
             new MailAddress(
-                SmtpUser);
+                smtpConfig.Usuario);
 
         mensaje.To.Add(
             destinatario.Trim());
@@ -806,19 +804,19 @@ VALUES
 
         using var smtp =
             new SmtpClient(
-                SmtpHost,
-                SmtpPort);
+                smtpConfig.Servidor,
+                smtpConfig.Puerto);
 
         smtp.EnableSsl =
-            SmtpEnableSsl;
+            smtpConfig.SSL;
 
         smtp.UseDefaultCredentials =
             false;
 
         smtp.Credentials =
             new NetworkCredential(
-                SmtpUser,
-                SmtpAppPassword);
+                smtpConfig.Usuario,
+                smtpConfig.Contrasena);
 
         await smtp.SendMailAsync(
             mensaje);
@@ -1174,6 +1172,40 @@ VALUES
                 NormalizarEvaluaciones(
                     configuracion.EXTRA);
 
+            // ====================================================
+            // NORMALIZAR SMTP
+            // ====================================================
+
+            if (configuracion.SMTP != null)
+            {
+                configuracion.SMTP.Servidor =
+                    configuracion.SMTP.Servidor?.Trim()
+                    ?? string.Empty;
+
+                configuracion.SMTP.Usuario =
+                    configuracion.SMTP.Usuario?.Trim()
+                    ?? string.Empty;
+
+                configuracion.SMTP.Contrasena =
+                    configuracion.SMTP.Contrasena
+                    ?? string.Empty;
+            }
+
+            // ====================================================
+            // NORMALIZAR MIGRACION WEB
+            // ====================================================
+
+            if (configuracion.MigracionWeb != null)
+            {
+                configuracion.MigracionWeb.Usuario =
+                    configuracion.MigracionWeb.Usuario?.Trim()
+                    ?? string.Empty;
+
+                configuracion.MigracionWeb.Contrasena =
+                    configuracion.MigracionWeb.Contrasena
+                    ?? string.Empty;
+            }
+
             _configuracion =
                 configuracion;
         }
@@ -1408,9 +1440,48 @@ VALUES
             new(
                 StringComparer.OrdinalIgnoreCase);
 
-        public List<EvaluacionAdicional> PRE { get; set; } = new();
+        public List<EvaluacionAdicional> PRE { get; set; } =
+            new();
 
-        public List<EvaluacionAdicional> EXTRA { get; set; } = new();
+        public List<EvaluacionAdicional> EXTRA { get; set; } =
+            new();
+
+        public SmtpConfig? SMTP { get; set; }
+
+        public MigracionWebConfig? MigracionWeb { get; set; }
+    }
+
+    // ============================================================
+    // SMTP
+    // ============================================================
+
+    private class SmtpConfig
+    {
+        public string Servidor { get; set; } =
+            string.Empty;
+
+        public int Puerto { get; set; }
+
+        public string Usuario { get; set; } =
+            string.Empty;
+
+        public string Contrasena { get; set; } =
+            string.Empty;
+
+        public bool SSL { get; set; }
+    }
+
+    // ============================================================
+    // MIGRACION WEB
+    // ============================================================
+
+    private class MigracionWebConfig
+    {
+        public string Usuario { get; set; } =
+            string.Empty;
+
+        public string Contrasena { get; set; } =
+            string.Empty;
     }
 
     // ============================================================
@@ -1419,9 +1490,11 @@ VALUES
 
     public class EvaluacionAdicional
     {
-        public string CLAVEASIGNATURA { get; set; } = string.Empty;
+        public string CLAVEASIGNATURA { get; set; } =
+            string.Empty;
 
-        public string MATRICULA { get; set; } = string.Empty;
+        public string MATRICULA { get; set; } =
+            string.Empty;
     }
 
     // ============================================================
@@ -1430,11 +1503,14 @@ VALUES
 
     public class ProfesorConfigurado
     {
-        public string CLAVEPROFESOR { get; set; } = string.Empty;
+        public string CLAVEPROFESOR { get; set; } =
+            string.Empty;
 
-        public string EMAIL { get; set; } = string.Empty;
+        public string EMAIL { get; set; } =
+            string.Empty;
 
-        public string NOMBREPROFESOR { get; set; } = string.Empty;
+        public string NOMBREPROFESOR { get; set; } =
+            string.Empty;
 
         public string TextoCombo =>
             string.IsNullOrWhiteSpace(EMAIL)

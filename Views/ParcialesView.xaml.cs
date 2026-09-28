@@ -23,260 +23,260 @@ public partial class ParcialesView : UserControl
     }
 
     private void PuntajeObtenido_KeyDown(
-    object sender,
-    KeyEventArgs e)
-{
-    if (e.Key != Key.Enter)
-        return;
-
-    if (DataContext is not ParcialesViewModel vm)
-        return;
-
-    if (sender is not TextBox tb)
-        return;
-
-    vm.PrepararGuardado();
-
-    // ============================================================
-    // SI ENTER VIENE DE UNA ACTIVIDAD
-    // ============================================================
-
-    if (tb.DataContext is ActividadParcialEditor actividad)
+        object sender,
+        KeyEventArgs e)
     {
-        int actividadIndex =
-            vm.Actividades.IndexOf(actividad);
+        if (e.Key != Key.Enter)
+            return;
 
-        // --------------------------------------------------------
-        // BUSCAR LA SIGUIENTE ACTIVIDAD ACTIVA
-        // --------------------------------------------------------
+        if (DataContext is not ParcialesViewModel vm)
+            return;
 
-        for (
-            int i = actividadIndex + 1;
-            i < vm.Actividades.Count;
-            i++)
+        if (sender is not TextBox tb)
+            return;
+
+        vm.PrepararGuardado();
+
+        // ============================================================
+        // SI ENTER VIENE DE UNA ACTIVIDAD
+        // ============================================================
+
+        if (tb.DataContext is ActividadParcialEditor actividad)
         {
-            if (!vm.Actividades[i].Activa)
-                continue;
+            int actividadIndex =
+                vm.Actividades.IndexOf(actividad);
 
-            var container =
-                PuntajesItemsControl
-                    .ItemContainerGenerator
-                    .ContainerFromIndex(i)
-                as FrameworkElement;
+            // --------------------------------------------------------
+            // BUSCAR LA SIGUIENTE ACTIVIDAD ACTIVA
+            // --------------------------------------------------------
 
-            if (container == null)
-                continue;
-
-            // IMPORTANTE:
-            // Buscar EXCLUSIVAMENTE el TextBox de captura,
-            // no cualquier TextBox del alumno/actividad.
-            var siguienteTb =
-                FindVisualChildren<TextBox>(container)
-                    .FirstOrDefault(t =>
-                        string.Equals(
-                            t.Tag?.ToString(),
-                            "NavegacionPuntaje",
-                            StringComparison.Ordinal) &&
-                        t.IsVisible &&
-                        t.IsEnabled);
-
-            if (siguienteTb != null)
+            for (
+                int i = actividadIndex + 1;
+                i < vm.Actividades.Count;
+                i++)
             {
-                siguienteTb.Focus();
-                siguienteTb.SelectAll();
+                if (!vm.Actividades[i].Activa)
+                    continue;
 
-                e.Handled = true;
-                return;
+                var container =
+                    PuntajesItemsControl
+                            .ItemContainerGenerator
+                            .ContainerFromIndex(i)
+                        as FrameworkElement;
+
+                if (container == null)
+                    continue;
+
+                // IMPORTANTE:
+                // Buscar EXCLUSIVAMENTE el TextBox de captura,
+                // no cualquier TextBox del alumno/actividad.
+                var siguienteTb =
+                    FindVisualChildren<TextBox>(container)
+                        .FirstOrDefault(t =>
+                            string.Equals(
+                                t.Tag?.ToString(),
+                                "NavegacionPuntaje",
+                                StringComparison.Ordinal) &&
+                            t.IsVisible &&
+                            t.IsEnabled);
+
+                if (siguienteTb != null)
+                {
+                    siguienteTb.Focus();
+                    siguienteTb.SelectAll();
+
+                    e.Handled = true;
+                    return;
+                }
             }
+
+            // ========================================================
+            // YA ES LA ÚLTIMA ACTIVIDAD ACTIVA
+            //
+            // SOLO AQUÍ SE REVISA ASISTENCIA.
+            // ========================================================
+
+            if (vm.AsistenciaActiva)
+            {
+                var asistenciaTb =
+                    FindVisualChildren<TextBox>(this)
+                        .FirstOrDefault(t =>
+                            string.Equals(
+                                t.Tag?.ToString(),
+                                "NavegacionInasistencia",
+                                StringComparison.Ordinal) &&
+                            t.IsVisible &&
+                            t.IsEnabled);
+
+                if (asistenciaTb != null)
+                {
+                    asistenciaTb.Focus();
+                    asistenciaTb.SelectAll();
+
+                    e.Handled = true;
+                    return;
+                }
+            }
+
+            // ========================================================
+            // SIN ASISTENCIA:
+            // IR DIRECTAMENTE AL SIGUIENTE ALUMNO.
+            //
+            // NO MoveFocus().
+            // NO BUSCAR OTRO CONTROL VISUAL.
+            // ========================================================
+
+            if (
+                vm.AlumnoSeleccionado != null &&
+                vm.Alumnos.Any())
+            {
+                int idx =
+                    vm.Alumnos.IndexOf(
+                        vm.AlumnoSeleccionado);
+
+                if (idx < vm.Alumnos.Count - 1)
+                {
+                    vm.AlumnoSeleccionado =
+                        vm.Alumnos[idx + 1];
+
+                    Dispatcher.BeginInvoke(
+                        new Action(() =>
+                        {
+                            // Esperar a que WPF reconstruya
+                            // los controles del nuevo alumno.
+
+                            for (
+                                int i = 0;
+                                i < vm.Actividades.Count;
+                                i++)
+                            {
+                                if (!vm.Actividades[i].Activa)
+                                    continue;
+
+                                var container =
+                                    PuntajesItemsControl
+                                            .ItemContainerGenerator
+                                            .ContainerFromIndex(i)
+                                        as FrameworkElement;
+
+                                if (container == null)
+                                    continue;
+
+                                var primerTb =
+                                    FindVisualChildren<TextBox>(
+                                            container)
+                                        .FirstOrDefault(t =>
+                                            string.Equals(
+                                                t.Tag?.ToString(),
+                                                "NavegacionPuntaje",
+                                                StringComparison.Ordinal) &&
+                                            t.IsVisible &&
+                                            t.IsEnabled);
+
+                                if (primerTb != null)
+                                {
+                                    primerTb.Focus();
+                                    primerTb.SelectAll();
+                                }
+
+                                break;
+                            }
+                        }));
+                }
+                else
+                {
+                    MessageBox.Show(
+                        "Se evaluaron todos los alumnos.",
+                        "Fin de captura",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+            }
+
+            e.Handled = true;
+            return;
         }
 
-        // ========================================================
-        // YA ES LA ÚLTIMA ACTIVIDAD ACTIVA
-        //
-        // SOLO AQUÍ SE REVISA ASISTENCIA.
-        // ========================================================
-
-        if (vm.AsistenciaActiva)
-        {
-            var asistenciaTb =
-                FindVisualChildren<TextBox>(this)
-                    .FirstOrDefault(t =>
-                        string.Equals(
-                            t.Tag?.ToString(),
-                            "NavegacionInasistencia",
-                            StringComparison.Ordinal) &&
-                        t.IsVisible &&
-                        t.IsEnabled);
-
-            if (asistenciaTb != null)
-            {
-                asistenciaTb.Focus();
-                asistenciaTb.SelectAll();
-
-                e.Handled = true;
-                return;
-            }
-        }
-
-        // ========================================================
-        // SIN ASISTENCIA:
-        // IR DIRECTAMENTE AL SIGUIENTE ALUMNO.
-        //
-        // NO MoveFocus().
-        // NO BUSCAR OTRO CONTROL VISUAL.
-        // ========================================================
+        // ============================================================
+        // ENTER EN INASISTENCIAS
+        // ============================================================
 
         if (
-            vm.AlumnoSeleccionado != null &&
-            vm.Alumnos.Any())
+            string.Equals(
+                tb.Tag?.ToString(),
+                "NavegacionInasistencia",
+                StringComparison.Ordinal))
         {
-            int idx =
-                vm.Alumnos.IndexOf(
-                    vm.AlumnoSeleccionado);
-
-            if (idx < vm.Alumnos.Count - 1)
+            if (
+                vm.AlumnoSeleccionado != null &&
+                vm.Alumnos.Any())
             {
-                vm.AlumnoSeleccionado =
-                    vm.Alumnos[idx + 1];
+                int idx =
+                    vm.Alumnos.IndexOf(
+                        vm.AlumnoSeleccionado);
 
-                Dispatcher.BeginInvoke(
-                    new Action(() =>
-                    {
-                        // Esperar a que WPF reconstruya
-                        // los controles del nuevo alumno.
+                if (idx < vm.Alumnos.Count - 1)
+                {
+                    vm.AlumnoSeleccionado =
+                        vm.Alumnos[idx + 1];
 
-                        for (
-                            int i = 0;
-                            i < vm.Actividades.Count;
-                            i++)
+                    Dispatcher.BeginInvoke(
+                        new Action(() =>
                         {
-                            if (!vm.Actividades[i].Activa)
-                                continue;
-
-                            var container =
-                                PuntajesItemsControl
-                                    .ItemContainerGenerator
-                                    .ContainerFromIndex(i)
-                                as FrameworkElement;
-
-                            if (container == null)
-                                continue;
-
-                            var primerTb =
-                                FindVisualChildren<TextBox>(
-                                    container)
-                                .FirstOrDefault(t =>
-                                    string.Equals(
-                                        t.Tag?.ToString(),
-                                        "NavegacionPuntaje",
-                                        StringComparison.Ordinal) &&
-                                    t.IsVisible &&
-                                    t.IsEnabled);
-
-                            if (primerTb != null)
+                            for (
+                                int i = 0;
+                                i < vm.Actividades.Count;
+                                i++)
                             {
-                                primerTb.Focus();
-                                primerTb.SelectAll();
-                            }
+                                if (!vm.Actividades[i].Activa)
+                                    continue;
 
-                            break;
-                        }
-                    }));
+                                var container =
+                                    PuntajesItemsControl
+                                            .ItemContainerGenerator
+                                            .ContainerFromIndex(i)
+                                        as FrameworkElement;
+
+                                if (container == null)
+                                    continue;
+
+                                var primerTb =
+                                    FindVisualChildren<TextBox>(
+                                            container)
+                                        .FirstOrDefault(t =>
+                                            string.Equals(
+                                                t.Tag?.ToString(),
+                                                "NavegacionPuntaje",
+                                                StringComparison.Ordinal) &&
+                                            t.IsVisible &&
+                                            t.IsEnabled);
+
+                                if (primerTb != null)
+                                {
+                                    primerTb.Focus();
+                                    primerTb.SelectAll();
+                                }
+
+                                break;
+                            }
+                        }));
+                }
+                else
+                {
+                    MessageBox.Show(
+                        "Se evaluaron todos los alumnos.",
+                        "Fin de captura",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
             }
-            else
-            {
-                MessageBox.Show(
-                    "Se evaluaron todos los alumnos.",
-                    "Fin de captura",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
+
+            e.Handled = true;
+            return;
         }
 
         e.Handled = true;
-        return;
     }
-
-    // ============================================================
-    // ENTER EN INASISTENCIAS
-    // ============================================================
-
-    if (
-        string.Equals(
-            tb.Tag?.ToString(),
-            "NavegacionInasistencia",
-            StringComparison.Ordinal))
-    {
-        if (
-            vm.AlumnoSeleccionado != null &&
-            vm.Alumnos.Any())
-        {
-            int idx =
-                vm.Alumnos.IndexOf(
-                    vm.AlumnoSeleccionado);
-
-            if (idx < vm.Alumnos.Count - 1)
-            {
-                vm.AlumnoSeleccionado =
-                    vm.Alumnos[idx + 1];
-
-                Dispatcher.BeginInvoke(
-                    new Action(() =>
-                    {
-                        for (
-                            int i = 0;
-                            i < vm.Actividades.Count;
-                            i++)
-                        {
-                            if (!vm.Actividades[i].Activa)
-                                continue;
-
-                            var container =
-                                PuntajesItemsControl
-                                    .ItemContainerGenerator
-                                    .ContainerFromIndex(i)
-                                as FrameworkElement;
-
-                            if (container == null)
-                                continue;
-
-                            var primerTb =
-                                FindVisualChildren<TextBox>(
-                                    container)
-                                .FirstOrDefault(t =>
-                                    string.Equals(
-                                        t.Tag?.ToString(),
-                                        "NavegacionPuntaje",
-                                        StringComparison.Ordinal) &&
-                                    t.IsVisible &&
-                                    t.IsEnabled);
-
-                            if (primerTb != null)
-                            {
-                                primerTb.Focus();
-                                primerTb.SelectAll();
-                            }
-
-                            break;
-                        }
-                    }));
-            }
-            else
-            {
-                MessageBox.Show(
-                    "Se evaluaron todos los alumnos.",
-                    "Fin de captura",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
-        }
-
-        e.Handled = true;
-        return;
-    }
-
-    e.Handled = true;
-}
 
     private void Puntaje_TextChanged(
         object sender,
@@ -709,99 +709,188 @@ public partial class ParcialesView : UserControl
     // =========================================================
 
     private void ActividadProp_TextChanged(
-        object sender,
-        TextChangedEventArgs e)
+    object sender,
+    TextChangedEventArgs e)
+{
+    if (sender is not TextBox tb)
+        return;
+
+    if (DataContext is not ParcialesViewModel vm)
+        return;
+
+    if (tb.DataContext is not ActividadParcialEditor actividad)
+        return;
+
+    // =========================================================
+    // PUNTAJE MÁXIMO
+    // =========================================================
+
+    if (Grid.GetColumn(tb) == 4)
     {
-        if (sender is not TextBox tb)
-            return;
+        string textoMaximo =
+            (tb.Text ??
+             string.Empty)
+            .Trim()
+            .Replace(
+                ',',
+                '.');
 
         if (
-            tb.Name == "PorcBox" &&
-            DataContext is ParcialesViewModel vm)
+            double.TryParse(
+                textoMaximo,
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out double nuevoMaximo))
         {
-            var actividad =
-                tb.DataContext
-                    as ActividadParcialEditor;
-
-            if (actividad != null)
+            if (nuevoMaximo >= 0)
             {
-                double sumaOtros = 0.0;
-
-                foreach (var a in vm.Actividades)
-                {
-                    if (
-                        ReferenceEquals(
-                            a,
-                            actividad))
-                    {
-                        continue;
-                    }
-
-                    if (!a.Activa)
-                        continue;
-
-                    var text =
-                        (a.Porcentaje ??
-                         string.Empty)
-                        .Trim()
-                        .Replace(
-                            ',',
-                            '.');
-
-                    if (
-                        double.TryParse(
-                            text,
-                            System.Globalization.NumberStyles.Any,
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            out double val))
-                    {
-                        sumaOtros += val;
-                    }
-                }
-
-                string mine =
-                    (tb.Text ??
-                     string.Empty)
-                    .Trim()
-                    .Replace(
-                        ',',
-                        '.');
-
                 if (
-                    double.TryParse(
-                        mine,
-                        System.Globalization.NumberStyles.Any,
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        out double mineVal))
+                    vm.ExistePuntajeFueraDeLimite(
+                        actividad,
+                        nuevoMaximo))
                 {
+                    var resultado =
+                        MessageBox.Show(
+                            "El nuevo puntaje máximo es menor que uno o más puntajes obtenidos en esta actividad.\n\n" +
+                            "¿Deseas eliminar los puntajes obtenidos de esta actividad?",
+                            "Puntaje máximo modificado",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Warning);
+
                     if (
-                        sumaOtros +
-                        mineVal >
-                        100.0)
+                        resultado ==
+                        MessageBoxResult.Yes)
                     {
-                        var warningModal =
-                            new WarningWindow(
-                                "La suma de los porcentajes no puede superar el 100%. Por favor, ajusta los valores.");
-
-                        warningModal.Owner =
-                            Window.GetWindow(
-                                this);
-
-                        warningModal.ShowDialog();
-
-                        tb.Text =
-                            string.Empty;
-
-                        tb.Focus();
-
-                        return;
+                        vm.EliminarPuntajesDeActividad(
+                            actividad);
                     }
                 }
             }
         }
+    }
 
-        if (DataContext is ParcialesViewModel vm2)
-            vm2.MarkUserEdited();
+    // =========================================================
+    // PORCENTAJE
+    // =========================================================
+
+    if (tb.Name == "PorcBox")
+    {
+        double sumaOtros = 0.0;
+
+        foreach (var a in vm.Actividades)
+        {
+            if (
+                ReferenceEquals(
+                    a,
+                    actividad))
+            {
+                continue;
+            }
+
+            if (!a.Activa)
+                continue;
+
+            var text =
+                (a.Porcentaje ??
+                 string.Empty)
+                .Trim()
+                .Replace(
+                    ',',
+                    '.');
+
+            if (
+                double.TryParse(
+                    text,
+                    System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out double val))
+            {
+                sumaOtros += val;
+            }
+        }
+
+        string mine =
+            (tb.Text ??
+             string.Empty)
+            .Trim()
+            .Replace(
+                ',',
+                '.');
+
+        if (
+            double.TryParse(
+                mine,
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out double mineVal))
+        {
+            if (
+                sumaOtros +
+                mineVal >
+                100.0)
+            {
+                var warningModal =
+                    new WarningWindow(
+                        "La suma de los porcentajes no puede superar el 100%. Por favor, ajusta los valores.");
+
+                warningModal.Owner =
+                    Window.GetWindow(
+                        this);
+
+                warningModal.ShowDialog();
+
+                tb.Text =
+                    string.Empty;
+
+                tb.Focus();
+
+                return;
+            }
+        }
+    }
+
+    vm.MarkUserEdited();
+}
+
+    private static bool PuntajeObtenidoSuperaMaximo(
+        ActividadParcialEditor actividad,
+        double nuevoMaximo)
+    {
+        string texto =
+            (actividad.PuntajeObtenido ??
+             string.Empty)
+            .Trim()
+            .Replace(
+                ',',
+                '.');
+
+        if (string.IsNullOrWhiteSpace(texto))
+            return false;
+
+        if (
+            string.Equals(
+                texto,
+                "SC",
+                StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(
+                texto,
+                "S",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (
+            !double.TryParse(
+                texto,
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out double puntaje))
+        {
+            return false;
+        }
+
+        return puntaje > nuevoMaximo;
     }
 
     private void ActividadActiva_Click(
