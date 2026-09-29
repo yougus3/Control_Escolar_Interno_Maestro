@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
@@ -40,8 +41,7 @@ public partial class ParcialesViewModel : ObservableObject
 
     private string? _ultimaMatriculaSeleccionada;
 
-    [ObservableProperty]
-    private bool _tieneCambios;
+    [ObservableProperty] private bool _tieneCambios;
 
     private string? _lastArchivoSeleccionado;
     private string? _lastEvaluacionSeleccionada;
@@ -61,77 +61,54 @@ public partial class ParcialesViewModel : ObservableObject
     public MainViewModel MainVm =>
         _mainVm;
 
-    [ObservableProperty]
-    private Alumno? _alumnoSeleccionado;
+    [ObservableProperty] private Alumno? _alumnoSeleccionado;
 
-    [ObservableProperty]
-    private string _nombreMateria = string.Empty;
+    [ObservableProperty] private string _nombreMateria = string.Empty;
+    [ObservableProperty] private string _nombreProfesor = string.Empty;
 
-    [ObservableProperty]
-    private string _nombreEvaluacion = string.Empty;
+    [ObservableProperty] private string _nombreEvaluacion = string.Empty;
 
-    [ObservableProperty]
-    private string _nombreAlumno = string.Empty;
+    [ObservableProperty] private string _nombreAlumno = string.Empty;
 
-    [ObservableProperty]
-    private string _matriculaAlumno = string.Empty;
+    [ObservableProperty] private string _matriculaAlumno = string.Empty;
 
-    [ObservableProperty]
-    private string _grupoAlumno = string.Empty;
+    [ObservableProperty] private string _grupoAlumno = string.Empty;
 
-    [ObservableProperty]
-    private bool _mostrarGrupo = true;
+    [ObservableProperty] private bool _mostrarGrupo = true;
 
-    [ObservableProperty]
-    private decimal _sumaPorcentajes;
+    [ObservableProperty] private decimal _sumaPorcentajes;
 
-    [ObservableProperty]
-    private string _sumaPorcentajesTexto = "0%";
+    [ObservableProperty] private string _sumaPorcentajesTexto = "0%";
 
-    [ObservableProperty]
-    private string _porcentajeEstado = "Ok";
+    [ObservableProperty] private string _porcentajeEstado = "Ok";
 
-    [ObservableProperty]
-    private bool _sumaValida = false;
+    [ObservableProperty] private bool _sumaValida = false;
 
-    [ObservableProperty]
-    private string _calificacionParcialTexto = string.Empty;
+    [ObservableProperty] private string _calificacionParcialTexto = string.Empty;
 
-    [ObservableProperty]
-    private string _estadoValidacion = "Sin cargar";
+    [ObservableProperty] private string _estadoValidacion = "Sin cargar";
 
-    [ObservableProperty]
-    private string _estadoGuardado = string.Empty;
+    [ObservableProperty] private string _estadoGuardado = string.Empty;
 
-    [ObservableProperty]
-    private bool _asistenciaActiva;
+    [ObservableProperty] private bool _asistenciaActiva;
 
-    [ObservableProperty]
-    private string _clasesTotales = string.Empty;
+    [ObservableProperty] private string _clasesTotales = string.Empty;
 
-    [ObservableProperty]
-    private string _inasistencias = string.Empty;
+    [ObservableProperty] private string _inasistencias = string.Empty;
 
-    [ObservableProperty]
-    private bool _alumnoConCapturaDirecta;
+    [ObservableProperty] private bool _alumnoConCapturaDirecta;
 
-    [ObservableProperty]
-    private bool _capturaDirectaActiva;
+    [ObservableProperty] private bool _capturaDirectaActiva;
 
-    [ObservableProperty]
-    private string _leyendaCapturaDirecta = string.Empty;
+    [ObservableProperty] private string _leyendaCapturaDirecta = string.Empty;
 
-    [ObservableProperty]
-    private bool _preActivo;
+    [ObservableProperty] private bool _preActivo;
 
-    [ObservableProperty]
-    private bool _calificacionParcialEditable;
+    [ObservableProperty] private bool _calificacionParcialEditable;
 
-    [ObservableProperty]
-    private string _textoEvaluados = string.Empty;
+    [ObservableProperty] private string _textoEvaluados = string.Empty;
 
-    [ObservableProperty]
-    private bool _faltanPorEvaluar = false;
+    [ObservableProperty] private bool _faltanPorEvaluar = false;
 
     public List<AlumnoFaltante> ListaNoEvaluados { get; private set; } =
         new();
@@ -304,6 +281,75 @@ public partial class ParcialesViewModel : ObservableObject
         RecalcularTodo(
             guardarJson: false);
     }
+    
+    private string ObtenerNombreProfesorDesdeCap(
+        string rutaCompleta)
+    {
+        if (string.IsNullOrWhiteSpace(rutaCompleta) ||
+            !File.Exists(rutaCompleta))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            Encoding.RegisterProvider(
+                CodePagesEncodingProvider.Instance);
+
+            var encodingCap =
+                Encoding.GetEncoding("iso-8859-1");
+
+            bool dentroParametros = false;
+
+            foreach (var linea in
+                     File.ReadLines(
+                         rutaCompleta,
+                         encodingCap))
+            {
+                string texto =
+                    linea.Trim();
+
+                if (texto.Equals(
+                        "[Parametros]",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    dentroParametros = true;
+                    continue;
+                }
+
+                if (dentroParametros &&
+                    texto.StartsWith("[") &&
+                    texto.EndsWith("]"))
+                {
+                    break;
+                }
+
+                if (!dentroParametros ||
+                    !texto.Contains('='))
+                {
+                    continue;
+                }
+
+                var partes =
+                    texto.Split('=', 2);
+
+                if (partes.Length != 2)
+                    continue;
+
+                if (partes[0].Trim().Equals(
+                        "NombreProfesor",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return partes[1].Trim();
+                }
+            }
+        }
+        catch
+        {
+        }
+
+        return string.Empty;
+    }
 
     private void InicializarInasistenciasVacias()
     {
@@ -329,7 +375,7 @@ public partial class ParcialesViewModel : ObservableObject
                         StringComparer.OrdinalIgnoreCase);
 
                 _materia.Calificaciones[
-                    alumno.Matricula] =
+                        alumno.Matricula] =
                     capturas;
             }
 
@@ -352,7 +398,7 @@ public partial class ParcialesViewModel : ObservableObject
                 continue;
 
             capturas[
-                "__Inasistencias__"] =
+                    "__Inasistencias__"] =
                 0.0;
         }
 
@@ -784,6 +830,13 @@ public partial class ParcialesViewModel : ObservableObject
                 _mainVm.ArchivoSeleccionado ??
                 string.Empty;
 
+            NombreProfesor =
+                !string.IsNullOrWhiteSpace(
+                    _mainVm.ArchivoCompletoActual)
+                    ? ObtenerNombreProfesorDesdeCap(
+                        _mainVm.ArchivoCompletoActual)
+                    : string.Empty;
+            
             NombreEvaluacion =
                 ObtenerNombreEvaluacionVisual(
                     _mainVm.EvaluacionSeleccionada);
@@ -1097,7 +1150,7 @@ public partial class ParcialesViewModel : ObservableObject
                         {
                             claveMateriaBase =
                                 Path.GetFileNameWithoutExtension(
-                                    MainVm.ArchivoCompletoActual)?
+                                        MainVm.ArchivoCompletoActual)?
                                     .Trim()
                                     .Replace(
                                         ' ',
@@ -1370,7 +1423,7 @@ public partial class ParcialesViewModel : ObservableObject
         // ============================================================
 
         capturas[
-            "__CAPTURA_DIRECTA__"] =
+                "__CAPTURA_DIRECTA__"] =
             AlumnoConCapturaDirecta
                 ? 1.0
                 : 0.0;
@@ -1385,7 +1438,7 @@ public partial class ParcialesViewModel : ObservableObject
                     out double dval))
             {
                 capturas[
-                    "__CALIF_DIRECTA__"] =
+                        "__CALIF_DIRECTA__"] =
                     dval;
             }
         }
@@ -1475,13 +1528,13 @@ public partial class ParcialesViewModel : ObservableObject
                 out int inaVal))
         {
             capturas[
-                "__Inasistencias__"] =
+                    "__Inasistencias__"] =
                 inaVal;
         }
         else
         {
             capturas[
-                "__Inasistencias__"] =
+                    "__Inasistencias__"] =
                 -1;
         }
 
@@ -1495,7 +1548,7 @@ public partial class ParcialesViewModel : ObservableObject
                 out int ct))
         {
             _materia.Calificaciones[
-                "$CONFIG$"] =
+                    "$CONFIG$"] =
                 new Dictionary<string, double>
                 {
                     {
@@ -1513,7 +1566,7 @@ public partial class ParcialesViewModel : ObservableObject
         else
         {
             _materia.Calificaciones[
-                "$CONFIG$"] =
+                    "$CONFIG$"] =
                 new Dictionary<string, double>
                 {
                     {
@@ -1534,7 +1587,7 @@ public partial class ParcialesViewModel : ObservableObject
         // ============================================================
 
         _materia.Calificaciones[
-            matricula] =
+                matricula] =
             capturas;
     }
 
@@ -1818,8 +1871,8 @@ public partial class ParcialesViewModel : ObservableObject
                         _evaluacionActual))
                 {
                     AlumnoSeleccionado
-                        .Calificación[
-                            _evaluacionActual] =
+                            .Calificación[
+                                _evaluacionActual] =
                         CalificacionParcialTexto;
                 }
             }
@@ -1839,8 +1892,8 @@ public partial class ParcialesViewModel : ObservableObject
                             _evaluacionActual))
                     {
                         AlumnoSeleccionado
-                            .Calificación[
-                                _evaluacionActual] =
+                                .Calificación[
+                                    _evaluacionActual] =
                             string.Empty;
                     }
                 }
@@ -1923,7 +1976,7 @@ public partial class ParcialesViewModel : ObservableObject
             };
 
         _materia.Calificaciones[
-            "$CONFIG$"] =
+                "$CONFIG$"] =
             config;
 
         if (
@@ -2035,8 +2088,8 @@ public partial class ParcialesViewModel : ObservableObject
 
         string nombre =
             texto[
-                (firstSpace + 1)..]
-            .Trim();
+                    (firstSpace + 1)..]
+                .Trim();
 
         return string.IsNullOrWhiteSpace(nombre)
             ? clave
@@ -2103,7 +2156,7 @@ public partial class ParcialesViewModel : ObservableObject
             foreach (var kv in grupos)
             {
                 _mapaGrupos[
-                    kv.Key] =
+                        kv.Key] =
                     kv.Value;
             }
         }
@@ -2193,30 +2246,23 @@ public partial class ActividadParcialEditor : ObservableObject
     private bool _cargandoPuntaje =
         false;
 
-    [ObservableProperty]
-    private bool _estaCompleta;
+    [ObservableProperty] private bool _estaCompleta;
 
-    [ObservableProperty]
-    private bool _activa;
+    [ObservableProperty] private bool _activa;
 
-    [ObservableProperty]
-    private string _nombre =
+    [ObservableProperty] private string _nombre =
         string.Empty;
 
-    [ObservableProperty]
-    private string _porcentaje =
+    [ObservableProperty] private string _porcentaje =
         string.Empty;
 
-    [ObservableProperty]
-    private string _puntajeMaximo =
+    [ObservableProperty] private string _puntajeMaximo =
         string.Empty;
 
-    [ObservableProperty]
-    private string _puntajeObtenido =
+    [ObservableProperty] private string _puntajeObtenido =
         string.Empty;
 
-    [ObservableProperty]
-    private int _numeroActividad;
+    [ObservableProperty] private int _numeroActividad;
 
     public bool EsActividad1 { get; }
 
@@ -2678,13 +2724,13 @@ public partial class ActividadParcialEditor : ObservableObject
                 (decimal)porc;
 
             return
-                (
-                    Math.Truncate(
-                        contribucion * 10m) /
-                    10m
-                ).ToString(
-                    "0.0",
-                    CultureInfo.InvariantCulture);
+            (
+                Math.Truncate(
+                    contribucion * 10m) /
+                10m
+            ).ToString(
+                "0.0",
+                CultureInfo.InvariantCulture);
         }
     }
 
@@ -2703,6 +2749,7 @@ public partial class ActividadParcialEditor : ObservableObject
                 nameof(DisplayPuntajeObtenido));
         }
     }
+    
 
     private string GetDisplayPuntaje(
         string? raw)

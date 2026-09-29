@@ -862,26 +862,13 @@
                                 Margin="0,2,0,0">
 
                                 <TextBlock
-                                    Text="Asignatura: "
+                                    Text="Docente: "
                                     Foreground="#D6E4FF"
                                     FontSize="12"
                                     FontWeight="SemiBold" />
 
                                 <TextBlock
-                                    Text="{Binding NombreMateria}"
-                                    Foreground="White"
-                                    FontSize="12"
-                                    FontWeight="SemiBold" />
-
-                                <TextBlock
-                                    Text="  Evaluación: "
-                                    Foreground="#D6E4FF"
-                                    FontSize="12"
-                                    FontWeight="SemiBold"
-                                    Margin="15,0,0,0" />
-
-                                <TextBlock
-                                    Text="{Binding NombreEvaluacion}"
+                                    Text="{Binding NombreProfesor}"
                                     Foreground="White"
                                     FontSize="12"
                                     FontWeight="SemiBold" />
@@ -891,26 +878,14 @@
                                     Margin="15,0,0,0"
                                     Visibility="{Binding MostrarGrupo, Converter={StaticResource BoolToVis}}">
 
-                                    <TextBlock
-                                        Text="  Grupo: "
-                                        Foreground="#D6E4FF"
-                                        FontSize="12"
-                                        FontWeight="SemiBold" />
-
-                                    <TextBlock
-                                        Text="{Binding GrupoAlumno}"
-                                        Foreground="White"
-                                        FontSize="12"
-                                        FontWeight="SemiBold" />
-
                                 </StackPanel>
 
                                 <StackPanel
                                     Orientation="Horizontal"
-                                    Margin="15,0,0,0">
+                                    Margin="5,0,0,0">
 
                                     <TextBlock
-                                        Text="  Alumnos evaluados: "
+                                        Text="Alumnos evaluados: "
                                         Foreground="#D6E4FF"
                                         FontSize="12"
                                         FontWeight="SemiBold" />
@@ -922,17 +897,23 @@
                                         FontWeight="SemiBold" />
 
                                     <Button
+                                        Width="24"
+                                        Height="20"
                                         Margin="8,0,0,0"
+                                        Padding="0"
                                         Background="Transparent"
                                         BorderThickness="0"
                                         Cursor="Hand"
+                                        VerticalAlignment="Center"
                                         Visibility="{Binding FaltanPorEvaluar, Converter={StaticResource BoolToVis}}"
                                         Click="WarningNoEvaluados_Click"
                                         ToolTip="Ver lista de alumnos pendientes">
 
                                         <Viewbox
-                                            Width="17"
-                                            Height="17">
+                                            Width="18"
+                                            Height="18"
+                                            Margin="0,-5,0,0"
+                                            Stretch="Uniform">
 
                                             <Path
                                                 Fill="#FACC15"

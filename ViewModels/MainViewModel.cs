@@ -978,16 +978,8 @@
                 }
                 else
                 {
-                    var resTemp =
-                        _parserService
-                            .ProcesarArchivoCompleto(
-                                archivo);
-
                     string grupoNormal =
-                        resTemp.Alumnos
-                            .FirstOrDefault()
-                            ?.Grupo
-                        ?? "S/G";
+                        ObtenerGrupoDesdeCap(archivo);
 
                     nombreCombo =
                         $"{info.NombreBase} - Grupo: {grupoNormal}";

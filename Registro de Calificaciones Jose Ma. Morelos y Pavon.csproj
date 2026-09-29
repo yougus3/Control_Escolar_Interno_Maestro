@@ -42,6 +42,7 @@
 		<!-- Release limpio -->
 		<DebugType>None</DebugType>
 		<DebugSymbols>false</DebugSymbols>
+		<Version>2.1.5</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
