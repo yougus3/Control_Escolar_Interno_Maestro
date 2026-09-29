@@ -11,19 +11,27 @@ using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
 {
-    public class ReporteExtraordinarioPdfService
+    public class ReporteEvaluacionesAdicionalesPdfService
     {
         private readonly CapParserService _parserService;
         private readonly SqliteService _sqliteService;
+        private readonly PreExtraordinarioService _preService;
 
-        public ReporteExtraordinarioPdfService()
+        public ReporteEvaluacionesAdicionalesPdfService()
         {
             _parserService = new CapParserService();
             _sqliteService = new SqliteService();
+            _preService = new PreExtraordinarioService();
 
             Encoding.RegisterProvider(
                 CodePagesEncodingProvider.Instance);
         }
+
+        // ============================================================
+        // GENERAR EXTRAORDINARIO
+        //
+        // ESTE MÉTODO CONSERVA EL COMPORTAMIENTO ACTUAL.
+        // ============================================================
 
         public byte[] GenerarDiseno(
             IEnumerable<string> rutasCap)
@@ -83,7 +91,78 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
         }
 
         // ============================================================
+        // GENERAR PREEXTRAORDINARIO
+        //
+        // SOLO ALUMNOS QUE TIENEN PRE.
+        //
+        // LA CALIFICACIÓN SALE DE PreExtraordinarioService.
+        // NO utiliza alumno.Calificación["EXTRA"].
+        // ============================================================
+
+        public byte[] GenerarDisenoPre(
+            IEnumerable<string> rutasCap)
+        {
+            if (rutasCap == null)
+                throw new ArgumentNullException(
+                    nameof(rutasCap));
+
+            List<string> rutas =
+                rutasCap
+                    .Where(
+                        x =>
+                            !string.IsNullOrWhiteSpace(x))
+                    .Distinct(
+                        StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+            if (rutas.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    "No se seleccionaron archivos CAP.");
+            }
+
+            var materias =
+                new List<MateriaExtra>();
+
+            foreach (string ruta in rutas)
+            {
+                if (!File.Exists(ruta))
+                    continue;
+
+                MateriaExtra? materia =
+                    CargarMateriaPre(ruta);
+
+                if (materia != null &&
+                    materia.Alumnos.Count > 0)
+                {
+                    materias.Add(materia);
+                }
+            }
+
+            if (materias.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    "No se encontraron alumnos con PRE en los archivos CAP seleccionados.");
+            }
+
+            return Document
+                .Create(document =>
+                {
+                    foreach (MateriaExtra materia
+                             in materias)
+                    {
+                        AgregarPaginaMateriaPre(
+                            document,
+                            materia);
+                    }
+                })
+                .GeneratePdf();
+        }
+
+        // ============================================================
         // CARGAR MATERIA DESDE CAP
+        //
+        // ESTE MÉTODO ES EL EXISTENTE PARA EXTRA.
         // ============================================================
 
         private MateriaExtra? CargarMateria(
@@ -91,16 +170,12 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
         {
             try
             {
-                // ProcesarArchivo() devuelve directamente List<Alumno>
                 List<Alumno> alumnos =
                     _parserService
                         .ProcesarArchivo(rutaCap);
 
                 // ====================================================
                 // DATOS DIRECTOS DEL CAP
-                //
-                // NO se buscan en configuracion.bin.
-                // Se leen literalmente del CAP con ISO-8859-1.
                 // ====================================================
 
                 string asignatura =
@@ -167,51 +242,11 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
                                 .Trim()
                             ?? string.Empty;
 
-                        // =================================================
-                        // GPO
-                        //
-                        // Primero configuracion.bin.
-                        // Después grupo del alumno.
-                        // Finalmente Grupo del CAP.
-                        // =================================================
-
                         string grupoTradicional =
-                            string.Empty;
-
-                        if (!string.IsNullOrWhiteSpace(
-                                matricula))
-                        {
-                            try
-                            {
-                                grupoTradicional =
-                                    _sqliteService
-                                        .ObtenerGrupoPorMatricula(
-                                            matricula)?
-                                        .Trim()
-                                    ?? string.Empty;
-                            }
-                            catch
-                            {
-                                grupoTradicional =
-                                    string.Empty;
-                            }
-                        }
-
-                        if (string.IsNullOrWhiteSpace(
-                                grupoTradicional))
-                        {
-                            grupoTradicional =
-                                alumno.Grupo?
-                                    .Trim()
-                                ?? string.Empty;
-                        }
-
-                        if (string.IsNullOrWhiteSpace(
-                                grupoTradicional))
-                        {
-                            grupoTradicional =
-                                materia.GrupoCap;
-                        }
+                            ObtenerGrupoAlumno(
+                                alumno,
+                                matricula,
+                                materia.GrupoCap);
 
                         string calificacionNumero =
                             ObtenerCalificacionNumero(
@@ -251,7 +286,218 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
         }
 
         // ============================================================
-        // PÁGINA DE MATERIA
+        // CARGAR MATERIA PARA PRE
+        //
+        // AQUÍ SE CONSERVA EL CARÁCTER DE PRE.
+        //
+        // La materia, alumnos y datos generales siguen saliendo
+        // del CAP.
+        //
+        // La calificación sale exclusivamente de:
+        //
+        // PreExtraordinarioService.ObtenerEstadoPre(...)
+        // ============================================================
+
+        private MateriaExtra? CargarMateriaPre(
+            string rutaCap)
+        {
+            try
+            {
+                List<Alumno> alumnos =
+                    _parserService
+                        .ProcesarArchivo(rutaCap);
+
+                string asignatura =
+                    ObtenerDatoCap(
+                        rutaCap,
+                        "ASIGNATURA_STR");
+
+                string codigoGrupo =
+                    ObtenerDatoCap(
+                        rutaCap,
+                        "CodigoGrupo");
+
+                string grupoCap =
+                    ObtenerDatoCap(
+                        rutaCap,
+                        "Grupo");
+
+                string nombreProfesor =
+                    ObtenerDatoCap(
+                        rutaCap,
+                        "NombreProfesor");
+
+                var materia =
+                    new MateriaExtra
+                    {
+                        RutaCap =
+                            rutaCap,
+
+                        Asignatura =
+                            asignatura.Trim(),
+
+                        CodigoGrupo =
+                            codigoGrupo.Trim(),
+
+                        GrupoCap =
+                            grupoCap.Trim(),
+
+                        NombreProfesor =
+                            nombreProfesor.Trim(),
+
+                        Alumnos =
+                            new List<AlumnoExtra>()
+                    };
+
+                string capBaseName =
+                    Path.GetFileNameWithoutExtension(
+                        rutaCap);
+
+                // ====================================================
+                // ALUMNOS CON PRE
+                // ====================================================
+
+                if (alumnos != null)
+                {
+                    foreach (Alumno alumno
+                             in alumnos)
+                    {
+                        if (alumno == null)
+                            continue;
+
+                        string matricula =
+                            alumno.Matricula?
+                                .Trim()
+                            ?? string.Empty;
+
+                        if (string.IsNullOrWhiteSpace(
+                                matricula))
+                        {
+                            continue;
+                        }
+
+                        PreEstado estadoPre =
+                            _preService
+                                .ObtenerEstadoPre(
+                                    capBaseName,
+                                    matricula);
+
+                        // ============================================
+                        // SOLO ALUMNOS QUE REALMENTE TIENEN PRE
+                        // ============================================
+
+                        if (!estadoPre.TienePRE)
+                            continue;
+
+                        string nombre =
+                            alumno.Nombre?
+                                .Trim()
+                            ?? string.Empty;
+
+                        string grupoTradicional =
+                            ObtenerGrupoAlumno(
+                                alumno,
+                                matricula,
+                                materia.GrupoCap);
+
+                        string calificacionNumero =
+                            ObtenerCalificacionPre(
+                                estadoPre);
+
+                        string calificacionLetra =
+                            ConvertirNumeroALetra(
+                                calificacionNumero);
+
+                        materia.Alumnos.Add(
+                            new AlumnoExtra
+                            {
+                                Matricula =
+                                    matricula,
+
+                                Nombre =
+                                    nombre,
+
+                                Grupo =
+                                    grupoTradicional,
+
+                                CalificacionNumero =
+                                    calificacionNumero,
+
+                                CalificacionLetra =
+                                    calificacionLetra
+                            });
+                    }
+                }
+
+                return materia;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        // ============================================================
+        // GRUPO DEL ALUMNO
+        //
+        // SE CONSERVA LA PRIORIDAD EXISTENTE:
+        //
+        // 1. configuracion.bin
+        // 2. grupo del alumno
+        // 3. grupo del CAP
+        // ============================================================
+
+        private string ObtenerGrupoAlumno(
+            Alumno alumno,
+            string matricula,
+            string grupoCap)
+        {
+            string grupoTradicional =
+                string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(
+                    matricula))
+            {
+                try
+                {
+                    grupoTradicional =
+                        _sqliteService
+                            .ObtenerGrupoPorMatricula(
+                                matricula)?
+                            .Trim()
+                        ?? string.Empty;
+                }
+                catch
+                {
+                    grupoTradicional =
+                        string.Empty;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    grupoTradicional))
+            {
+                grupoTradicional =
+                    alumno.Grupo?
+                        .Trim()
+                    ?? string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    grupoTradicional))
+            {
+                grupoTradicional =
+                    grupoCap;
+            }
+
+            return grupoTradicional;
+        }
+
+        // ============================================================
+        // PÁGINA DE MATERIA EXTRA
+        //
+        // DISEÑO EXISTENTE.
+        // NO SE MODIFICA.
         // ============================================================
 
         private static void AgregarPaginaMateria(
@@ -276,8 +522,6 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
 
                 // ====================================================
                 // ENCABEZADO
-                //
-                // AQUÍ SOLO VA EL NombreProfesor DEL CAP.
                 // ====================================================
 
                 page.Header()
@@ -320,22 +564,22 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
                             columns =>
                             {
                                 columns.RelativeColumn(
-                                    3.2f); // ASIGNATURA
+                                    3.2f);
 
                                 columns.RelativeColumn(
-                                    1.4f); // GPO
+                                    1.4f);
 
                                 columns.RelativeColumn(
-                                    1.6f); // MATR
+                                    1.6f);
 
                                 columns.RelativeColumn(
-                                    4.8f); // NOMBRE
+                                    4.8f);
 
                                 columns.RelativeColumn(
-                                    1.8f); // C. NÚMERO
+                                    1.8f);
 
                                 columns.RelativeColumn(
-                                    3.0f); // C. LETRA
+                                    3.0f);
                             });
 
                         CrearEncabezadoTabla(
@@ -366,35 +610,207 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
                             AlumnoExtra alumno
                             in materia.Alumnos)
                         {
-                            // ASIGNATURA
                             CrearCelda(
                                 table,
                                 materia.Asignatura);
 
-                            // GPO
                             CrearCelda(
                                 table,
                                 alumno.Grupo,
                                 true);
 
-                            // MATR
                             CrearCelda(
                                 table,
                                 alumno.Matricula,
                                 true);
 
-                            // NOMBRE
                             CrearCelda(
                                 table,
                                 alumno.Nombre);
 
-                            // C. NÚMERO
                             CrearCelda(
                                 table,
                                 alumno.CalificacionNumero,
                                 true);
 
-                            // C. LETRA
+                            CrearCelda(
+                                table,
+                                alumno.CalificacionLetra,
+                                true);
+                        }
+                    });
+
+                // ====================================================
+                // PIE
+                // ====================================================
+
+                page.Footer()
+                    .AlignCenter()
+                    .Text(text =>
+                    {
+                        text.Span(
+                            "Página ");
+
+                        text.CurrentPageNumber();
+
+                        text.Span(
+                            " de ");
+
+                        text.TotalPages();
+                    });
+            });
+        }
+
+        // ============================================================
+        // PÁGINA DE MATERIA PRE
+        //
+        // MISMA MAQUETA DEL ACTA ADICIONAL.
+        //
+        // LA DIFERENCIA ES EL TÍTULO Y QUE LOS DATOS YA VIENEN
+        // FILTRADOS POR PRE.
+        // ============================================================
+
+        private static void AgregarPaginaMateriaPre(
+            IDocumentContainer document,
+            MateriaExtra materia)
+        {
+            document.Page(page =>
+            {
+                page.Size(
+                    PageSizes.Letter);
+
+                page.MarginTop(28);
+                page.MarginBottom(28);
+                page.MarginLeft(28);
+                page.MarginRight(28);
+
+                page.DefaultTextStyle(
+                    style =>
+                        style
+                            .FontFamily("Tahoma")
+                            .FontSize(8));
+
+                // ====================================================
+                // ENCABEZADO
+                // ====================================================
+
+                page.Header()
+                    .Column(header =>
+                    {
+                        header.Spacing(3);
+
+                        if (!string.IsNullOrWhiteSpace(
+                                materia.NombreProfesor))
+                        {
+                            header.Item()
+                                .AlignCenter()
+                                .Text(
+                                    materia.NombreProfesor)
+                                .Bold()
+                                .FontSize(11);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(
+                                materia.Asignatura))
+                        {
+                            header.Item()
+                                .AlignCenter()
+                                .Text(
+                                    materia.Asignatura)
+                                .Bold()
+                                .FontSize(9);
+                        }
+
+                        header.Item()
+                            .PaddingTop(3)
+                            .AlignCenter()
+                            .Text(
+                                "ACTA DE EVALUACIÓN PREEXTRAORDINARIA")
+                            .Bold()
+                            .FontSize(9);
+                    });
+
+                // ====================================================
+                // TABLA
+                // ====================================================
+
+                page.Content()
+                    .PaddingTop(10)
+                    .Table(table =>
+                    {
+                        table.ColumnsDefinition(
+                            columns =>
+                            {
+                                columns.RelativeColumn(
+                                    3.2f);
+
+                                columns.RelativeColumn(
+                                    1.4f);
+
+                                columns.RelativeColumn(
+                                    1.6f);
+
+                                columns.RelativeColumn(
+                                    4.8f);
+
+                                columns.RelativeColumn(
+                                    1.8f);
+
+                                columns.RelativeColumn(
+                                    3.0f);
+                            });
+
+                        CrearEncabezadoTabla(
+                            table,
+                            "ASIGNATURA");
+
+                        CrearEncabezadoTabla(
+                            table,
+                            "GPO");
+
+                        CrearEncabezadoTabla(
+                            table,
+                            "MATR");
+
+                        CrearEncabezadoTabla(
+                            table,
+                            "NOMBRE");
+
+                        CrearEncabezadoTabla(
+                            table,
+                            "C. NÚMERO");
+
+                        CrearEncabezadoTabla(
+                            table,
+                            "C. LETRA");
+
+                        foreach (
+                            AlumnoExtra alumno
+                            in materia.Alumnos)
+                        {
+                            CrearCelda(
+                                table,
+                                materia.Asignatura);
+
+                            CrearCelda(
+                                table,
+                                alumno.Grupo,
+                                true);
+
+                            CrearCelda(
+                                table,
+                                alumno.Matricula,
+                                true);
+
+                            CrearCelda(
+                                table,
+                                alumno.Nombre);
+
+                            CrearCelda(
+                                table,
+                                alumno.CalificacionNumero,
+                                true);
+
                             CrearCelda(
                                 table,
                                 alumno.CalificacionLetra,
@@ -476,7 +892,8 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
         // OBTENER EXTRA
         // ============================================================
 
-        private static string ObtenerCalificacionNumero(Alumno alumno)
+        private static string ObtenerCalificacionNumero(
+            Alumno alumno)
         {
             if (alumno?.Calificación == null)
                 return string.Empty;
@@ -503,10 +920,10 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
                     .Replace(',', '.');
 
             if (double.TryParse(
-                    texto,
-                    NumberStyles.Any,
-                    CultureInfo.InvariantCulture,
-                    out double numero))
+                texto,
+                NumberStyles.Any,
+                CultureInfo.InvariantCulture,
+                out double numero))
             {
                 if (numero < 0)
                     numero = 0;
@@ -517,7 +934,8 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
                 if (numero % 1 == 0)
                 {
                     return ((int)numero)
-                        .ToString(CultureInfo.InvariantCulture);
+                        .ToString(
+                            CultureInfo.InvariantCulture);
                 }
 
                 return numero.ToString(
@@ -529,10 +947,50 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
         }
 
         // ============================================================
+        // OBTENER PRE
+        //
+        // PRE MANEJA VALORES NUMÉRICOS.
+        //
+        // SI TODAVÍA NO EXISTE CALIFICACIÓN, SE DEJA VACÍO.
+        // ============================================================
+
+        private static string ObtenerCalificacionPre(
+            PreEstado estadoPre)
+        {
+            if (estadoPre == null ||
+                !estadoPre.TienePRE ||
+                !estadoPre.Calificacion.HasValue)
+            {
+                return string.Empty;
+            }
+
+            double numero =
+                estadoPre.Calificacion.Value;
+
+            if (numero < 0)
+                numero = 0;
+
+            if (numero > 10)
+                numero = 10;
+
+            if (numero % 1 == 0)
+            {
+                return ((int)numero)
+                    .ToString(
+                        CultureInfo.InvariantCulture);
+            }
+
+            return numero.ToString(
+                "0.#",
+                CultureInfo.InvariantCulture);
+        }
+
+        // ============================================================
         // CALIFICACIÓN A LETRA
         // ============================================================
 
-        private static string ConvertirNumeroALetra(string valor)
+        private static string ConvertirNumeroALetra(
+            string valor)
         {
             if (string.IsNullOrWhiteSpace(valor))
                 return string.Empty;
@@ -552,10 +1010,10 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
             }
 
             if (!double.TryParse(
-                    valor.Replace(',', '.'),
-                    NumberStyles.Any,
-                    CultureInfo.InvariantCulture,
-                    out double numero))
+                valor.Replace(',', '.'),
+                NumberStyles.Any,
+                CultureInfo.InvariantCulture,
+                out double numero))
             {
                 return string.Empty;
             }
@@ -582,14 +1040,6 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services
 
         // ============================================================
         // LEER DATO DIRECTAMENTE DEL CAP
-        //
-        // IMPORTANTE:
-        // No se limita a [DatosGrupo].
-        //
-        // Busca el campo en TODO el CAP.
-        //
-        // Codificación exacta:
-        // ISO-8859-1
         // ============================================================
 
         private static string ObtenerDatoCap(

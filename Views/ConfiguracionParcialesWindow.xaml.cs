@@ -1078,7 +1078,7 @@ public partial class ConfiguracionParcialesWindow :
             if (esExtra)
             {
                 var servicioExtra =
-                    new ReporteExtraordinarioPdfService();
+                    new ReporteEvaluacionesAdicionalesPdfService();
 
                 var rutasCap =
                     seleccionados
@@ -1472,7 +1472,7 @@ public partial class ConfiguracionParcialesWindow :
             if (esExtra)
             {
                 var servicioExtra =
-                    new ReporteExtraordinarioPdfService();
+                    new ReporteEvaluacionesAdicionalesPdfService();
 
                 var rutasCap =
                     seleccionados

@@ -1,16 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.ViewModels;
+using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
 {
@@ -108,20 +109,6 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
 
                 AlumnosPre.Clear();
 
-                // ====================================================
-                // CLAVE REAL DEL REGISTRO PRE
-                //
-                // SE OBTIENE DEL NOMBRE BASE DEL CAP:
-                //
-                // CALIF001.CAP
-                //      ↓
-                // CALIF001
-                //      ↓
-                // CALIF001_PRE
-                //
-                // NO SE USA CLAVEASIGNATURA AQUÍ.
-                // ====================================================
-
                 string claveMateria =
                     ObtenerClaveMateria();
 
@@ -137,24 +124,10 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 System.Diagnostics.Debug.WriteLine(
                     $"[PRE] Clave base CAP usada para PRE = '{claveMateria}'");
 
-                // ====================================================
-                // OBTENER ALUMNOS BASE
-                //
-                // Aquí se utiliza la MISMA clave que P1/P2/P3.
-                // ====================================================
-
                 var alumnos =
                     _preService.ObtenerAlumnosParaPre(
                         claveMateria,
                         _mainVm.Alumnos);
-
-                // ====================================================
-                // FILTRO REAL:
-                // configuracion.bin -> PRE
-                //
-                // ESTA COMPROBACIÓN SÍ USA CLAVEASIGNATURA,
-                // porque aquí estamos verificando DERECHO a PRE.
-                // ====================================================
 
                 int candidatos =
                     alumnos.Count;
@@ -185,9 +158,7 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                         $"[PRE] Alumno {matricula} -> derecho={tieneDerecho}");
 
                     if (!tieneDerecho)
-                    {
                         continue;
-                    }
 
                     autorizados++;
 
@@ -219,18 +190,6 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
 
         // ============================================================
         // CLAVE BASE DEL CAP
-        //
-        // IMPORTANTE:
-        //
-        // CALIF001.CAP
-        //      ↓
-        // CALIF001
-        //
-        // NO:
-        // 3-6-111
-        //
-        // 3-6-111 es CLAVEASIGNATURA y se utiliza únicamente
-        // en MainViewModel.AlumnoTieneDerechoPre().
         // ============================================================
 
         private string ObtenerClaveMateria()
@@ -282,40 +241,98 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             TextCompositionEventArgs e)
         {
             if (sender is not TextBox textBox)
-                return;
-
-            string entrada =
-                e.Text?.Trim().ToUpperInvariant()
-                ?? string.Empty;
-
-            // ============================================================
-            // ESCRIBIR N
-            // ============================================================
-            // Al escribir N se completa automáticamente a NP.
-            // ============================================================
-
-            if (entrada == "N")
             {
-                textBox.Text = "NP";
-                textBox.CaretIndex = textBox.Text.Length;
-
                 e.Handled = true;
                 return;
             }
 
-            // ============================================================
-            // ESCRIBIR 0 A 6
-            // ============================================================
+            string textoActual =
+                textBox.Text ?? string.Empty;
 
-            if (entrada.Length == 1 &&
-                entrada[0] >= '0' &&
-                entrada[0] <= '6')
+            // N / n -> NP
+            if (e.Text.Equals(
+                    "N",
+                    StringComparison.OrdinalIgnoreCase))
             {
-                e.Handled = false;
+                textBox.Text =
+                    "NP";
+
+                textBox.CaretIndex =
+                    textBox.Text.Length;
+
+                e.Handled =
+                    true;
+
                 return;
             }
 
-            e.Handled = true;
+            // Si ya es NP, no permitir más caracteres
+            if (textoActual.Equals(
+                    "NP",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                e.Handled =
+                    true;
+
+                return;
+            }
+
+            // Solo dígitos
+            if (string.IsNullOrEmpty(e.Text) ||
+                !char.IsDigit(e.Text[0]))
+            {
+                e.Handled =
+                    true;
+
+                return;
+            }
+
+            string nuevoTexto;
+
+            if (textBox.SelectionLength > 0)
+            {
+                nuevoTexto =
+                    textoActual.Remove(
+                            textBox.SelectionStart,
+                            textBox.SelectionLength)
+                        .Insert(
+                            textBox.SelectionStart,
+                            e.Text);
+            }
+            else
+            {
+                nuevoTexto =
+                    textoActual.Insert(
+                        textBox.SelectionStart,
+                        e.Text);
+            }
+
+            // Solo enteros 0 a 10
+            if (!int.TryParse(
+                    nuevoTexto,
+                    NumberStyles.None,
+                    CultureInfo.InvariantCulture,
+                    out int valor) ||
+                valor < 0 ||
+                valor > 10)
+            {
+                e.Handled =
+                    true;
+
+                return;
+            }
+
+            // Máximo dos caracteres
+            if (nuevoTexto.Length > 2)
+            {
+                e.Handled =
+                    true;
+
+                return;
+            }
+
+            e.Handled =
+                false;
         }
 
         private void PreTextBox_PreviewKeyDown(
@@ -325,29 +342,35 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             if (sender is not TextBox textBox)
                 return;
 
-            if (e.Key == Key.Enter)
+            // NP + Backspace/Delete = borrar TODO el campo
+            if ((e.Key == Key.Back ||
+                 e.Key == Key.Delete) &&
+                textBox.Text.Equals(
+                    "NP",
+                    StringComparison.OrdinalIgnoreCase))
             {
-                e.Handled = true;
+                textBox.Clear();
+                textBox.CaretIndex =
+                    0;
 
-                GuardarDesdeTextBox(
-                    textBox);
-
-                MoveFocusAfterSave(
-                    textBox);
+                e.Handled =
+                    true;
 
                 return;
             }
 
-            if (e.Key == Key.Escape)
+            // ENTER = únicamente pasar al siguiente PRE.
+            // NO guarda.
+            if (e.Key == Key.Enter)
             {
-                e.Handled = true;
+                e.Handled =
+                    true;
 
-                if (textBox.DataContext
-                    is AlumnoPreItem item)
-                {
-                    textBox.Text =
-                        item.PreAnterior;
-                }
+                Dispatcher.BeginInvoke(
+                    new Action(() =>
+                        MoverAlSiguienteCampoPre(
+                            textBox)),
+                    System.Windows.Threading.DispatcherPriority.Input);
             }
         }
 
@@ -355,23 +378,19 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             object sender,
             RoutedEventArgs e)
         {
-            if (_cargando ||
-                _guardando)
-            {
-                return;
-            }
-
-            if (sender is TextBox textBox)
-            {
-                GuardarDesdeTextBox(
-                    textBox);
-            }
+            // NO guardar automáticamente al perder el foco.
         }
 
         private void PreTextBox_Pasting(
             object sender,
             DataObjectPastingEventArgs e)
         {
+            if (sender is not TextBox textBox)
+            {
+                e.CancelCommand();
+                return;
+            }
+
             if (!e.DataObject.GetDataPresent(
                     DataFormats.Text))
             {
@@ -379,42 +398,162 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 return;
             }
 
-            string texto =
+            string pegado =
                 e.DataObject.GetData(
-                    DataFormats.Text) as string
+                        DataFormats.Text) as string
                 ?? string.Empty;
 
-            texto =
-                texto.Trim()
-                    .ToUpperInvariant();
+            pegado =
+                pegado.Trim();
 
-            if (texto == "N")
+            // N / NP
+            if (pegado.Equals(
+                    "N",
+                    StringComparison.OrdinalIgnoreCase) ||
+                pegado.Equals(
+                    "NP",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                textBox.Text =
+                    "NP";
+
+                textBox.CaretIndex =
+                    textBox.Text.Length;
+
+                e.Handled =
+                    true;
+
+                return;
+            }
+
+            // Solo 0 a 10 sin decimales
+            if (!int.TryParse(
+                    pegado,
+                    NumberStyles.None,
+                    CultureInfo.InvariantCulture,
+                    out int valor) ||
+                valor < 0 ||
+                valor > 10)
             {
                 e.CancelCommand();
+                return;
+            }
 
-                if (sender is TextBox textBox)
+            textBox.Text =
+                valor.ToString(
+                    CultureInfo.InvariantCulture);
+
+            textBox.CaretIndex =
+                textBox.Text.Length;
+
+            e.Handled =
+                true;
+        }
+
+        // ============================================================
+        // NAVEGACIÓN PRE
+        // ============================================================
+
+        private void MoverAlSiguienteCampoPre(
+            TextBox campoActual)
+        {
+            List<TextBox> campos =
+                FindVisualChildren<TextBox>(this)
+                    .Where(x =>
+                        x.DataContext is AlumnoPreItem &&
+                        x.IsEnabled &&
+                        x.IsVisible)
+                    .ToList();
+
+            int indiceActual =
+                campos.IndexOf(
+                    campoActual);
+
+            if (indiceActual < 0)
+                return;
+
+            for (int i = indiceActual + 1;
+                 i < campos.Count;
+                 i++)
+            {
+                TextBox siguiente =
+                    campos[i];
+
+                if (siguiente.DataContext
+                    is not AlumnoPreItem alumno)
                 {
-                    textBox.Text = "NP";
-                    textBox.CaretIndex =
-                        textBox.Text.Length;
+                    continue;
                 }
 
+                if (alumno.Estado.Equals(
+                        "Sin derecho",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                siguiente.Focus();
+                siguiente.SelectAll();
+
+                ScrollIntoView(
+                    siguiente);
+
                 return;
             }
+        }
 
-            if (texto == "NP")
+        private static IEnumerable<T> FindVisualChildren<T>(
+            DependencyObject parent)
+            where T : DependencyObject
+        {
+            if (parent == null)
+                yield break;
+
+            int count =
+                VisualTreeHelper.GetChildrenCount(
+                    parent);
+
+            for (int i = 0;
+                 i < count;
+                 i++)
             {
-                return;
-            }
+                DependencyObject child =
+                    VisualTreeHelper.GetChild(
+                        parent,
+                        i);
 
-            if (texto.Length == 1 &&
-                texto[0] >= '0' &&
-                texto[0] <= '6')
+                if (child is T typedChild)
+                    yield return typedChild;
+
+                foreach (T descendant
+                         in FindVisualChildren<T>(
+                             child))
+                {
+                    yield return descendant;
+                }
+            }
+        }
+
+        private void ScrollIntoView(
+            DependencyObject elemento)
+        {
+            DependencyObject? actual =
+                elemento;
+
+            while (actual != null)
             {
-                return;
-            }
+                if (actual is ScrollViewer scrollViewer)
+                {
+                    scrollViewer.ScrollToVerticalOffset(
+                        scrollViewer.VerticalOffset);
 
-            e.CancelCommand();
+                    break;
+                }
+
+                actual =
+                    VisualTreeHelper.GetParent(
+                        actual);
+            }
         }
 
         private static string ObtenerTextoResultante(
@@ -451,163 +590,99 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
         // ============================================================
         // GUARDAR DESDE TEXTBOX
         // ============================================================
+        //
+        // Se conserva para no eliminar funcionalidad existente,
+        // pero YA NO realiza ninguna persistencia.
+        // ============================================================
 
         private void GuardarDesdeTextBox(
             TextBox textBox)
         {
-            if (_cargando ||
-                _guardando)
-            {
-                return;
-            }
-
             if (textBox.DataContext
                 is not AlumnoPreItem item)
             {
                 return;
             }
 
-            string valor =
-                (textBox.Text ?? string.Empty).Trim();
+            string texto =
+                textBox.Text?.Trim()
+                ?? string.Empty;
 
             if (string.IsNullOrWhiteSpace(
-                    valor))
+                    texto))
             {
-                if (string.IsNullOrWhiteSpace(
-                        item.PreAnterior))
-                {
-                    item.Estado =
-                        string.Empty;
+                item.Pre =
+                    string.Empty;
 
-                    return;
-                }
+                return;
+            }
 
-                RevertirPre(
-                    item);
+            if (texto.Equals(
+                    "NP",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                item.Pre =
+                    "NP";
 
                 return;
             }
 
             if (!int.TryParse(
-                    valor,
-                    NumberStyles.Integer,
+                    texto,
+                    NumberStyles.None,
                     CultureInfo.InvariantCulture,
-                    out int resultado) ||
-                resultado < 0 ||
-                resultado > 6)
+                    out int resultado))
             {
                 textBox.Text =
-                    item.PreAnterior;
+                    item.Pre;
+
+                textBox.CaretIndex =
+                    textBox.Text.Length;
 
                 return;
             }
 
-            GuardarPre(
-                item,
-                resultado);
+            if (resultado < 0 ||
+                resultado > 10)
+            {
+                textBox.Text =
+                    item.Pre;
+
+                textBox.CaretIndex =
+                    textBox.Text.Length;
+
+                return;
+            }
+
+            item.Pre =
+                resultado.ToString(
+                    CultureInfo.InvariantCulture);
         }
 
         // ============================================================
         // GUARDAR PRE
+        // ============================================================
+        //
+        // IMPORTANTE:
+        // Este método ya NO guarda en SQLite/CAP.
+        // Solo actualiza el valor visual/en memoria.
         // ============================================================
 
         private void GuardarPre(
             AlumnoPreItem item,
             int resultado)
         {
-            if (_mainVm == null)
-                return;
-
-            // ============================================================
-            // AQUÍ YA OBTENEMOS:
-            //
-            // CALIF001.CAP -> CALIF001
-            //
-            // Por lo tanto PreExtraordinarioService guardará:
-            //
-            // CALIF001_PRE
-            // ============================================================
-
-            string claveMateria =
-                ObtenerClaveMateria();
-
-            if (string.IsNullOrWhiteSpace(
-                    claveMateria))
-            {
-                return;
-            }
-
-            try
-            {
-                _guardando =
-                    true;
-
-                var respuesta =
-                    _preService.GuardarResultadoPre(
-                        claveMateria,
-                        item.Matricula,
-                        resultado,
-                        _mainVm.Alumnos);
-
-                if (!respuesta.Exito)
-                {
-                    MessageBox.Show(
-                        respuesta.Mensaje,
-                        "PREEXTRAORDINARIO",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-
-                    item.Pre =
-                        item.PreAnterior;
-
-                    return;
-                }
-
-                item.PreAnterior =
-                    resultado.ToString(
-                        CultureInfo.InvariantCulture);
-
-                item.Pre =
-                    item.PreAnterior;
-
-                ActualizarItemDesdeAlumno(
-                    item);
-                
-                    bool guardado =
-                        _mainVm.GuardarResultadosPreEnCap();
-
-                    if (!guardado)
-                    {
-                        MessageBox.Show(
-                            "El PRE fue procesado en SQLite, pero no fue posible actualizar P2, P3 y SEM en el CAP.",
-                            "Advertencia",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Warning);
-                    }
-                
-
-                ActualizarTodosDesdeMainVm();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    $"No se pudo guardar el PREEXTRAORDINARIO.\n\n{ex.Message}",
-                    "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-
-                item.Pre =
-                    item.PreAnterior;
-            }
-            finally
-            {
-                _guardando =
-                    false;
-            }
+            item.Pre =
+                resultado.ToString(
+                    CultureInfo.InvariantCulture);
         }
 
         // ============================================================
         // REVERTIR PRE
+        // ============================================================
+        //
+        // Se conserva sin eliminar funcionalidad existente.
+        // Ya no es invocado automáticamente por LostFocus/Enter.
         // ============================================================
 
         private void RevertirPre(
@@ -682,7 +757,7 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 if (!guardado)
                 {
                     MessageBox.Show(
-                        "El PRE fue revertido en LiteDB, pero no fue posible restaurar P2, P3 y SEM en el CAP.",
+                        "El PRE fue revertido, pero no fue posible restaurar P2, P3 y SEM en el CAP.",
                         "Advertencia",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
@@ -717,8 +792,7 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             if (_mainVm == null)
                 return;
 
-            foreach (var item
-                     in AlumnosPre)
+            foreach (var item in AlumnosPre)
             {
                 ActualizarItemDesdeAlumno(
                     item);
@@ -778,7 +852,9 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             }
 
             if (!double.TryParse(
-                    valor.Replace(',', '.'),
+                    valor.Replace(
+                        ',',
+                        '.'),
                     NumberStyles.Any,
                     CultureInfo.InvariantCulture,
                     out double numero))
@@ -824,11 +900,13 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
             }
 
             double promedio =
-                (p1 + p2 + p3) / 3.0;
+                (p1 + p2 + p3) /
+                3.0;
 
             promedio =
                 Math.Truncate(
-                    promedio * 10.0) / 10.0;
+                    promedio * 10.0) /
+                10.0;
 
             return promedio.ToString(
                 "0.0",
@@ -847,39 +925,73 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 return;
 
             if (button.DataContext
-                is not AlumnoPreItem item)
+                is not AlumnoPreItem alumnoPre)
             {
                 return;
             }
 
-            MessageBox.Show(
-                $"Alumno: {item.Nombre}\n" +
-                $"Matrícula: {item.Matricula}\n" +
-                $"Grupo: {item.Grupo}\n\n" +
-                $"Parcial 1: {item.P1}\n" +
-                $"Parcial 2: {item.P2}\n" +
-                $"Parcial 3: {item.P3}\n" +
-                $"Promedio: {item.Promedio}\n\n" +
-                $"PRE: {(string.IsNullOrWhiteSpace(item.Pre) ? "Sin capturar" : item.Pre)}\n" +
-                $"Estado: {(string.IsNullOrWhiteSpace(item.Estado) ? "Sin PRE" : item.Estado)}",
-                "Información del alumno",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-        }
+            if (_mainVm == null)
+                _mainVm =
+                    FindMainViewModel();
 
-        private static void MoveFocusAfterSave(
-            Control actual)
-        {
-            actual.MoveFocus(
-                new TraversalRequest(
-                    FocusNavigationDirection.Next));
+            if (_mainVm == null)
+                return;
+
+            var alumno =
+                _mainVm.Alumnos.FirstOrDefault(
+                    a =>
+                        string.Equals(
+                            a.Matricula,
+                            alumnoPre.Matricula,
+                            StringComparison.OrdinalIgnoreCase));
+
+            if (alumno == null)
+                return;
+
+            var datosParciales =
+                new Dictionary<
+                    string,
+                    (
+                        string calif,
+                        string estado,
+                        int faltas,
+                        int totalClases
+                    )>();
+
+            foreach (string eval in
+                     new[] { "P1", "P2", "P3", "SEM" })
+            {
+                string calif =
+                    alumno.Calificación[eval];
+
+                datosParciales[eval] =
+                    (
+                        calif,
+                        string.Empty,
+                        -1,
+                        -1
+                    );
+            }
+
+            var ventana =
+                new InfoAlumnoWindow(
+                    alumno,
+                    datosParciales)
+                {
+                    Owner =
+                        Window.GetWindow(
+                            this)
+                };
+
+            ventana.ShowDialog();
         }
 
         // ============================================================
         // ITEM PRE
         // ============================================================
 
-        public sealed class AlumnoPreItem : INotifyPropertyChanged
+        public sealed class AlumnoPreItem :
+            INotifyPropertyChanged
         {
             private string _p1 = string.Empty;
             private string _p2 = string.Empty;
@@ -1109,7 +1221,9 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 string? valor)
             {
                 if (!double.TryParse(
-                        valor?.Replace(',', '.'),
+                        valor?.Replace(
+                            ',',
+                            '.'),
                         NumberStyles.Any,
                         CultureInfo.InvariantCulture,
                         out double numero))
@@ -1146,34 +1260,44 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views
                 string estado)
             {
                 Matricula =
-                    matricula ?? string.Empty;
+                    matricula ??
+                    string.Empty;
 
                 Nombre =
-                    nombre ?? string.Empty;
+                    nombre ??
+                    string.Empty;
 
                 Grupo =
-                    grupo ?? string.Empty;
+                    grupo ??
+                    string.Empty;
 
                 _p1 =
-                    p1 ?? string.Empty;
+                    p1 ??
+                    string.Empty;
 
                 _p2 =
-                    p2 ?? string.Empty;
+                    p2 ??
+                    string.Empty;
 
                 _p3 =
-                    p3 ?? string.Empty;
+                    p3 ??
+                    string.Empty;
 
                 _promedio =
-                    promedio ?? string.Empty;
+                    promedio ??
+                    string.Empty;
 
                 _pre =
-                    pre ?? string.Empty;
+                    pre ??
+                    string.Empty;
 
                 _preAnterior =
-                    pre ?? string.Empty;
+                    pre ??
+                    string.Empty;
 
                 _estado =
-                    estado ?? string.Empty;
+                    estado ??
+                    string.Empty;
             }
 
             public event PropertyChangedEventHandler?
