@@ -42,7 +42,7 @@
 		<!-- Release limpio -->
 		<DebugType>None</DebugType>
 		<DebugSymbols>false</DebugSymbols>
-		<Version>2.1.14</Version>
+		<Version>2.2.1</Version>
 	</PropertyGroup>
 
 	<ItemGroup>

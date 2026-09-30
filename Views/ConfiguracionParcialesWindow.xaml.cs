@@ -185,10 +185,228 @@ public partial class ConfiguracionParcialesWindow :
             string.Empty;
 
         public bool IsExtra { get; set; }
+        
+        private string _estadoEvaluacion =
+            "Ninguno";
+
+        private string _estadoEvaluacionToolTip =
+            "No hay alumnos evaluados.";
+
+        public int AlumnosEvaluados { get; private set; }
+
+        public int TotalAlumnos { get; private set; }
+
+        public string EstadoEvaluacion
+        {
+            get => _estadoEvaluacion;
+
+            private set
+            {
+                if (_estadoEvaluacion == value)
+                    return;
+
+                _estadoEvaluacion =
+                    value;
+
+                PropertyChanged?.Invoke(
+                    this,
+                    new PropertyChangedEventArgs(
+                        nameof(EstadoEvaluacion)));
+            }
+        }
+
+        public string EstadoEvaluacionToolTip
+        {
+            get => _estadoEvaluacionToolTip;
+
+            private set
+            {
+                if (_estadoEvaluacionToolTip == value)
+                    return;
+
+                _estadoEvaluacionToolTip =
+                    value;
+
+                PropertyChanged?.Invoke(
+                    this,
+                    new PropertyChangedEventArgs(
+                        nameof(EstadoEvaluacionToolTip)));
+            }
+        }
+
+        public void EstablecerEstadoEvaluacion(
+            int evaluados,
+            int total)
+        {
+            AlumnosEvaluados =
+                evaluados;
+
+            TotalAlumnos =
+                total;
+
+            if (total <= 0 ||
+                evaluados <= 0)
+            {
+                EstadoEvaluacion =
+                    "Ninguno";
+
+                EstadoEvaluacionToolTip =
+                    "Ver lista de alumnos pendientes.";
+
+                return;
+            }
+
+            if (evaluados >= total)
+            {
+                EstadoEvaluacion =
+                    "Completo";
+
+                EstadoEvaluacionToolTip =
+                    "Todos los alumnos evaluados.";
+
+                return;
+            }
+
+            EstadoEvaluacion =
+                "Parcial";
+
+            EstadoEvaluacionToolTip =
+                "Ver lista de alumnos pendientes.";
+        }
 
         public event PropertyChangedEventHandler?
             PropertyChanged;
     }
+    
+    private void ActualizarEstadosEvaluacionCaps()
+{
+    string evaluacionObjetivo =
+        EvaluacionGlobalSeleccionada?.Trim()
+        ?? string.Empty;
+
+    foreach (var cap in CapFiles)
+    {
+        if (!File.Exists(cap.FilePath))
+        {
+            cap.EstablecerEstadoEvaluacion(
+                0,
+                0);
+
+            continue;
+        }
+
+        try
+        {
+            // =====================================================
+            // EXTRA SIEMPRE USA EXTRA.
+            // =====================================================
+
+            string evaluacionCap =
+                cap.IsExtra
+                    ? "EXTRA"
+                    : evaluacionObjetivo;
+
+            if (string.IsNullOrWhiteSpace(
+                    evaluacionCap))
+            {
+                cap.EstablecerEstadoEvaluacion(
+                    0,
+                    0);
+
+                continue;
+            }
+
+            var resultado =
+                _parserService
+                    .ProcesarArchivoCompleto(
+                        cap.FilePath);
+
+            int total =
+                resultado.Alumnos?.Count
+                ?? 0;
+
+            int evaluados = 0;
+
+            if (resultado.Alumnos != null)
+            {
+                foreach (var alumno in
+                         resultado.Alumnos)
+                {
+                    if (alumno == null ||
+                        alumno.Calificación == null)
+                    {
+                        continue;
+                    }
+
+                    string texto;
+
+                    try
+                    {
+                        texto =
+                            alumno.Calificación[
+                                    evaluacionCap]
+                                ?.Trim()
+                            ?? string.Empty;
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(
+                            texto))
+                    {
+                        continue;
+                    }
+
+                    // =================================================
+                    // -1 = SC = NO EVALUADO
+                    // =================================================
+
+                    if (string.Equals(
+                            texto,
+                            "SC",
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    if (double.TryParse(
+                            texto.Replace(
+                                ',',
+                                '.'),
+                            NumberStyles.Any,
+                            CultureInfo.InvariantCulture,
+                            out double numero))
+                    {
+                        if (numero < 0)
+                            continue;
+
+                        evaluados++;
+                        continue;
+                    }
+
+                    // =================================================
+                    // OTROS ESTADOS NO VACÍOS, COMO NP,
+                    // SE CONSIDERAN EVALUADOS.
+                    // =================================================
+
+                    evaluados++;
+                }
+            }
+
+            cap.EstablecerEstadoEvaluacion(
+                evaluados,
+                total);
+        }
+        catch
+        {
+            cap.EstablecerEstadoEvaluacion(
+                0,
+                0);
+        }
+    }
+}
 
     // ============================================================
     // PROPIEDADES PROFESOR
@@ -510,6 +728,8 @@ public partial class ConfiguracionParcialesWindow :
             if (!_cargandoDatos)
             {
                 GuardarConfiguracionGlobal();
+
+                ActualizarEstadosEvaluacionCaps();
             }
         }
     }
@@ -687,9 +907,9 @@ public partial class ConfiguracionParcialesWindow :
             mainVm
             ?? throw new ArgumentNullException(
                 nameof(mainVm));
-        
+
         _apiCalificaciones = new ApiCalificaciones();
-        
+
         _configuracionService =
             new ConfiguracionParcialesService();
 
@@ -718,6 +938,7 @@ public partial class ConfiguracionParcialesWindow :
         CargarEvaluacionesGlobales();
 
         CargarEstadoGlobal();
+        ActualizarEstadosEvaluacionCaps();
 
         if (MateriasDisponibles.Any())
         {
@@ -2995,239 +3216,239 @@ public partial class ConfiguracionParcialesWindow :
 // ENVIAR CALIFICACIONES
 // ============================================================
 
-private async void EnviarCalificacionesWeb_Click(
-    object sender,
-    RoutedEventArgs e)
-{
-    try
+    private async void EnviarCalificacionesWeb_Click(
+        object sender,
+        RoutedEventArgs e)
     {
-        var seleccionados =
-            CapFiles
-                .Where(c => c.IsSelected)
-                .ToList();
-
-        if (seleccionados.Count == 0)
-        {
-            MessageBox.Show(
-                "Selecciona al menos un CAP para enviar.",
-                "Enviar calificaciones",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-
-            return;
-        }
-
-        // ========================================================
-        // PRIMER PROFESOR
-        // ========================================================
-
-        CapFileItem primerCap =
-            seleccionados.First();
-
-        string claveProfesor =
-            primerCap.ClaveProfesor?
-                .Trim()
-            ?? string.Empty;
-
-        if (string.IsNullOrWhiteSpace(
-                claveProfesor))
-        {
-            claveProfesor =
-                ObtenerClaveProfesorDesdeCap(
-                    primerCap.FilePath);
-        }
-
-        string nombreProfesor =
-            primerCap.NombreProfesor?
-                .Trim()
-            ?? string.Empty;
-
-        if (string.IsNullOrWhiteSpace(
-                nombreProfesor))
-        {
-            if (ProfesorSeleccionado != null)
-            {
-                nombreProfesor =
-                    ProfesorSeleccionado
-                        .NOMBREPROFESOR?
-                        .Trim()
-                    ?? string.Empty;
-            }
-        }
-
-        if (string.IsNullOrWhiteSpace(
-                nombreProfesor))
-        {
-            nombreProfesor =
-                "PROFESOR";
-        }
-
-        // ========================================================
-        // DOCUMENTO JSON
-        // ========================================================
-
-        var exportacion =
-            new ExportacionCalificacionesJson
-            {
-                Tipo =
-                    "CEIM_CALIFICACIONES",
-
-                Version =
-                    1,
-
-                FechaExportacion =
-                    DateTime.Now.ToString(
-                        "yyyy-MM-dd'T'HH:mm:ss",
-                        CultureInfo.InvariantCulture),
-
-                Profesor =
-                    new ExportacionProfesorJson
-                    {
-                        Clave =
-                            claveProfesor,
-
-                        Nombre =
-                            nombreProfesor
-                    }
-            };
-
-        // ========================================================
-        // CADA CAP = UNA MATERIA
-        // ========================================================
-
-        foreach (CapFileItem cap
-                 in seleccionados)
-        {
-            if (string.IsNullOrWhiteSpace(
-                    cap.FilePath))
-            {
-                continue;
-            }
-
-            if (!File.Exists(
-                    cap.FilePath))
-            {
-                continue;
-            }
-
-            var servicio =
-                new ReporteCalificacionesPdfService(
-                    cap.FilePath);
-
-            ExportacionMateriaJson materia =
-                servicio.GenerarDatosExportacionJson();
-
-            exportacion
-                .Materias
-                .Add(materia);
-        }
-
-        // ========================================================
-        // VALIDAR
-        // ========================================================
-
-        if (exportacion.Materias.Count == 0)
-        {
-            MessageBox.Show(
-                "No se encontró ningún CAP válido para enviar.",
-                "Enviar calificaciones",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-
-            return;
-        }
-
-        // ========================================================
-        // ENVIAR A LA API
-        //
-        // ApiCalificaciones:
-        // 1. Hace login
-        // 2. Obtiene un accessToken nuevo
-        // 3. Envía este mismo objeto
-        // ========================================================
-
-        IsEnabled = false;
-
         try
         {
-            ApiCalificaciones.RespuestaApiCalificaciones respuesta =
-                await _apiCalificaciones
-                    .EnviarCalificacionesAsync(exportacion);
+            var seleccionados =
+                CapFiles
+                    .Where(c => c.IsSelected)
+                    .ToList();
 
-            // ====================================================
-            // ÉXITO
-            //
-            // aplicadas > 0
-            // omitidas == 0
-            // detalle vacío
-            // ====================================================
-
-            if (respuesta.EsExitosa)
+            if (seleccionados.Count == 0)
             {
                 MessageBox.Show(
-                    $"Las calificaciones se enviaron correctamente.\n\n" +
-                    $"Aplicadas: {respuesta.Aplicadas}\n" +
-                    $"Omitidas: {respuesta.Omitidas}",
+                    "Selecciona al menos un CAP para enviar.",
                     "Enviar calificaciones",
                     MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    MessageBoxImage.Warning);
 
                 return;
             }
 
-            // ====================================================
-            // RESPUESTA CON OMISIONES / ERROR
-            // ====================================================
+            // ========================================================
+            // PRIMER PROFESOR
+            // ========================================================
 
-            var mensaje =
-                new StringBuilder();
+            CapFileItem primerCap =
+                seleccionados.First();
 
-            mensaje.AppendLine(
-                "La API procesó el envío, pero hubo registros omitidos.");
+            string claveProfesor =
+                primerCap.ClaveProfesor?
+                    .Trim()
+                ?? string.Empty;
 
-            mensaje.AppendLine();
-            mensaje.AppendLine(
-                $"Aplicadas: {respuesta.Aplicadas}");
-
-            mensaje.AppendLine(
-                $"Omitidas: {respuesta.Omitidas}");
-
-            if (respuesta.Detalle.Count > 0)
+            if (string.IsNullOrWhiteSpace(
+                    claveProfesor))
             {
-                mensaje.AppendLine();
-                mensaje.AppendLine("Detalle:");
+                claveProfesor =
+                    ObtenerClaveProfesorDesdeCap(
+                        primerCap.FilePath);
+            }
 
-                foreach (
-                    ApiCalificaciones.DetalleCalificacion detalle
-                    in respuesta.Detalle)
+            string nombreProfesor =
+                primerCap.NombreProfesor?
+                    .Trim()
+                ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(
+                    nombreProfesor))
+            {
+                if (ProfesorSeleccionado != null)
                 {
-                    mensaje.AppendLine(
-                        $"• Matrícula: {detalle.Matricula}" +
-                        $" | Materia: {detalle.ClaveMateria}" +
-                        $" | Periodo: {detalle.Periodo}" +
-                        $" | Motivo: {detalle.Motivo}");
+                    nombreProfesor =
+                        ProfesorSeleccionado
+                            .NOMBREPROFESOR?
+                            .Trim()
+                        ?? string.Empty;
                 }
             }
 
-            MessageBox.Show(
-                mensaje.ToString(),
-                "Enviar calificaciones",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            if (string.IsNullOrWhiteSpace(
+                    nombreProfesor))
+            {
+                nombreProfesor =
+                    "PROFESOR";
+            }
+
+            // ========================================================
+            // DOCUMENTO JSON
+            // ========================================================
+
+            var exportacion =
+                new ExportacionCalificacionesJson
+                {
+                    Tipo =
+                        "CEIM_CALIFICACIONES",
+
+                    Version =
+                        1,
+
+                    FechaExportacion =
+                        DateTime.Now.ToString(
+                            "yyyy-MM-dd'T'HH:mm:ss",
+                            CultureInfo.InvariantCulture),
+
+                    Profesor =
+                        new ExportacionProfesorJson
+                        {
+                            Clave =
+                                claveProfesor,
+
+                            Nombre =
+                                nombreProfesor
+                        }
+                };
+
+            // ========================================================
+            // CADA CAP = UNA MATERIA
+            // ========================================================
+
+            foreach (CapFileItem cap
+                     in seleccionados)
+            {
+                if (string.IsNullOrWhiteSpace(
+                        cap.FilePath))
+                {
+                    continue;
+                }
+
+                if (!File.Exists(
+                        cap.FilePath))
+                {
+                    continue;
+                }
+
+                var servicio =
+                    new ReporteCalificacionesPdfService(
+                        cap.FilePath);
+
+                ExportacionMateriaJson materia =
+                    servicio.GenerarDatosExportacionJson();
+
+                exportacion
+                    .Materias
+                    .Add(materia);
+            }
+
+            // ========================================================
+            // VALIDAR
+            // ========================================================
+
+            if (exportacion.Materias.Count == 0)
+            {
+                MessageBox.Show(
+                    "No se encontró ningún CAP válido para enviar.",
+                    "Enviar calificaciones",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+
+                return;
+            }
+
+            // ========================================================
+            // ENVIAR A LA API
+            //
+            // ApiCalificaciones:
+            // 1. Hace login
+            // 2. Obtiene un accessToken nuevo
+            // 3. Envía este mismo objeto
+            // ========================================================
+
+            IsEnabled = false;
+
+            try
+            {
+                ApiCalificaciones.RespuestaApiCalificaciones respuesta =
+                    await _apiCalificaciones
+                        .EnviarCalificacionesAsync(exportacion);
+
+                // ====================================================
+                // ÉXITO
+                //
+                // aplicadas > 0
+                // omitidas == 0
+                // detalle vacío
+                // ====================================================
+
+                if (respuesta.EsExitosa)
+                {
+                    MessageBox.Show(
+                        $"Las calificaciones se enviaron correctamente.\n\n" +
+                        $"Aplicadas: {respuesta.Aplicadas}\n" +
+                        $"Omitidas: {respuesta.Omitidas}",
+                        "Enviar calificaciones",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+
+                    return;
+                }
+
+                // ====================================================
+                // RESPUESTA CON OMISIONES / ERROR
+                // ====================================================
+
+                var mensaje =
+                    new StringBuilder();
+
+                mensaje.AppendLine(
+                    "La API procesó el envío, pero hubo registros omitidos.");
+
+                mensaje.AppendLine();
+                mensaje.AppendLine(
+                    $"Aplicadas: {respuesta.Aplicadas}");
+
+                mensaje.AppendLine(
+                    $"Omitidas: {respuesta.Omitidas}");
+
+                if (respuesta.Detalle.Count > 0)
+                {
+                    mensaje.AppendLine();
+                    mensaje.AppendLine("Detalle:");
+
+                    foreach (
+                        ApiCalificaciones.DetalleCalificacion detalle
+                        in respuesta.Detalle)
+                    {
+                        mensaje.AppendLine(
+                            $"• Matrícula: {detalle.Matricula}" +
+                            $" | Materia: {detalle.ClaveMateria}" +
+                            $" | Periodo: {detalle.Periodo}" +
+                            $" | Motivo: {detalle.Motivo}");
+                    }
+                }
+
+                MessageBox.Show(
+                    mensaje.ToString(),
+                    "Enviar calificaciones",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+            finally
+            {
+                IsEnabled = true;
+            }
         }
-        finally
+        catch (Exception ex)
         {
-            IsEnabled = true;
+            MessageBox.Show(
+                $"No se pudieron enviar las calificaciones:\n\n" +
+                $"{ex.Message}",
+                "Error de envío",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
         }
     }
-    catch (Exception ex)
-    {
-        MessageBox.Show(
-            $"No se pudieron enviar las calificaciones:\n\n" +
-            $"{ex.Message}",
-            "Error de envío",
-            MessageBoxButton.OK,
-            MessageBoxImage.Error);
-    }
-}
 }

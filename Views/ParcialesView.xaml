@@ -896,6 +896,13 @@
                                         FontSize="12"
                                         FontWeight="SemiBold" />
 
+                                    <!-- ========================================================= -->
+                                    <!-- ESTADO DE EVALUACIÓN                                     -->
+                                    <!-- VERDE = TODOS                                            -->
+                                    <!-- AMARILLO = PARCIAL                                       -->
+                                    <!-- ROJO = NINGUNO                                           -->
+                                    <!-- ========================================================= -->
+
                                     <Button
                                         Width="24"
                                         Height="20"
@@ -905,9 +912,8 @@
                                         BorderThickness="0"
                                         Cursor="Hand"
                                         VerticalAlignment="Center"
-                                        Visibility="{Binding FaltanPorEvaluar, Converter={StaticResource BoolToVis}}"
                                         Click="WarningNoEvaluados_Click"
-                                        ToolTip="Ver lista de alumnos pendientes">
+                                        ToolTip="{Binding EstadoEvaluacionToolTip}">
 
                                         <Viewbox
                                             Width="18"
@@ -916,8 +922,8 @@
                                             Stretch="Uniform">
 
                                             <Path
-                                                Fill="#FACC15"
-                                                Data="M12,2L1,21H23M12,6L19.53,19H4.47M11,10V14H13V10M11,16V18H13V16" />
+                                                Data="{Binding EstadoEvaluacionPath}"
+                                                Fill="{Binding EstadoEvaluacionColor}" />
 
                                         </Viewbox>
 

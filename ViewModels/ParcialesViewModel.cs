@@ -115,6 +115,18 @@ public partial class ParcialesViewModel : ObservableObject
     [ObservableProperty] private string _textoEvaluados = string.Empty;
 
     [ObservableProperty] private bool _faltanPorEvaluar = false;
+    
+    [ObservableProperty]
+    private string _estadoEvaluacionColor =
+        "#DC2626";
+
+    [ObservableProperty]
+    private string _estadoEvaluacionPath =
+        "M5,3 L19,3 L19,17 L5,17 Z M8,8 L16,16 M16,8 L8,16";
+
+    [ObservableProperty]
+    private string _estadoEvaluacionToolTip =
+        "Ver lista de alumnos pendientes.";
 
     public List<AlumnoFaltante> ListaNoEvaluados { get; private set; } =
         new();
@@ -257,6 +269,49 @@ public partial class ParcialesViewModel : ObservableObject
 
         ListaNoEvaluados =
             lista;
+
+// ============================================================
+// ESTADO VISUAL DE EVALUACIÓN
+// ============================================================
+
+        if (total <= 0 ||
+            evaluados <= 0)
+        {
+            // ROJO = NINGUNO
+            EstadoEvaluacionColor =
+                "#DC2626";
+
+            EstadoEvaluacionPath =
+                "M5,3 L19,3 L19,17 L5,17 Z M8,8 L16,16 M16,8 L8,16";
+
+            EstadoEvaluacionToolTip =
+                "Ver lista de alumnos pendientes.";
+        }
+        else if (evaluados >= total)
+        {
+            // VERDE = TODOS
+            EstadoEvaluacionColor =
+                "#16A34A";
+
+            EstadoEvaluacionPath =
+                "M4,11 L8,15 L18,5 L20,7 L8,19 L2,13 Z";
+
+            EstadoEvaluacionToolTip =
+                "Todos los alumnos evaluados.";
+        }
+        else
+        {
+            // AMARILLO = PARCIALMENTE
+            EstadoEvaluacionColor =
+                "#FACC15";
+
+            // MISMO ÍCONO DE ADVERTENCIA QUE YA TENÍAS
+            EstadoEvaluacionPath =
+                "M12,2L1,21H23M12,6L19.53,19H4.47M11,10V14H13V10M11,16V18H13V16";
+
+            EstadoEvaluacionToolTip =
+                "Ver lista de alumnos pendientes.";
+        }
     }
 
     private void EditorChanged()
@@ -3298,7 +3353,7 @@ public partial class ActividadParcialEditor : ObservableObject
                 System.Globalization.NumberStyles.Any,
                 CultureInfo.InvariantCulture,
                 out double d))
-        {
+        { 
             return Services.NumberUtils
                 .ToSmartString(d);
         }
