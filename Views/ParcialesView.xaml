@@ -1118,7 +1118,9 @@
                                                     Style="{StaticResource RoundedTextBoxStyle}"
                                                     PreviewTextInput="Numeros_PreviewTextInput"
                                                     DataObject.Pasting="Numeros_Pasting"
-                                                    TextChanged="ActividadProp_TextChanged" />
+                                                    TextChanged="ActividadProp_TextChanged"
+                                                    GotFocus="PuntajeMaximo_GotFocus"
+                                                    LostFocus="PuntajeMaximo_LostFocus" />
 
                                             </Grid>
 

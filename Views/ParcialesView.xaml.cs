@@ -17,698 +17,711 @@ namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views;
 
 public partial class ParcialesView : UserControl
 {
-    public ParcialesView()
+// =========================================================
+// PUNTAJE MÁXIMO EN EDICIÓN
+// =========================================================
+
+
+private ActividadParcialEditor? _actividadPuntajeMaximoEditando;
+
+private string _puntajeMaximoOriginal = string.Empty;
+
+private bool _puntajeMaximoCambiosAntesDeEditar;
+
+private bool _restaurandoPuntajeMaximo;
+
+public ParcialesView()
+{
+    InitializeComponent();
+}
+
+private void PuntajeObtenido_KeyDown(
+    object sender,
+    KeyEventArgs e)
+{
+    if (e.Key != Key.Enter)
+        return;
+
+    if (DataContext is not ParcialesViewModel vm)
+        return;
+
+    if (sender is not TextBox tb)
+        return;
+
+    vm.PrepararGuardado();
+
+    // ============================================================
+    // SI ENTER VIENE DE UNA ACTIVIDAD
+    // ============================================================
+
+    if (tb.DataContext is ActividadParcialEditor actividad)
     {
-        InitializeComponent();
-    }
+        int actividadIndex =
+            vm.Actividades.IndexOf(actividad);
 
-    private void PuntajeObtenido_KeyDown(
-        object sender,
-        KeyEventArgs e)
-    {
-        if (e.Key != Key.Enter)
-            return;
+        // --------------------------------------------------------
+        // BUSCAR LA SIGUIENTE ACTIVIDAD ACTIVA
+        // --------------------------------------------------------
 
-        if (DataContext is not ParcialesViewModel vm)
-            return;
-
-        if (sender is not TextBox tb)
-            return;
-
-        vm.PrepararGuardado();
-
-        // ============================================================
-        // SI ENTER VIENE DE UNA ACTIVIDAD
-        // ============================================================
-
-        if (tb.DataContext is ActividadParcialEditor actividad)
+        for (
+            int i = actividadIndex + 1;
+            i < vm.Actividades.Count;
+            i++)
         {
-            int actividadIndex =
-                vm.Actividades.IndexOf(actividad);
+            if (!vm.Actividades[i].Activa)
+                continue;
 
-            // --------------------------------------------------------
-            // BUSCAR LA SIGUIENTE ACTIVIDAD ACTIVA
-            // --------------------------------------------------------
+            var container =
+                PuntajesItemsControl
+                        .ItemContainerGenerator
+                        .ContainerFromIndex(i)
+                    as FrameworkElement;
 
-            for (
-                int i = actividadIndex + 1;
-                i < vm.Actividades.Count;
-                i++)
+            if (container == null)
+                continue;
+
+            // IMPORTANTE:
+            // Buscar EXCLUSIVAMENTE el TextBox de captura,
+            // no cualquier TextBox del alumno/actividad.
+            var siguienteTb =
+                FindVisualChildren<TextBox>(container)
+                    .FirstOrDefault(t =>
+                        string.Equals(
+                            t.Tag?.ToString(),
+                            "NavegacionPuntaje",
+                            StringComparison.Ordinal) &&
+                        t.IsVisible &&
+                        t.IsEnabled);
+
+            if (siguienteTb != null)
             {
-                if (!vm.Actividades[i].Activa)
-                    continue;
+                siguienteTb.Focus();
+                siguienteTb.SelectAll();
 
-                var container =
-                    PuntajesItemsControl
-                            .ItemContainerGenerator
-                            .ContainerFromIndex(i)
-                        as FrameworkElement;
-
-                if (container == null)
-                    continue;
-
-                // IMPORTANTE:
-                // Buscar EXCLUSIVAMENTE el TextBox de captura,
-                // no cualquier TextBox del alumno/actividad.
-                var siguienteTb =
-                    FindVisualChildren<TextBox>(container)
-                        .FirstOrDefault(t =>
-                            string.Equals(
-                                t.Tag?.ToString(),
-                                "NavegacionPuntaje",
-                                StringComparison.Ordinal) &&
-                            t.IsVisible &&
-                            t.IsEnabled);
-
-                if (siguienteTb != null)
-                {
-                    siguienteTb.Focus();
-                    siguienteTb.SelectAll();
-
-                    e.Handled = true;
-                    return;
-                }
+                e.Handled = true;
+                return;
             }
-
-            // ========================================================
-            // YA ES LA ÚLTIMA ACTIVIDAD ACTIVA
-            //
-            // SOLO AQUÍ SE REVISA ASISTENCIA.
-            // ========================================================
-
-            if (vm.AsistenciaActiva)
-            {
-                var asistenciaTb =
-                    FindVisualChildren<TextBox>(this)
-                        .FirstOrDefault(t =>
-                            string.Equals(
-                                t.Tag?.ToString(),
-                                "NavegacionInasistencia",
-                                StringComparison.Ordinal) &&
-                            t.IsVisible &&
-                            t.IsEnabled);
-
-                if (asistenciaTb != null)
-                {
-                    asistenciaTb.Focus();
-                    asistenciaTb.SelectAll();
-
-                    e.Handled = true;
-                    return;
-                }
-            }
-
-            // ========================================================
-            // SIN ASISTENCIA:
-            // IR DIRECTAMENTE AL SIGUIENTE ALUMNO.
-            //
-            // NO MoveFocus().
-            // NO BUSCAR OTRO CONTROL VISUAL.
-            // ========================================================
-
-            if (
-                vm.AlumnoSeleccionado != null &&
-                vm.Alumnos.Any())
-            {
-                int idx =
-                    vm.Alumnos.IndexOf(
-                        vm.AlumnoSeleccionado);
-
-                if (idx < vm.Alumnos.Count - 1)
-                {
-                    vm.AlumnoSeleccionado =
-                        vm.Alumnos[idx + 1];
-
-                    Dispatcher.BeginInvoke(
-                        new Action(() =>
-                        {
-                            // Esperar a que WPF reconstruya
-                            // los controles del nuevo alumno.
-
-                            for (
-                                int i = 0;
-                                i < vm.Actividades.Count;
-                                i++)
-                            {
-                                if (!vm.Actividades[i].Activa)
-                                    continue;
-
-                                var container =
-                                    PuntajesItemsControl
-                                            .ItemContainerGenerator
-                                            .ContainerFromIndex(i)
-                                        as FrameworkElement;
-
-                                if (container == null)
-                                    continue;
-
-                                var primerTb =
-                                    FindVisualChildren<TextBox>(
-                                            container)
-                                        .FirstOrDefault(t =>
-                                            string.Equals(
-                                                t.Tag?.ToString(),
-                                                "NavegacionPuntaje",
-                                                StringComparison.Ordinal) &&
-                                            t.IsVisible &&
-                                            t.IsEnabled);
-
-                                if (primerTb != null)
-                                {
-                                    primerTb.Focus();
-                                    primerTb.SelectAll();
-                                }
-
-                                break;
-                            }
-                        }));
-                }
-                else
-                {
-                    MessageBox.Show(
-                        "Se evaluaron todos los alumnos.",
-                        "Fin de captura",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                }
-            }
-
-            e.Handled = true;
-            return;
         }
 
-        // ============================================================
-        // ENTER EN INASISTENCIAS
-        // ============================================================
+        // ========================================================
+        // YA ES LA ÚLTIMA ACTIVIDAD ACTIVA
+        //
+        // SOLO AQUÍ SE REVISA ASISTENCIA.
+        // ========================================================
+
+        if (vm.AsistenciaActiva)
+        {
+            var asistenciaTb =
+                FindVisualChildren<TextBox>(this)
+                    .FirstOrDefault(t =>
+                        string.Equals(
+                            t.Tag?.ToString(),
+                            "NavegacionInasistencia",
+                            StringComparison.Ordinal) &&
+                        t.IsVisible &&
+                        t.IsEnabled);
+
+            if (asistenciaTb != null)
+            {
+                asistenciaTb.Focus();
+                asistenciaTb.SelectAll();
+
+                e.Handled = true;
+                return;
+            }
+        }
+
+        // ========================================================
+        // SIN ASISTENCIA:
+        // IR DIRECTAMENTE AL SIGUIENTE ALUMNO.
+        //
+        // NO MoveFocus().
+        // NO BUSCAR OTRO CONTROL VISUAL.
+        // ========================================================
 
         if (
-            string.Equals(
-                tb.Tag?.ToString(),
-                "NavegacionInasistencia",
-                StringComparison.Ordinal))
+            vm.AlumnoSeleccionado != null &&
+            vm.Alumnos.Any())
         {
-            if (
-                vm.AlumnoSeleccionado != null &&
-                vm.Alumnos.Any())
+            int idx =
+                vm.Alumnos.IndexOf(
+                    vm.AlumnoSeleccionado);
+
+            if (idx < vm.Alumnos.Count - 1)
             {
-                int idx =
-                    vm.Alumnos.IndexOf(
-                        vm.AlumnoSeleccionado);
+                vm.AlumnoSeleccionado =
+                    vm.Alumnos[idx + 1];
 
-                if (idx < vm.Alumnos.Count - 1)
-                {
-                    vm.AlumnoSeleccionado =
-                        vm.Alumnos[idx + 1];
+                Dispatcher.BeginInvoke(
+                    new Action(() =>
+                    {
+                        // Esperar a que WPF reconstruya
+                        // los controles del nuevo alumno.
 
-                    Dispatcher.BeginInvoke(
-                        new Action(() =>
+                        for (
+                            int i = 0;
+                            i < vm.Actividades.Count;
+                            i++)
                         {
-                            for (
-                                int i = 0;
-                                i < vm.Actividades.Count;
-                                i++)
+                            if (!vm.Actividades[i].Activa)
+                                continue;
+
+                            var container =
+                                PuntajesItemsControl
+                                        .ItemContainerGenerator
+                                        .ContainerFromIndex(i)
+                                    as FrameworkElement;
+
+                            if (container == null)
+                                continue;
+
+                            var primerTb =
+                                FindVisualChildren<TextBox>(
+                                        container)
+                                    .FirstOrDefault(t =>
+                                        string.Equals(
+                                            t.Tag?.ToString(),
+                                            "NavegacionPuntaje",
+                                            StringComparison.Ordinal) &&
+                                        t.IsVisible &&
+                                        t.IsEnabled);
+
+                            if (primerTb != null)
                             {
-                                if (!vm.Actividades[i].Activa)
-                                    continue;
-
-                                var container =
-                                    PuntajesItemsControl
-                                            .ItemContainerGenerator
-                                            .ContainerFromIndex(i)
-                                        as FrameworkElement;
-
-                                if (container == null)
-                                    continue;
-
-                                var primerTb =
-                                    FindVisualChildren<TextBox>(
-                                            container)
-                                        .FirstOrDefault(t =>
-                                            string.Equals(
-                                                t.Tag?.ToString(),
-                                                "NavegacionPuntaje",
-                                                StringComparison.Ordinal) &&
-                                            t.IsVisible &&
-                                            t.IsEnabled);
-
-                                if (primerTb != null)
-                                {
-                                    primerTb.Focus();
-                                    primerTb.SelectAll();
-                                }
-
-                                break;
+                                primerTb.Focus();
+                                primerTb.SelectAll();
                             }
-                        }));
-                }
-                else
-                {
-                    MessageBox.Show(
-                        "Se evaluaron todos los alumnos.",
-                        "Fin de captura",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                }
-            }
 
-            e.Handled = true;
-            return;
+                            break;
+                        }
+                    }));
+            }
+            else
+            {
+                MessageBox.Show(
+                    "Se evaluaron todos los alumnos.",
+                    "Fin de captura",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
         }
 
         e.Handled = true;
+        return;
     }
 
-    private void Puntaje_TextChanged(
-        object sender,
-        TextChangedEventArgs e)
-    {
-        if (DataContext is ParcialesViewModel vm)
-            vm.MarkUserEdited();
-    }
+    // ============================================================
+    // ENTER EN INASISTENCIAS
+    // ============================================================
 
-    private void CalificacionParcial_TextChanged(
-        object sender,
-        TextChangedEventArgs e)
+    if (
+        string.Equals(
+            tb.Tag?.ToString(),
+            "NavegacionInasistencia",
+            StringComparison.Ordinal))
     {
-        if (sender is TextBox tb)
+        if (
+            vm.AlumnoSeleccionado != null &&
+            vm.Alumnos.Any())
         {
-            string normalized =
-                NormalizeToSingleDecimalRange(
-                    tb.Text);
+            int idx =
+                vm.Alumnos.IndexOf(
+                    vm.AlumnoSeleccionado);
 
-            if (tb.Text != normalized)
+            if (idx < vm.Alumnos.Count - 1)
             {
-                int sel =
-                    tb.SelectionStart;
+                vm.AlumnoSeleccionado =
+                    vm.Alumnos[idx + 1];
 
-                tb.Text =
-                    normalized;
+                Dispatcher.BeginInvoke(
+                    new Action(() =>
+                    {
+                        for (
+                            int i = 0;
+                            i < vm.Actividades.Count;
+                            i++)
+                        {
+                            if (!vm.Actividades[i].Activa)
+                                continue;
 
-                tb.SelectionStart =
-                    Math.Min(
-                        sel,
-                        tb.Text.Length);
+                            var container =
+                                PuntajesItemsControl
+                                        .ItemContainerGenerator
+                                        .ContainerFromIndex(i)
+                                    as FrameworkElement;
+
+                            if (container == null)
+                                continue;
+
+                            var primerTb =
+                                FindVisualChildren<TextBox>(
+                                        container)
+                                    .FirstOrDefault(t =>
+                                        string.Equals(
+                                            t.Tag?.ToString(),
+                                            "NavegacionPuntaje",
+                                            StringComparison.Ordinal) &&
+                                        t.IsVisible &&
+                                        t.IsEnabled);
+
+                            if (primerTb != null)
+                            {
+                                primerTb.Focus();
+                                primerTb.SelectAll();
+                            }
+
+                            break;
+                        }
+                    }));
+            }
+            else
+            {
+                MessageBox.Show(
+                    "Se evaluaron todos los alumnos.",
+                    "Fin de captura",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
             }
         }
 
-        if (DataContext is ParcialesViewModel vm)
-            vm.MarkUserEdited();
+        e.Handled = true;
+        return;
     }
 
-    private static string NormalizeToSingleDecimalRange(
-        string input)
+    e.Handled = true;
+}
+
+private void Puntaje_TextChanged(
+    object sender,
+    TextChangedEventArgs e)
+{
+    if (DataContext is ParcialesViewModel vm)
+        vm.MarkUserEdited();
+}
+
+private void CalificacionParcial_TextChanged(
+    object sender,
+    TextChangedEventArgs e)
+{
+    if (sender is TextBox tb)
     {
-        if (string.IsNullOrWhiteSpace(input))
-            return string.Empty;
+        string normalized =
+            NormalizeToSingleDecimalRange(
+                tb.Text);
 
-        if (
-            input.Trim()
-                .ToUpperInvariant() == "SC")
+        if (tb.Text != normalized)
         {
-            return "SC";
-        }
+            int sel =
+                tb.SelectionStart;
 
-        if (
-            input.Trim()
-                .ToUpperInvariant() == "S")
+            tb.Text =
+                normalized;
+
+            tb.SelectionStart =
+                Math.Min(
+                    sel,
+                    tb.Text.Length);
+        }
+    }
+
+    if (DataContext is ParcialesViewModel vm)
+        vm.MarkUserEdited();
+}
+
+private static string NormalizeToSingleDecimalRange(
+    string input)
+{
+    if (string.IsNullOrWhiteSpace(input))
+        return string.Empty;
+
+    if (
+        input.Trim()
+            .ToUpperInvariant() == "SC")
+    {
+        return "SC";
+    }
+
+    if (
+        input.Trim()
+            .ToUpperInvariant() == "S")
+    {
+        return "S";
+    }
+
+    string s =
+        input.Trim()
+            .Replace(
+                ',',
+                '.');
+
+    var sb =
+        new System.Text.StringBuilder();
+
+    foreach (char c in s)
+    {
+        if (char.IsDigit(c) ||
+            c == '.')
         {
-            return "S";
+            sb.Append(c);
         }
+    }
 
-        string s =
-            input.Trim()
-                .Replace(
-                    ',',
-                    '.');
+    s =
+        sb.ToString();
 
-        var sb =
-            new System.Text.StringBuilder();
+    int firstDot =
+        s.IndexOf('.');
 
-        foreach (char c in s)
-        {
-            if (char.IsDigit(c) ||
-                c == '.')
-            {
-                sb.Append(c);
-            }
-        }
-
+    if (firstDot >= 0)
+    {
         s =
-            sb.ToString();
+            s.Substring(
+                0,
+                firstDot + 1)
+            +
+            s.Substring(
+                    firstDot + 1)
+                .Replace(
+                    ".",
+                    "");
 
-        int firstDot =
-            s.IndexOf('.');
+        int decimals =
+            s.Length -
+            firstDot -
+            1;
 
-        if (firstDot >= 0)
+        if (decimals > 2)
         {
             s =
                 s.Substring(
                     0,
-                    firstDot + 1)
-                +
-                s.Substring(
-                        firstDot + 1)
-                    .Replace(
-                        ".",
-                        "");
-
-            int decimals =
-                s.Length -
-                firstDot -
-                1;
-
-            if (decimals > 2)
-            {
-                s =
-                    s.Substring(
-                        0,
-                        firstDot + 3);
-            }
+                    firstDot + 3);
         }
-
-        if (
-            double.TryParse(
-                s,
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out double val))
-        {
-            if (val < 0)
-                val = 0;
-
-            if (val > 10)
-                val = 10;
-
-            return val % 1 == 0
-                ? ((int)val).ToString(
-                    System.Globalization.CultureInfo.InvariantCulture)
-                : val.ToString(
-                    "0.#",
-                    System.Globalization.CultureInfo.InvariantCulture);
-        }
-
-        return s;
     }
 
-    private static T? FindVisualChild<T>(
-        DependencyObject parent)
-        where T : DependencyObject
+    if (
+        double.TryParse(
+            s,
+            System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out double val))
     {
-        if (parent == null)
-            return null;
+        if (val < 0)
+            val = 0;
 
-        int children =
-            System.Windows.Media.VisualTreeHelper
-                .GetChildrenCount(parent);
+        if (val > 10)
+            val = 10;
 
-        for (int i = 0; i < children; i++)
-        {
-            var child =
-                System.Windows.Media.VisualTreeHelper
-                    .GetChild(
-                        parent,
-                        i);
+        return val % 1 == 0
+            ? ((int)val).ToString(
+                System.Globalization.CultureInfo.InvariantCulture)
+            : val.ToString(
+                "0.#",
+                System.Globalization.CultureInfo.InvariantCulture);
+    }
 
-            if (child is T t)
-                return t;
+    return s;
+}
 
-            var result =
-                FindVisualChild<T>(
-                    child);
-
-            if (result != null)
-                return result;
-        }
-
+private static T? FindVisualChild<T>(
+    DependencyObject parent)
+    where T : DependencyObject
+{
+    if (parent == null)
         return null;
+
+    int children =
+        System.Windows.Media.VisualTreeHelper
+            .GetChildrenCount(parent);
+
+    for (int i = 0; i < children; i++)
+    {
+        var child =
+            System.Windows.Media.VisualTreeHelper
+                .GetChild(
+                    parent,
+                    i);
+
+        if (child is T t)
+            return t;
+
+        var result =
+            FindVisualChild<T>(
+                child);
+
+        if (result != null)
+            return result;
     }
 
-    private void UserControl_Loaded(
-        object sender,
-        RoutedEventArgs e)
+    return null;
+}
+
+private void UserControl_Loaded(
+    object sender,
+    RoutedEventArgs e)
+{
+    if (DataContext is MainViewModel mainVm)
     {
-        if (DataContext is MainViewModel mainVm)
-        {
-            DataContext =
-                mainVm.ParcialesVm;
-        }
+        DataContext =
+            mainVm.ParcialesVm;
     }
+}
 
-    // =========================================================
-    // CAMPOS DE CONFIGURACIÓN
-    // =========================================================
+// =========================================================
+// CAMPOS DE CONFIGURACIÓN
+// =========================================================
 
-    private void Numeros_PreviewTextInput(
-        object sender,
-        TextCompositionEventArgs e)
-    {
-        if (sender is not TextBox textBox)
-            return;
+private void Numeros_PreviewTextInput(
+    object sender,
+    TextCompositionEventArgs e)
+{
+    if (sender is not TextBox textBox)
+        return;
 
-        string textoPropuesto =
-            textBox.Text
-                .Remove(
-                    textBox.SelectionStart,
-                    textBox.SelectionLength)
-                .Insert(
-                    textBox.SelectionStart,
-                    e.Text);
-
-        if (e.Text == ",")
-        {
-            textoPropuesto =
-                textoPropuesto.Replace(
-                    ',',
-                    '.');
-        }
-
-        Regex regex =
-            new Regex(
-                @"^[0-9]*\.?[0-9]*$");
-
-        e.Handled =
-            !regex.IsMatch(
-                textoPropuesto);
-    }
-
-    private void Numeros_Pasting(
-        object sender,
-        DataObjectPastingEventArgs e)
-    {
-        if (!e.DataObject.GetDataPresent(
-                typeof(string)))
-        {
-            e.CancelCommand();
-            return;
-        }
-
-        if (sender is not TextBox textBox)
-            return;
-
-        string textoAPegar =
-            (string)e.DataObject.GetData(
-                typeof(string));
-
-        textoAPegar =
-            textoAPegar.Replace(
-                ',',
-                '.');
-
-        string textoPropuesto =
-            textBox.Text
-                .Remove(
-                    textBox.SelectionStart,
-                    textBox.SelectionLength)
-                .Insert(
-                    textBox.SelectionStart,
-                    textoAPegar);
-
-        Regex regex =
-            new Regex(
-                @"^[0-9]*\.?[0-9]*$");
-
-        if (!regex.IsMatch(
-                textoPropuesto))
-        {
-            e.CancelCommand();
-        }
-    }
-
-    // =========================================================
-    // PUNTAJE OBTENIDO
-    // =========================================================
-
-    private void PuntajeObtenido_PreviewTextInput(
-        object sender,
-        TextCompositionEventArgs e)
-    {
-        if (sender is not TextBox textBox)
-            return;
-
-        string textoPropuesto =
-            textBox.Text
-                .Remove(
-                    textBox.SelectionStart,
-                    textBox.SelectionLength)
-                .Insert(
-                    textBox.SelectionStart,
-                    e.Text);
-
-        if (e.Text == ",")
-        {
-            textoPropuesto =
-                textoPropuesto.Replace(
-                    ',',
-                    '.');
-        }
-
-        Regex regex =
-            new Regex(
-                @"^[0-9]*\.?[0-9]*$");
-
-        if (!regex.IsMatch(
-                textoPropuesto))
-        {
-            e.Handled = true;
-            return;
-        }
-
-        if (!PuntajeDentroDelMaximo(
-                textBox,
-                textoPropuesto))
-        {
-            e.Handled = true;
-        }
-    }
-
-    private void PuntajeObtenido_Pasting(
-        object sender,
-        DataObjectPastingEventArgs e)
-    {
-        if (!e.DataObject.GetDataPresent(
-                typeof(string)))
-        {
-            e.CancelCommand();
-            return;
-        }
-
-        if (sender is not TextBox textBox)
-            return;
-
-        string textoAPegar =
-            (string)e.DataObject.GetData(
-                typeof(string));
-
-        textoAPegar =
-            textoAPegar.Replace(
-                ',',
-                '.');
-
-        string textoPropuesto =
-            textBox.Text
-                .Remove(
-                    textBox.SelectionStart,
-                    textBox.SelectionLength)
-                .Insert(
-                    textBox.SelectionStart,
-                    textoAPegar);
-
-        Regex regex =
-            new Regex(
-                @"^[0-9]*\.?[0-9]*$");
-
-        if (!regex.IsMatch(
-                textoPropuesto))
-        {
-            e.CancelCommand();
-            return;
-        }
-
-        if (!PuntajeDentroDelMaximo(
-                textBox,
-                textoPropuesto))
-        {
-            e.CancelCommand();
-        }
-    }
-
-    private static bool PuntajeDentroDelMaximo(
-        TextBox textBox,
-        string texto)
-    {
-        if (
-            textBox.DataContext
-            is not ActividadParcialEditor actividad)
-        {
-            return true;
-        }
-
-        if (
-            !double.TryParse(
-                actividad.PuntajeMaximo,
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out double maximo))
-        {
-            return true;
-        }
-
-        if (maximo <= 0)
-            return true;
-
-        if (string.IsNullOrWhiteSpace(texto))
-            return true;
-
-        if (
-            !double.TryParse(
-                texto.Replace(
-                    ',',
-                    '.'),
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out double valor))
-        {
-            return true;
-        }
-
-        return valor <= maximo;
-    }
-
-    // =========================================================
-    // ALUMNOS
-    // =========================================================
-
-    private void Alumnos_SelectionChanged(
-        object sender,
-        SelectionChangedEventArgs e)
-    {
-        if (
-            sender is ListBox listBox &&
-            listBox.SelectedItem != null)
-        {
-            listBox.ScrollIntoView(
-                listBox.SelectedItem);
-        }
-    }
-
-    private void NumerosEnteros_PreviewTextInput(
-        object sender,
-        TextCompositionEventArgs e)
-    {
-        Regex regex =
-            new Regex(
-                "[^0-9]+");
-
-        e.Handled =
-            regex.IsMatch(
+    string textoPropuesto =
+        textBox.Text
+            .Remove(
+                textBox.SelectionStart,
+                textBox.SelectionLength)
+            .Insert(
+                textBox.SelectionStart,
                 e.Text);
+
+    if (e.Text == ",")
+    {
+        textoPropuesto =
+            textoPropuesto.Replace(
+                ',',
+                '.');
     }
 
-    // =========================================================
-    // PROPIEDADES DE ACTIVIDADES
-    // =========================================================
+    Regex regex =
+        new Regex(
+            @"^[0-9]*\.?[0-9]*$");
 
-    private void ActividadProp_TextChanged(
+    e.Handled =
+        !regex.IsMatch(
+            textoPropuesto);
+}
+
+private void Numeros_Pasting(
+    object sender,
+    DataObjectPastingEventArgs e)
+{
+    if (!e.DataObject.GetDataPresent(
+            typeof(string)))
+    {
+        e.CancelCommand();
+        return;
+    }
+
+    if (sender is not TextBox textBox)
+        return;
+
+    string textoAPegar =
+        (string)e.DataObject.GetData(
+            typeof(string));
+
+    textoAPegar =
+        textoAPegar.Replace(
+            ',',
+            '.');
+
+    string textoPropuesto =
+        textBox.Text
+            .Remove(
+                textBox.SelectionStart,
+                textBox.SelectionLength)
+            .Insert(
+                textBox.SelectionStart,
+                textoAPegar);
+
+    Regex regex =
+        new Regex(
+            @"^[0-9]*\.?[0-9]*$");
+
+    if (!regex.IsMatch(
+            textoPropuesto))
+    {
+        e.CancelCommand();
+    }
+}
+
+// =========================================================
+// PUNTAJE OBTENIDO
+// =========================================================
+
+private void PuntajeObtenido_PreviewTextInput(
+    object sender,
+    TextCompositionEventArgs e)
+{
+    if (sender is not TextBox textBox)
+        return;
+
+    string textoPropuesto =
+        textBox.Text
+            .Remove(
+                textBox.SelectionStart,
+                textBox.SelectionLength)
+            .Insert(
+                textBox.SelectionStart,
+                e.Text);
+
+    if (e.Text == ",")
+    {
+        textoPropuesto =
+            textoPropuesto.Replace(
+                ',',
+                '.');
+    }
+
+    Regex regex =
+        new Regex(
+            @"^[0-9]*\.?[0-9]*$");
+
+    if (!regex.IsMatch(
+            textoPropuesto))
+    {
+        e.Handled = true;
+        return;
+    }
+
+    if (!PuntajeDentroDelMaximo(
+            textBox,
+            textoPropuesto))
+    {
+        e.Handled = true;
+    }
+}
+
+private void PuntajeObtenido_Pasting(
+    object sender,
+    DataObjectPastingEventArgs e)
+{
+    if (!e.DataObject.GetDataPresent(
+            typeof(string)))
+    {
+        e.CancelCommand();
+        return;
+    }
+
+    if (sender is not TextBox textBox)
+        return;
+
+    string textoAPegar =
+        (string)e.DataObject.GetData(
+            typeof(string));
+
+    textoAPegar =
+        textoAPegar.Replace(
+            ',',
+            '.');
+
+    string textoPropuesto =
+        textBox.Text
+            .Remove(
+                textBox.SelectionStart,
+                textBox.SelectionLength)
+            .Insert(
+                textBox.SelectionStart,
+                textoAPegar);
+
+    Regex regex =
+        new Regex(
+            @"^[0-9]*\.?[0-9]*$");
+
+    if (!regex.IsMatch(
+            textoPropuesto))
+    {
+        e.CancelCommand();
+        return;
+    }
+
+    if (!PuntajeDentroDelMaximo(
+            textBox,
+            textoPropuesto))
+    {
+        e.CancelCommand();
+    }
+}
+
+private static bool PuntajeDentroDelMaximo(
+    TextBox textBox,
+    string texto)
+{
+    if (
+        textBox.DataContext
+        is not ActividadParcialEditor actividad)
+    {
+        return true;
+    }
+
+    if (
+        !double.TryParse(
+            actividad.PuntajeMaximo,
+            System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out double maximo))
+    {
+        return true;
+    }
+
+    if (maximo <= 0)
+        return true;
+
+    if (string.IsNullOrWhiteSpace(texto))
+        return true;
+
+    if (
+        !double.TryParse(
+            texto.Replace(
+                ',',
+                '.'),
+            System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out double valor))
+    {
+        return true;
+    }
+
+    return valor <= maximo;
+}
+
+// =========================================================
+// ALUMNOS
+// =========================================================
+
+private void Alumnos_SelectionChanged(
+    object sender,
+    SelectionChangedEventArgs e)
+{
+    if (
+        sender is ListBox listBox &&
+        listBox.SelectedItem != null)
+    {
+        listBox.ScrollIntoView(
+            listBox.SelectedItem);
+    }
+}
+
+private void NumerosEnteros_PreviewTextInput(
+    object sender,
+    TextCompositionEventArgs e)
+{
+    Regex regex =
+        new Regex(
+            "[^0-9]+");
+
+    e.Handled =
+        regex.IsMatch(
+            e.Text);
+}
+
+// =========================================================
+// PROPIEDADES DE ACTIVIDADES
+// =========================================================
+
+private void ActividadProp_TextChanged(
     object sender,
     TextChangedEventArgs e)
 {
@@ -723,51 +736,10 @@ public partial class ParcialesView : UserControl
 
     // =========================================================
     // PUNTAJE MÁXIMO
+    //
+    // LA VALIDACIÓN YA NO SE HACE AQUÍ.
+    // SE REALIZA EXCLUSIVAMENTE EN LOSTFOCUS.
     // =========================================================
-
-    if (Grid.GetColumn(tb) == 4)
-    {
-        string textoMaximo =
-            (tb.Text ??
-             string.Empty)
-            .Trim()
-            .Replace(
-                ',',
-                '.');
-
-        if (
-            double.TryParse(
-                textoMaximo,
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out double nuevoMaximo))
-        {
-            if (nuevoMaximo >= 0)
-            {
-                if (
-                    vm.ExistePuntajeFueraDeLimite(
-                        actividad,
-                        nuevoMaximo))
-                {
-                    var resultado =
-                        MessageBox.Show(
-                            "El nuevo puntaje máximo es menor que uno o más puntajes obtenidos en esta actividad.\n\n" +
-                            "¿Deseas eliminar los puntajes obtenidos de esta actividad?",
-                            "Puntaje máximo modificado",
-                            MessageBoxButton.YesNo,
-                            MessageBoxImage.Warning);
-
-                    if (
-                        resultado ==
-                        MessageBoxResult.Yes)
-                    {
-                        vm.EliminarPuntajesDeActividad(
-                            actividad);
-                    }
-                }
-            }
-        }
-    }
 
     // =========================================================
     // PORCENTAJE
@@ -849,429 +821,567 @@ public partial class ParcialesView : UserControl
         }
     }
 
+    // Al escribir en cualquier propiedad se conservan
+    // los cambios pendientes, exactamente como antes.
+    //
+    // Durante la restauración de Puntaje Máximo después
+    // de pulsar "No", se evita volver a marcar el cambio.
+    if (!_restaurandoPuntajeMaximo)
+    {
+        vm.MarkUserEdited();
+    }
+}
+
+// =========================================================
+// PUNTAJE MÁXIMO
+// =========================================================
+
+private void PuntajeMaximo_GotFocus(
+    object sender,
+    RoutedEventArgs e)
+{
+    if (sender is not TextBox tb)
+        return;
+
+    if (DataContext is not ParcialesViewModel vm)
+        return;
+
+    if (tb.DataContext is not ActividadParcialEditor actividad)
+        return;
+
+    _actividadPuntajeMaximoEditando =
+        actividad;
+
+    _puntajeMaximoOriginal =
+        actividad.PuntajeMaximo ?? string.Empty;
+
+    _puntajeMaximoCambiosAntesDeEditar =
+        vm.TieneCambios;
+}
+
+private void PuntajeMaximo_LostFocus(
+    object sender,
+    RoutedEventArgs e)
+{
+    if (sender is not TextBox tb)
+        return;
+
+    if (DataContext is not ParcialesViewModel vm)
+        return;
+
+    if (tb.DataContext is not ActividadParcialEditor actividad)
+        return;
+
+    if (
+        !ReferenceEquals(
+            actividad,
+            _actividadPuntajeMaximoEditando))
+    {
+        return;
+    }
+
+    string nuevoTexto =
+        (tb.Text ??
+         string.Empty)
+        .Trim()
+        .Replace(
+            ',',
+            '.');
+
+    string originalTexto =
+        (_puntajeMaximoOriginal ??
+         string.Empty)
+        .Trim()
+        .Replace(
+            ',',
+            '.');
+
+    // ---------------------------------------------------------
+    // SIN CAMBIO REAL
+    // ---------------------------------------------------------
+
+    if (
+        double.TryParse(
+            nuevoTexto,
+            System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out double nuevoMaximo) &&
+        double.TryParse(
+            originalTexto,
+            System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out double maximoOriginal))
+    {
+        if (
+            Math.Abs(
+                nuevoMaximo -
+                maximoOriginal) <
+            0.000001)
+        {
+            LimpiarEstadoEdicionPuntajeMaximo();
+            return;
+        }
+
+        if (nuevoMaximo < 0)
+        {
+            LimpiarEstadoEdicionPuntajeMaximo();
+            return;
+        }
+
+        // -----------------------------------------------------
+        // VALIDACIÓN GLOBAL DEL PARCIAL ACTUAL
+        //
+        // ExistePuntajeFueraDeLimite() revisa las capturas
+        // de todos los alumnos de la materia/parcial actual.
+        // -----------------------------------------------------
+
+        if (
+            vm.ExistePuntajeFueraDeLimite(
+                actividad,
+                nuevoMaximo))
+        {
+            var resultado =
+                MessageBox.Show(
+                    "El nuevo puntaje máximo es menor que uno o más puntajes obtenidos en esta actividad.\n\n" +
+                    "¿Deseas eliminar los puntajes obtenidos de esta actividad?",
+                    "Puntaje máximo modificado",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+            if (
+                resultado ==
+                MessageBoxResult.Yes)
+            {
+                // -------------------------------------------------
+                // SÍ:
+                // ELIMINAR CAPTURAS Y RECALCULAR
+                // -------------------------------------------------
+
+                vm.EliminarPuntajesDeActividad(
+                    actividad);
+
+                LimpiarEstadoEdicionPuntajeMaximo();
+                return;
+            }
+
+            // -----------------------------------------------------
+            // NO:
+            // RESTAURAR EL MÁXIMO ORIGINAL
+            // Y RECUPERAR EL ESTADO PREVIO DE CAMBIOS
+            // -----------------------------------------------------
+
+            _restaurandoPuntajeMaximo = true;
+
+            try
+            {
+                actividad.PuntajeMaximo =
+                    _puntajeMaximoOriginal;
+
+                tb.Text =
+                    _puntajeMaximoOriginal;
+            }
+            finally
+            {
+                _restaurandoPuntajeMaximo = false;
+            }
+
+            vm.TieneCambios =
+                _puntajeMaximoCambiosAntesDeEditar;
+
+            actividad.RefrescarVista();
+
+            LimpiarEstadoEdicionPuntajeMaximo();
+            return;
+        }
+    }
+
+    LimpiarEstadoEdicionPuntajeMaximo();
+}
+
+private void LimpiarEstadoEdicionPuntajeMaximo()
+{
+    _actividadPuntajeMaximoEditando = null;
+    _puntajeMaximoOriginal = string.Empty;
+    _puntajeMaximoCambiosAntesDeEditar = false;
+}
+
+private static bool PuntajeObtenidoSuperaMaximo(
+    ActividadParcialEditor actividad,
+    double nuevoMaximo)
+{
+    string texto =
+        (actividad.PuntajeObtenido ??
+         string.Empty)
+        .Trim()
+        .Replace(
+            ',',
+            '.');
+
+    if (string.IsNullOrWhiteSpace(texto))
+        return false;
+
+    if (
+        string.Equals(
+            texto,
+            "SC",
+            StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(
+            texto,
+            "S",
+            StringComparison.OrdinalIgnoreCase))
+    {
+        return false;
+    }
+
+    if (
+        !double.TryParse(
+            texto,
+            System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out double puntaje))
+    {
+        return false;
+    }
+
+    return puntaje > nuevoMaximo;
+}
+
+private void ActividadActiva_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    if (sender is not CheckBox checkBox)
+        return;
+
+    if (
+        checkBox.DataContext
+        is not ActividadParcialEditor actividad)
+    {
+        return;
+    }
+
+    if (DataContext is not ParcialesViewModel vm)
+        return;
+
+    int indice =
+        vm.Actividades.IndexOf(
+            actividad);
+
+    // ACTIVIDAD 1 SIEMPRE ACTIVA
+    if (indice == 0)
+    {
+        checkBox.IsChecked = true;
+        actividad.Activa = true;
+        return;
+    }
+
+    // AL DESACTIVAR:
+    // desaparece de Puntajes obtenidos
+    // y se borra el puntaje actual,
+    // incluyendo SC.
+    if (!actividad.Activa)
+    {
+        actividad.PuntajeObtenido =
+            string.Empty;
+
+        actividad.RefrescarVista();
+    }
+
     vm.MarkUserEdited();
 }
 
-    private static bool PuntajeObtenidoSuperaMaximo(
-        ActividadParcialEditor actividad,
-        double nuevoMaximo)
+// =========================================================
+// NO EVALUADOS
+// =========================================================
+
+private void WarningNoEvaluados_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    if (
+        DataContext is ParcialesViewModel vm &&
+        vm.FaltanPorEvaluar)
     {
-        string texto =
-            (actividad.PuntajeObtenido ??
-             string.Empty)
-            .Trim()
-            .Replace(
-                ',',
-                '.');
-
-        if (string.IsNullOrWhiteSpace(texto))
-            return false;
-
-        if (
-            string.Equals(
-                texto,
-                "SC",
-                StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(
-                texto,
-                "S",
-                StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        if (
-            !double.TryParse(
-                texto,
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out double puntaje))
-        {
-            return false;
-        }
-
-        return puntaje > nuevoMaximo;
-    }
-
-    private void ActividadActiva_Click(
-        object sender,
-        RoutedEventArgs e)
-    {
-        if (sender is not CheckBox checkBox)
-            return;
-
-        if (
-            checkBox.DataContext
-            is not ActividadParcialEditor actividad)
-        {
-            return;
-        }
-
-        if (DataContext is not ParcialesViewModel vm)
-            return;
-
-        int indice =
-            vm.Actividades.IndexOf(
-                actividad);
-
-        // ACTIVIDAD 1 SIEMPRE ACTIVA
-        if (indice == 0)
-        {
-            checkBox.IsChecked = true;
-            actividad.Activa = true;
-            return;
-        }
-
-        // AL DESACTIVAR:
-        // desaparece de Puntajes obtenidos
-        // y se borra el puntaje actual,
-        // incluyendo SC.
-        if (!actividad.Activa)
-        {
-            actividad.PuntajeObtenido =
-                string.Empty;
-
-            actividad.RefrescarVista();
-        }
-
-        vm.MarkUserEdited();
-    }
-
-    // =========================================================
-    // NO EVALUADOS
-    // =========================================================
-
-    private void WarningNoEvaluados_Click(
-        object sender,
-        RoutedEventArgs e)
-    {
-        if (
-            DataContext is ParcialesViewModel vm &&
-            vm.FaltanPorEvaluar)
-        {
-            var modal =
-                new NoEvaluadosWindow(
-                    vm.ListaNoEvaluados);
-
-            modal.Owner =
-                Window.GetWindow(
-                    this);
-
-            modal.ShowDialog();
-        }
-    }
-
-    // =========================================================
-    // PORCENTAJE / PUNTAJE MÁXIMO
-    // =========================================================
-
-    private void PorcentajeInfo_Click(
-        object sender,
-        RoutedEventArgs e)
-    {
-        if (DataContext is not ParcialesViewModel vm)
-            return;
-
-        string clave = string.Empty;
-
-        if (!string.IsNullOrWhiteSpace(
-                vm.MainVm?.ArchivoCompletoActual))
-        {
-            try
-            {
-                string nombre =
-                    Path.GetFileNameWithoutExtension(
-                        vm.MainVm.ArchivoCompletoActual)
-                    ?? string.Empty;
-
-                clave =
-                    nombre
-                        .Trim()
-                        .Replace(' ', '_');
-            }
-            catch
-            {
-                clave = string.Empty;
-            }
-        }
-        else
-        {
-            string nombreVisual =
-                vm.MainVm?.ArchivoSeleccionado
-                ?? string.Empty;
-
-            if (!string.IsNullOrWhiteSpace(nombreVisual))
-            {
-                string texto =
-                    nombreVisual.Trim();
-
-                int indexEspacio =
-                    texto.IndexOf(" - Grupo:");
-
-                if (indexEspacio > 0)
-                {
-                    texto =
-                        texto.Substring(
-                                0,
-                                indexEspacio)
-                            .Trim();
-                }
-
-                int firstSpace =
-                    texto.IndexOf(' ');
-
-                if (firstSpace <= 0)
-                {
-                    clave =
-                        texto.Replace(
-                            ' ',
-                            '_');
-                }
-                else
-                {
-                    string clavePart =
-                        texto.Substring(
-                                0,
-                                firstSpace)
-                            .Trim();
-
-                    string nombreRest =
-                        texto.Substring(
-                                firstSpace + 1)
-                            .Trim();
-
-                    clave =
-                        string.IsNullOrWhiteSpace(
-                            nombreRest)
-                            ? clavePart
-                            : $"{clavePart}_{nombreRest}";
-                }
-            }
-        }
-
-        var servicio =
-            new ParcialJsonService();
-
-        MateriaParcial? parcial1 = null;
-        MateriaParcial? parcial2 = null;
-        MateriaParcial? parcial3 = null;
-
-        if (!string.IsNullOrWhiteSpace(clave))
-        {
-            parcial1 =
-                servicio.ObtenerMateria(
-                    $"{clave}_P1");
-
-            parcial2 =
-                servicio.ObtenerMateria(
-                    $"{clave}_P2");
-
-            parcial3 =
-                servicio.ObtenerMateria(
-                    $"{clave}_P3");
-        }
-
         var modal =
-            new PorcentajesWindow(
-                parcial1,
-                parcial2,
-                parcial3)
-            {
-                Owner =
-                    Window.GetWindow(this)
-            };
+            new NoEvaluadosWindow(
+                vm.ListaNoEvaluados);
+
+        modal.Owner =
+            Window.GetWindow(
+                this);
 
         modal.ShowDialog();
     }
+}
 
-    // =========================================================
-    // INFORMACIÓN DEL ALUMNO
-    // =========================================================
+// =========================================================
+// PORCENTAJE / PUNTAJE MÁXIMO
+// =========================================================
 
-    private void PapelButton_Click(
-        object sender,
-        RoutedEventArgs e)
+private void PorcentajeInfo_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    if (DataContext is not ParcialesViewModel vm)
+        return;
+
+    string clave = string.Empty;
+
+    if (!string.IsNullOrWhiteSpace(
+            vm.MainVm?.ArchivoCompletoActual))
     {
-        var button =
-            sender as Button;
-
-        var alumno =
-            button?.Tag as Alumno;
-
-        var viewModel =
-            DataContext as ParcialesViewModel;
-
-        if (
-            alumno != null &&
-            viewModel?.MainVm != null)
+        try
         {
-            var datosParciales =
-                new Dictionary<
-                    string,
-                    (
-                    string calif,
-                    string estado,
-                    int faltas,
-                    int totalClases
-                    )>();
+            string nombre =
+                Path.GetFileNameWithoutExtension(
+                    vm.MainVm.ArchivoCompletoActual)
+                ?? string.Empty;
 
-            var evaluaciones =
-                new[]
-                {
-                    "P1",
-                    "P2",
-                    "P3",
-                    "SEM"
-                };
+            clave =
+                nombre
+                    .Trim()
+                    .Replace(' ', '_');
+        }
+        catch
+        {
+            clave = string.Empty;
+        }
+    }
+    else
+    {
+        string nombreVisual =
+            vm.MainVm?.ArchivoSeleccionado
+            ?? string.Empty;
 
-            string archivoActual =
-                viewModel
-                    .MainVm
-                    .ArchivoCompletoActual;
+        if (!string.IsNullOrWhiteSpace(nombreVisual))
+        {
+            string texto =
+                nombreVisual.Trim();
 
-            string claveMateria =
-                ObtenerClaveMateriaDesdeNombreArchivo(
-                    archivoActual);
+            int indexEspacio =
+                texto.IndexOf(" - Grupo:");
 
-            int totalClasesAcumuladas = 0;
-            int faltasAcumuladas = 0;
-
-            foreach (var eval in evaluaciones)
+            if (indexEspacio > 0)
             {
-                string calif =
-                    alumno.Calificación[eval];
+                texto =
+                    texto.Substring(
+                            0,
+                            indexEspacio)
+                        .Trim();
+            }
 
-                string estado =
-                    "Sin evaluar";
+            int firstSpace =
+                texto.IndexOf(' ');
 
-                int faltas = -1;
-                int totalClases = -1;
+            if (firstSpace <= 0)
+            {
+                clave =
+                    texto.Replace(
+                        ' ',
+                        '_');
+            }
+            else
+            {
+                string clavePart =
+                    texto.Substring(
+                            0,
+                            firstSpace)
+                        .Trim();
 
-                if (eval != "SEM")
+                string nombreRest =
+                    texto.Substring(
+                            firstSpace + 1)
+                        .Trim();
+
+                clave =
+                    string.IsNullOrWhiteSpace(
+                        nombreRest)
+                        ? clavePart
+                        : $"{clavePart}_{nombreRest}";
+            }
+        }
+    }
+
+    var servicio =
+        new ParcialJsonService();
+
+    MateriaParcial? parcial1 = null;
+    MateriaParcial? parcial2 = null;
+    MateriaParcial? parcial3 = null;
+
+    if (!string.IsNullOrWhiteSpace(clave))
+    {
+        parcial1 =
+            servicio.ObtenerMateria(
+                $"{clave}_P1");
+
+        parcial2 =
+            servicio.ObtenerMateria(
+                $"{clave}_P2");
+
+        parcial3 =
+            servicio.ObtenerMateria(
+                $"{clave}_P3");
+    }
+
+    var modal =
+        new PorcentajesWindow(
+            parcial1,
+            parcial2,
+            parcial3)
+        {
+            Owner =
+                Window.GetWindow(this)
+        };
+
+    modal.ShowDialog();
+}
+
+// =========================================================
+// INFORMACIÓN DEL ALUMNO
+// =========================================================
+
+private void PapelButton_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    var button =
+        sender as Button;
+
+    var alumno =
+        button?.Tag as Alumno;
+
+    var viewModel =
+        DataContext as ParcialesViewModel;
+
+    if (
+        alumno != null &&
+        viewModel?.MainVm != null)
+    {
+        var datosParciales =
+            new Dictionary<
+                string,
+                (
+                string calif,
+                string estado,
+                int faltas,
+                int totalClases
+                )>();
+
+        var evaluaciones =
+            new[]
+            {
+                "P1",
+                "P2",
+                "P3",
+                "SEM"
+            };
+
+        string archivoActual =
+            viewModel
+                .MainVm
+                .ArchivoCompletoActual;
+
+        string claveMateria =
+            ObtenerClaveMateriaDesdeNombreArchivo(
+                archivoActual);
+
+        int totalClasesAcumuladas = 0;
+        int faltasAcumuladas = 0;
+
+        foreach (var eval in evaluaciones)
+        {
+            string calif =
+                alumno.Calificación[eval];
+
+            string estado =
+                "Sin evaluar";
+
+            int faltas = -1;
+            int totalClases = -1;
+
+            if (eval != "SEM")
+            {
+                string claveMateriaEval =
+                    $"{claveMateria}_{eval}";
+
+                var materia =
+                    new ParcialJsonService()
+                        .ObtenerMateria(
+                            claveMateriaEval);
+
+                if (materia != null)
                 {
-                    string claveMateriaEval =
-                        $"{claveMateria}_{eval}";
+                    bool asistenciaActiva =
+                        false;
 
-                    var materia =
-                        new ParcialJsonService()
-                            .ObtenerMateria(
-                                claveMateriaEval);
-
-                    if (materia != null)
+                    if (
+                        materia.Calificaciones
+                        .TryGetValue(
+                            "$CONFIG$",
+                            out var config))
                     {
-                        bool asistenciaActiva =
-                            false;
-
-                        if (
-                            materia.Calificaciones
-                            .TryGetValue(
-                                "$CONFIG$",
-                                out var config))
-                        {
-                            asistenciaActiva =
-                                config.TryGetValue(
-                                    "AsistenciaActiva",
-                                    out var aa) &&
-                                aa > 0;
-
-                            if (
-                                asistenciaActiva &&
-                                config.TryGetValue(
-                                    "ClasesTotales",
-                                    out var ct) &&
-                                ct > 0)
-                            {
-                                totalClases =
-                                    (int)ct;
-                            }
-                        }
+                        asistenciaActiva =
+                            config.TryGetValue(
+                                "AsistenciaActiva",
+                                out var aa) &&
+                            aa > 0;
 
                         if (
                             asistenciaActiva &&
-                            materia.Calificaciones
-                                .TryGetValue(
-                                    alumno.Matricula,
-                                    out var capturas))
+                            config.TryGetValue(
+                                "ClasesTotales",
+                                out var ct) &&
+                            ct > 0)
                         {
-                            if (
-                                capturas.TryGetValue(
-                                    "__Inasistencias__",
-                                    out var f) &&
-                                f >= 0)
-                            {
-                                faltas =
-                                    (int)f;
-                            }
-                        }
-
-                        if (
-                            double.TryParse(
-                                calif,
-                                out double califNum))
-                        {
-                            if (
-                                asistenciaActiva &&
-                                totalClases > 0)
-                            {
-                                totalClasesAcumuladas +=
-                                    totalClases;
-
-                                if (faltas >= 0)
-                                    faltasAcumuladas +=
-                                        faltas;
-
-                                int asistencias =
-                                    totalClases -
-                                    (faltas >= 0
-                                        ? faltas
-                                        : 0);
-
-                                double porcentajeAsistencia =
-                                    (double)asistencias /
-                                    totalClases *
-                                    100;
-
-                                if (
-                                    porcentajeAsistencia <
-                                    80)
-                                {
-                                    estado =
-                                        "NP";
-                                }
-                                else
-                                {
-                                    estado =
-                                        califNum >= 7.0
-                                            ? "Aprobado"
-                                            : "Reprobado";
-                                }
-                            }
-                            else
-                            {
-                                estado =
-                                    califNum >= 7.0
-                                        ? "Aprobado"
-                                        : "Reprobado";
-                            }
+                            totalClases =
+                                (int)ct;
                         }
                     }
-                }
-                else
-                {
+
+                    if (
+                        asistenciaActiva &&
+                        materia.Calificaciones
+                            .TryGetValue(
+                                alumno.Matricula,
+                                out var capturas))
+                    {
+                        if (
+                            capturas.TryGetValue(
+                                "__Inasistencias__",
+                                out var f) &&
+                            f >= 0)
+                        {
+                            faltas =
+                                (int)f;
+                        }
+                    }
+
                     if (
                         double.TryParse(
                             calif,
                             out double califNum))
                     {
                         if (
-                            totalClasesAcumuladas >
-                            0)
+                            asistenciaActiva &&
+                            totalClases > 0)
                         {
+                            totalClasesAcumuladas +=
+                                totalClases;
+
+                            if (faltas >= 0)
+                                faltasAcumuladas +=
+                                    faltas;
+
+                            int asistencias =
+                                totalClases -
+                                (faltas >= 0
+                                    ? faltas
+                                    : 0);
+
                             double porcentajeAsistencia =
-                                (double)(
-                                    totalClasesAcumuladas -
-                                    faltasAcumuladas) /
-                                totalClasesAcumuladas *
+                                (double)asistencias /
+                                totalClases *
                                 100;
 
                             if (
@@ -1296,348 +1406,391 @@ public partial class ParcialesView : UserControl
                                     ? "Aprobado"
                                     : "Reprobado";
                         }
-
-                        totalClases =
-                            totalClasesAcumuladas;
-
-                        faltas =
-                            faltasAcumuladas;
                     }
                 }
-
-                datosParciales[eval] =
-                (
-                    calif,
-                    estado,
-                    faltas,
-                    totalClases
-                );
             }
-
-            var infoWindow =
-                new InfoAlumnoWindow(
-                    alumno,
-                    datosParciales);
-
-            infoWindow.Owner =
-                Window.GetWindow(
-                    this);
-
-            infoWindow.ShowDialog();
-        }
-    }
-
-    private string ObtenerClaveMateriaDesdeNombreArchivo(
-        string? rutaCompleta)
-    {
-        if (
-            string.IsNullOrWhiteSpace(
-                rutaCompleta))
-        {
-            return string.Empty;
-        }
-
-        try
-        {
-            var nombre =
-                Path.GetFileNameWithoutExtension(
-                    rutaCompleta);
-
-            return string.IsNullOrWhiteSpace(
-                nombre)
-                ? string.Empty
-                : nombre
-                    .Trim()
-                    .Replace(
-                        ' ',
-                        '_');
-        }
-        catch
-        {
-            return string.Empty;
-        }
-    }
-
-    // =========================================================
-    // SC
-    // =========================================================
-
-    private void CampoSc_GotFocus(
-        object sender,
-        RoutedEventArgs e)
-    {
-        if (sender is not TextBox tb)
-            return;
-
-        // =========================================================
-        // IMPORTANTE:
-        // Este evento también está conectado al campo de
-        // INASISTENCIAS en el XAML.
-        //
-        // Solo debe actuar sobre los TextBox cuyo DataContext
-        // sea una ActividadParcialEditor.
-        // =========================================================
-
-        if (tb.DataContext is not ActividadParcialEditor actividad)
-            return;
-
-        if (
-            !actividad.Activa ||
-            !actividad.IsPuntajeEditable)
-        {
-            return;
-        }
-
-        if (
-            string.Equals(
-                tb.Text?.Trim(),
-                "SC",
-                StringComparison.OrdinalIgnoreCase))
-        {
-            // SC se borra al recibir foco.
-            tb.Clear();
-        }
-    }
-
-    private void CampoSc_LostFocus(
-        object sender,
-        RoutedEventArgs e)
-    {
-        if (sender is not TextBox tb)
-            return;
-
-        // =========================================================
-        // SOLO ACTIVIDADES.
-        // NUNCA INASISTENCIAS.
-        // =========================================================
-
-        if (tb.DataContext is not ActividadParcialEditor actividad)
-            return;
-
-        if (!actividad.Activa)
-            return;
-
-        // Si el usuario dejó vacío el campo, al perder foco
-        // vuelve automáticamente a SC.
-        if (string.IsNullOrWhiteSpace(
-                tb.Text))
-        {
-            tb.Text =
-                "SC";
-        }
-    }
-
-    // =========================================================
-    // NAVEGACIÓN CON FLECHAS
-    // =========================================================
-
-    private void PuntajesNavegacion_PreviewKeyDown(
-        object sender,
-        KeyEventArgs e)
-    {
-        if (sender is not TextBox actual)
-            return;
-
-        if (DataContext is not ParcialesViewModel vm)
-            return;
-
-        // ============================================================
-        // SHIFT + IZQUIERDA / DERECHA = CAMBIAR DE ALUMNO
-        // ============================================================
-
-        if (
-            e.KeyboardDevice.Modifiers ==
-            ModifierKeys.Shift &&
-            (e.Key == Key.Left ||
-             e.Key == Key.Right))
-        {
-            int indiceActual =
-                vm.Alumnos.IndexOf(
-                    vm.AlumnoSeleccionado);
-
-            if (indiceActual < 0)
-                return;
-
-            int nuevoIndice =
-                e.Key == Key.Left
-                    ? indiceActual - 1
-                    : indiceActual + 1;
-
-            if (
-                nuevoIndice < 0 ||
-                nuevoIndice >= vm.Alumnos.Count)
+            else
             {
-                e.Handled = true;
-                return;
+                if (
+                    double.TryParse(
+                        calif,
+                        out double califNum))
+                {
+                    if (
+                        totalClasesAcumuladas >
+                        0)
+                    {
+                        double porcentajeAsistencia =
+                            (double)(
+                                totalClasesAcumuladas -
+                                faltasAcumuladas) /
+                            totalClasesAcumuladas *
+                            100;
+
+                        if (
+                            porcentajeAsistencia <
+                            80)
+                        {
+                            estado =
+                                "NP";
+                        }
+                        else
+                        {
+                            estado =
+                                califNum >= 7.0
+                                    ? "Aprobado"
+                                    : "Reprobado";
+                        }
+                    }
+                    else
+                    {
+                        estado =
+                            califNum >= 7.0
+                                ? "Aprobado"
+                                : "Reprobado";
+                    }
+
+                    totalClases =
+                        totalClasesAcumuladas;
+
+                    faltas =
+                        faltasAcumuladas;
+                }
             }
 
-            vm.AlumnoSeleccionado =
-                vm.Alumnos[nuevoIndice];
+            datosParciales[eval] =
+            (
+                calif,
+                estado,
+                faltas,
+                totalClases
+            );
+        }
 
+        var infoWindow =
+            new InfoAlumnoWindow(
+                alumno,
+                datosParciales);
+
+        infoWindow.Owner =
+            Window.GetWindow(
+                this);
+
+        infoWindow.ShowDialog();
+    }
+}
+
+private string ObtenerClaveMateriaDesdeNombreArchivo(
+    string? rutaCompleta)
+{
+    if (
+        string.IsNullOrWhiteSpace(
+            rutaCompleta))
+    {
+        return string.Empty;
+    }
+
+    try
+    {
+        var nombre =
+            Path.GetFileNameWithoutExtension(
+                rutaCompleta);
+
+        return string.IsNullOrWhiteSpace(
+            nombre)
+            ? string.Empty
+            : nombre
+                .Trim()
+                .Replace(
+                    ' ',
+                    '_');
+    }
+    catch
+    {
+        return string.Empty;
+    }
+}
+
+// =========================================================
+// SC
+// =========================================================
+
+private void CampoSc_GotFocus(
+    object sender,
+    RoutedEventArgs e)
+{
+    if (sender is not TextBox tb)
+        return;
+
+    // =========================================================
+    // IMPORTANTE:
+    // Este evento también está conectado al campo de
+    // INASISTENCIAS en el XAML.
+    //
+    // Solo debe actuar sobre los TextBox cuyo DataContext
+    // sea una ActividadParcialEditor.
+    // =========================================================
+
+    if (tb.DataContext is not ActividadParcialEditor actividad)
+        return;
+
+    if (
+        !actividad.Activa ||
+        !actividad.IsPuntajeEditable)
+    {
+        return;
+    }
+
+    if (
+        string.Equals(
+            tb.Text?.Trim(),
+            "SC",
+            StringComparison.OrdinalIgnoreCase))
+    {
+        // SC se borra al recibir foco.
+        tb.Clear();
+    }
+}
+
+private void CampoSc_LostFocus(
+    object sender,
+    RoutedEventArgs e)
+{
+    if (sender is not TextBox tb)
+        return;
+
+    // =========================================================
+    // SOLO ACTIVIDADES.
+    // NUNCA INASISTENCIAS.
+    // =========================================================
+
+    if (tb.DataContext is not ActividadParcialEditor actividad)
+        return;
+
+    if (!actividad.Activa)
+        return;
+
+    // Si el usuario dejó vacío el campo, al perder foco
+    // vuelve automáticamente a SC.
+    if (string.IsNullOrWhiteSpace(
+            tb.Text))
+    {
+        tb.Text =
+            "SC";
+    }
+}
+
+// =========================================================
+// NAVEGACIÓN CON FLECHAS
+// =========================================================
+
+private void PuntajesNavegacion_PreviewKeyDown(
+    object sender,
+    KeyEventArgs e)
+{
+    if (sender is not TextBox actual)
+        return;
+
+    if (DataContext is not ParcialesViewModel vm)
+        return;
+
+    // ============================================================
+    // SHIFT + IZQUIERDA / DERECHA = CAMBIAR DE ALUMNO
+    // ============================================================
+
+    if (
+        e.KeyboardDevice.Modifiers ==
+        ModifierKeys.Shift &&
+        (e.Key == Key.Left ||
+         e.Key == Key.Right))
+    {
+        int indiceActual =
+            vm.Alumnos.IndexOf(
+                vm.AlumnoSeleccionado);
+
+        if (indiceActual < 0)
+            return;
+
+        int nuevoIndice =
+            e.Key == Key.Left
+                ? indiceActual - 1
+                : indiceActual + 1;
+
+        if (
+            nuevoIndice < 0 ||
+            nuevoIndice >= vm.Alumnos.Count)
+        {
             e.Handled = true;
             return;
         }
 
-        // ============================================================
-        // SHIFT + ARRIBA / ABAJO = RECORRER PUNTAJES E INASISTENCIAS
-        // ============================================================
-
-        if (
-            e.KeyboardDevice.Modifiers != ModifierKeys.Shift ||
-            (e.Key != Key.Up &&
-             e.Key != Key.Down))
-        {
-            return;
-        }
-
-        var controles =
-            FindVisualChildren<TextBox>(this)
-                .Where(t =>
-                    (string.Equals(
-                         t.Tag?.ToString(),
-                         "NavegacionPuntaje",
-                         StringComparison.Ordinal) ||
-                     string.Equals(
-                         t.Tag?.ToString(),
-                         "NavegacionInasistencia",
-                         StringComparison.Ordinal)) &&
-                    t.IsEnabled &&
-                    t.IsVisible)
-                .ToList();
-
-        if (controles.Count == 0)
-            return;
-
-        int indiceControl =
-            controles.IndexOf(actual);
-
-        if (indiceControl < 0)
-            return;
-
-        int nuevoControl =
-            e.Key == Key.Up
-                ? indiceControl - 1
-                : indiceControl + 1;
-
-        if (
-            nuevoControl < 0 ||
-            nuevoControl >= controles.Count)
-        {
-            e.Handled = true;
-            return;
-        }
-
-        TextBox destino =
-            controles[nuevoControl];
-
-        destino.Focus();
-        destino.SelectAll();
+        vm.AlumnoSeleccionado =
+            vm.Alumnos[nuevoIndice];
 
         e.Handled = true;
-    }
-
-    private void AsistenciaActiva_Checked(
-        object sender,
-        RoutedEventArgs e)
-    {
-        if (DataContext is not ParcialesViewModel vm)
-            return;
-
-        foreach (var alumno in vm.Alumnos)
-        {
-            if (alumno == null)
-                continue;
-
-            PropertyInfo? propiedad =
-                alumno.GetType().GetProperty("Inasistencias");
-
-            if (propiedad == null ||
-                !propiedad.CanRead ||
-                !propiedad.CanWrite)
-            {
-                continue;
-            }
-
-            object? valorActual =
-                propiedad.GetValue(alumno);
-
-            // =========================================================
-            // SOLO ASIGNAR 0 CUANDO EL CAMPO ESTÁ VACÍO
-            // =========================================================
-
-            bool estaVacio =
-                valorActual == null ||
-                string.IsNullOrWhiteSpace(
-                    Convert.ToString(valorActual));
-
-            if (!estaVacio)
-                continue;
-
-            Type tipoPropiedad =
-                Nullable.GetUnderlyingType(
-                    propiedad.PropertyType)
-                ?? propiedad.PropertyType;
-
-            object? nuevoValor = null;
-
-            if (tipoPropiedad == typeof(string))
-            {
-                nuevoValor = "0";
-            }
-            else if (tipoPropiedad == typeof(int))
-            {
-                nuevoValor = 0;
-            }
-            else if (tipoPropiedad == typeof(double))
-            {
-                nuevoValor = 0d;
-            }
-            else if (tipoPropiedad == typeof(decimal))
-            {
-                nuevoValor = 0m;
-            }
-
-            if (nuevoValor != null)
-            {
-                propiedad.SetValue(
-                    alumno,
-                    nuevoValor);
-            }
-        }
+        return;
     }
 
     // ============================================================
-    // BUSCAR TEXTBOX DENTRO DEL ÁRBOL VISUAL
+    // SHIFT + ARRIBA / ABAJO = RECORRER PUNTAJES E INASISTENCIAS
     // ============================================================
 
-    private static IEnumerable<T> FindVisualChildren<T>(
-        DependencyObject dependencyObject)
-        where T : DependencyObject
+    if (
+        e.KeyboardDevice.Modifiers != ModifierKeys.Shift ||
+        (e.Key != Key.Up &&
+         e.Key != Key.Down))
     {
-        if (dependencyObject == null)
-            yield break;
+        return;
+    }
 
-        for (
-            int i = 0;
-            i <
-            VisualTreeHelper.GetChildrenCount(
-                dependencyObject);
-            i++)
+    var controles =
+        FindVisualChildren<TextBox>(this)
+            .Where(t =>
+                (string.Equals(
+                     t.Tag?.ToString(),
+                     "NavegacionPuntaje",
+                     StringComparison.Ordinal) ||
+                 string.Equals(
+                     t.Tag?.ToString(),
+                     "NavegacionInasistencia",
+                     StringComparison.Ordinal)) &&
+                t.IsEnabled &&
+                t.IsVisible)
+            .ToList();
+
+    if (controles.Count == 0)
+        return;
+
+    int indiceControl =
+        controles.IndexOf(actual);
+
+    if (indiceControl < 0)
+        return;
+
+    int nuevoControl =
+        e.Key == Key.Up
+            ? indiceControl - 1
+            : indiceControl + 1;
+
+    if (
+        nuevoControl < 0 ||
+        nuevoControl >= controles.Count)
+    {
+        e.Handled = true;
+        return;
+    }
+
+    TextBox destino =
+        controles[nuevoControl];
+
+    destino.Focus();
+    destino.SelectAll();
+
+    e.Handled = true;
+}
+
+private void AsistenciaActiva_Checked(
+    object sender,
+    RoutedEventArgs e)
+{
+    if (DataContext is not ParcialesViewModel vm)
+        return;
+
+    foreach (var alumno in vm.Alumnos)
+    {
+        if (alumno == null)
+            continue;
+
+        PropertyInfo? propiedad =
+            alumno.GetType().GetProperty("Inasistencias");
+
+        if (propiedad == null ||
+            !propiedad.CanRead ||
+            !propiedad.CanWrite)
         {
-            DependencyObject hijo =
-                VisualTreeHelper.GetChild(
-                    dependencyObject,
-                    i);
+            continue;
+        }
 
-            if (hijo is T resultado)
-                yield return resultado;
+        object? valorActual =
+            propiedad.GetValue(alumno);
 
-            foreach (T descendiente in
-                     FindVisualChildren<T>(
-                         hijo))
-            {
-                yield return descendiente;
-            }
+        // =========================================================
+        // SOLO ASIGNAR 0 CUANDO EL CAMPO ESTÁ VACÍO
+        // =========================================================
+
+        bool estaVacio =
+            valorActual == null ||
+            string.IsNullOrWhiteSpace(
+                Convert.ToString(valorActual));
+
+        if (!estaVacio)
+            continue;
+
+        Type tipoPropiedad =
+            Nullable.GetUnderlyingType(
+                propiedad.PropertyType)
+            ?? propiedad.PropertyType;
+
+        object? nuevoValor = null;
+
+        if (tipoPropiedad == typeof(string))
+        {
+            nuevoValor = "0";
+        }
+        else if (tipoPropiedad == typeof(int))
+        {
+            nuevoValor = 0;
+        }
+        else if (tipoPropiedad == typeof(double))
+        {
+            nuevoValor = 0d;
+        }
+        else if (tipoPropiedad == typeof(decimal))
+        {
+            nuevoValor = 0m;
+        }
+
+        if (nuevoValor != null)
+        {
+            propiedad.SetValue(
+                alumno,
+                nuevoValor);
         }
     }
+}
+
+// ============================================================
+// BUSCAR TEXTBOX DENTRO DEL ÁRBOL VISUAL
+// ============================================================
+
+private static IEnumerable<T> FindVisualChildren<T>(
+    DependencyObject dependencyObject)
+    where T : DependencyObject
+{
+    if (dependencyObject == null)
+        yield break;
+
+    for (
+        int i = 0;
+        i <
+        VisualTreeHelper.GetChildrenCount(
+            dependencyObject);
+        i++)
+    {
+        DependencyObject hijo =
+            VisualTreeHelper.GetChild(
+                dependencyObject,
+                i);
+
+        if (hijo is T resultado)
+            yield return resultado;
+
+        foreach (T descendiente in
+                 FindVisualChildren<T>(
+                     hijo))
+        {
+            yield return descendiente;
+        }
+    }
+}
 }
