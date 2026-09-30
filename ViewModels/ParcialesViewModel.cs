@@ -52,6 +52,12 @@ public partial class ParcialesViewModel : ObservableObject
     private DateTime? _lastUserEditTime;
     private DateTime _lastLoadOrSaveTime = DateTime.MinValue;
 
+    // ============================================================
+    // EVITAR RECÁLCULOS MASIVOS REENTRANTES
+    // ============================================================
+
+    private bool _recalculandoTodoParcial = false;
+
     public ObservableCollection<Alumno> Alumnos =>
         _mainVm.Alumnos;
 
@@ -255,8 +261,54 @@ public partial class ParcialesViewModel : ObservableObject
 
     private void EditorChanged()
     {
+        if (_recalculandoTodoParcial)
+            return;
+
+        // ============================================================
+        // GUARDAR EN MEMORIA LA CAPTURA ACTUAL DEL ALUMNO
+        // ANTES DE RECALCULAR EL PARCIAL COMPLETO.
+        //
+        // NO ES GUARDADO FÍSICO TODAVÍA.
+        // ============================================================
+
+        if (
+            !_cargando &&
+            _cargasActivas == 0 &&
+            AlumnoSeleccionado != null)
+        {
+            PersistirCapturasTemporales(
+                AlumnoSeleccionado.Matricula);
+        }
+
+        // ============================================================
+        // ACTUALIZAR LA CONFIGURACIÓN EN _materia
+        // ============================================================
+
+        _materia.Actividades =
+            Actividades
+                .Select(a => a.ToModelo())
+                .ToList();
+
+        // ============================================================
+        // RECALCULAR INMEDIATAMENTE EL ALUMNO MOSTRADO
+        // ============================================================
+
         RecalcularTodo(
             guardarJson: false);
+
+        // ============================================================
+        // SI LA CONFIGURACIÓN ES VÁLIDA, RECALCULAR EN MEMORIA
+        // TODOS LOS ALUMNOS DEL PARCIAL SELECCIONADO.
+        //
+        // NO SE GUARDA FÍSICAMENTE TODAVÍA.
+        // ============================================================
+
+        if (
+            ConfiguracionActividadesValidaParaRecalculoMasivo())
+        {
+            RecalcularCalificacionesDeTodosLosAlumnosDelParcial(
+                actualizarUiAlumnoActual: true);
+        }
     }
 
     partial void OnAsistenciaActivaChanged(
@@ -281,7 +333,7 @@ public partial class ParcialesViewModel : ObservableObject
         RecalcularTodo(
             guardarJson: false);
     }
-    
+
     private string ObtenerNombreProfesorDesdeCap(
         string rutaCompleta)
     {
@@ -361,10 +413,6 @@ public partial class ParcialesViewModel : ObservableObject
                 continue;
             }
 
-            // =========================================================
-            // OBTENER LAS CAPTURAS DEL ALUMNO
-            // =========================================================
-
             if (
                 !_materia.Calificaciones.TryGetValue(
                     alumno.Matricula,
@@ -379,15 +427,6 @@ public partial class ParcialesViewModel : ObservableObject
                     capturas;
             }
 
-            // =========================================================
-            // VACÍO = FALTA LA CAPTURA
-            //
-            // - No existe la clave
-            // - Tiene -1
-            //
-            // En cualquiera de esos casos ponemos 0.
-            // =========================================================
-
             bool estaVacia =
                 !capturas.TryGetValue(
                     "__Inasistencias__",
@@ -401,10 +440,6 @@ public partial class ParcialesViewModel : ObservableObject
                     "__Inasistencias__"] =
                 0.0;
         }
-
-        // =========================================================
-        // ACTUALIZAR INMEDIATAMENTE EL ALUMNO QUE ESTÁ EN PANTALLA
-        // =========================================================
 
         if (AlumnoSeleccionado != null &&
             !string.IsNullOrWhiteSpace(
@@ -609,6 +644,12 @@ public partial class ParcialesViewModel : ObservableObject
 
     public void PrepararGuardado()
     {
+        // ============================================================
+        // NORMALIZAR EL ALUMNO ACTUAL
+        //
+        // Una actividad activa vacía se considera SC al guardar.
+        // ============================================================
+
         foreach (var ed in Actividades)
         {
             if (
@@ -621,8 +662,448 @@ public partial class ParcialesViewModel : ObservableObject
             }
         }
 
-        RecalcularTodo(
-            guardarJson: true);
+        // ============================================================
+        // PERSISTIR EN MEMORIA LA CAPTURA ACTUAL
+        // ============================================================
+
+        if (AlumnoSeleccionado != null)
+        {
+            PersistirCapturasTemporales(
+                AlumnoSeleccionado.Matricula);
+        }
+
+        // ============================================================
+        // ASEGURAR QUE LA CONFIGURACIÓN ACTUAL ESTÉ EN _materia
+        // ============================================================
+
+        _materia.Actividades =
+            Actividades
+                .Select(a => a.ToModelo())
+                .ToList();
+
+        // ============================================================
+        // RECALCULAR TODOS LOS ALUMNOS DEL PARCIAL SELECCIONADO
+        //
+        // ESTO OCURRE ANTES DE GuardarEnJsonLocal()
+        // Y ANTES DE CapWriterService.GuardarEvaluacion().
+        // ============================================================
+
+        RecalcularCalificacionesDeTodosLosAlumnosDelParcial(
+            actualizarUiAlumnoActual: true);
+
+        // ============================================================
+        // GUARDAR PARCIALES.DB
+        // ============================================================
+
+        GuardarEnJsonLocal();
+    }
+
+    // ============================================================
+    // VALIDAR CONFIGURACIÓN ACTUAL PARA RECÁLCULO MASIVO
+    // ============================================================
+
+    private bool ConfiguracionActividadesValidaParaRecalculoMasivo()
+    {
+        decimal suma =
+            0m;
+
+        bool existeActividadActiva =
+            false;
+
+        foreach (var actividad in Actividades)
+        {
+            if (!actividad.Activa)
+                continue;
+
+            existeActividadActiva =
+                true;
+
+            if (string.IsNullOrWhiteSpace(
+                    actividad.Nombre))
+            {
+                return false;
+            }
+
+            if (
+                !double.TryParse(
+                    actividad.Porcentaje,
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out double porc) ||
+                porc < 0 ||
+                porc > 100)
+            {
+                return false;
+            }
+
+            if (
+                !double.TryParse(
+                    actividad.PuntajeMaximo,
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out double max) ||
+                max <= 0)
+            {
+                return false;
+            }
+
+            suma +=
+                (decimal)porc;
+        }
+
+        return
+            existeActividadActiva &&
+            suma > 0m;
+    }
+
+    // ============================================================
+    // RECALCULAR LA CALIFICACIÓN DE UN ALUMNO UTILIZANDO
+    // LAS CAPTURAS GUARDADAS EN _materia.Calificaciones.
+    //
+    // REGLAS:
+    // - TODAS las actividades activas deben tener captura.
+    // - SC (-1) cuenta como captura.
+    // - SC NO aporta puntos al cálculo.
+    // - Las actividades con puntaje numérico sí aportan.
+    // - Si no existe ningún puntaje numérico, no se genera
+    //   calificación.
+    // - Si un puntaje supera el máximo actual, no se genera
+    //   una calificación válida.
+    // ============================================================
+
+    private bool IntentarCalcularCalificacionDesdeCapturas(
+        Dictionary<string, double> capturas,
+        out string calificacion)
+    {
+        calificacion =
+            string.Empty;
+
+        if (capturas == null)
+            return false;
+
+        decimal sumaPorcentajes =
+            0m;
+
+        decimal acumulado =
+            0m;
+
+        var entradas =
+            new List<(double porc, double max, double obt)>();
+
+        bool todasLasActividadesCapturadas =
+            true;
+
+        bool hayPuntajesNumericos =
+            false;
+
+        foreach (var actividad in Actividades)
+        {
+            if (!actividad.Activa)
+                continue;
+
+            // ========================================================
+            // CONFIGURACIÓN
+            // ========================================================
+
+            if (
+                string.IsNullOrWhiteSpace(
+                    actividad.Nombre))
+            {
+                return false;
+            }
+
+            if (
+                !double.TryParse(
+                    actividad.Porcentaje,
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out double porc) ||
+                porc < 0 ||
+                porc > 100)
+            {
+                return false;
+            }
+
+            if (
+                !double.TryParse(
+                    actividad.PuntajeMaximo,
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out double max) ||
+                max <= 0)
+            {
+                return false;
+            }
+
+            sumaPorcentajes +=
+                (decimal)porc;
+
+            string nombreActividad =
+                actividad.Nombre.Trim();
+
+            // ========================================================
+            // TODA ACTIVIDAD ACTIVA DEBE TENER CAPTURA
+            //
+            // Número = capturada
+            // SC (-1) = capturada
+            // Ausencia de clave = no capturada
+            // ========================================================
+
+            if (
+                !capturas.TryGetValue(
+                    nombreActividad,
+                    out double valor))
+            {
+                todasLasActividadesCapturadas =
+                    false;
+
+                continue;
+            }
+
+            // ========================================================
+            // SC:
+            // CAPTURA VÁLIDA, PERO NO PARTICIPA EN EL CÁLCULO.
+            // ========================================================
+
+            if (valor == -1)
+            {
+                continue;
+            }
+
+            // ========================================================
+            // OTROS VALORES NEGATIVOS NO SON VÁLIDOS.
+            // ========================================================
+
+            if (valor < 0)
+            {
+                return false;
+            }
+
+            // ========================================================
+            // EL PUNTAJE NO PUEDE SUPERAR EL MÁXIMO ACTUAL.
+            //
+            // Esta comprobación NO sustituye el modal.
+            // Solamente evita generar una calificación inválida.
+            // ========================================================
+
+            if (valor > max)
+            {
+                return false;
+            }
+
+            hayPuntajesNumericos =
+                true;
+
+            entradas.Add(
+                (porc, max, valor));
+        }
+
+        // ============================================================
+        // FALTA ALGUNA ACTIVIDAD ACTIVA.
+        // ============================================================
+
+        if (!todasLasActividadesCapturadas)
+        {
+            return false;
+        }
+
+        // ============================================================
+        // TODAS LAS ACTIVIDADES SON SC.
+        // ============================================================
+
+        if (!hayPuntajesNumericos)
+        {
+            return false;
+        }
+
+        if (sumaPorcentajes <= 0m)
+        {
+            return false;
+        }
+
+        // ============================================================
+        // CONSERVAR LA MISMA NORMALIZACIÓN QUE YA USA CEIM.
+        // ============================================================
+
+        double scaling =
+            100.0 /
+            (double)sumaPorcentajes;
+
+        foreach (
+            var (porc, max, obt)
+            in entradas)
+        {
+            double porcNorm =
+                porc *
+                scaling;
+
+            acumulado +=
+                ((decimal)obt /
+                 (decimal)max) *
+                (decimal)porcNorm;
+        }
+
+        decimal resultado =
+            TruncarUnDecimal(
+                acumulado / 10m);
+
+        calificacion =
+            resultado.ToString(
+                "0.0",
+                CultureInfo.InvariantCulture);
+
+        return true;
+    }
+
+    // ============================================================
+    // RECALCULAR TODOS LOS ALUMNOS DEL PARCIAL ACTUAL
+    //
+    // SOLO trabaja sobre:
+    //     _claveMateria + _evaluacionActual
+    //
+    // NO toca otras materias ni otros parciales.
+    //
+    // Actualiza directamente:
+    //     Alumno.Calificación[_evaluacionActual]
+    //
+    // Esos valores son los que posteriormente recibe
+    // CapWriterService.
+    // ============================================================
+
+    private void RecalcularCalificacionesDeTodosLosAlumnosDelParcial(
+        bool actualizarUiAlumnoActual)
+    {
+        if (
+            _recalculandoTodoParcial ||
+            string.IsNullOrWhiteSpace(
+                _evaluacionActual))
+        {
+            return;
+        }
+
+        _recalculandoTodoParcial =
+            true;
+
+        try
+        {
+            // ========================================================
+            // ASEGURAR QUE _materia TIENE LA CONFIGURACIÓN ACTUAL
+            // ========================================================
+
+            _materia.Actividades =
+                Actividades
+                    .Select(a => a.ToModelo())
+                    .ToList();
+
+            foreach (var alumno in Alumnos)
+            {
+                if (
+                    alumno == null ||
+                    string.IsNullOrWhiteSpace(
+                        alumno.Matricula))
+                {
+                    continue;
+                }
+
+                // ====================================================
+                // CAPTURA DIRECTA
+                //
+                // NO SE RECALCULA.
+                // ====================================================
+
+                if (
+                    _materia.Calificaciones.TryGetValue(
+                        alumno.Matricula,
+                        out var capturas))
+                {
+                    bool capturaDirecta =
+                        capturas.TryGetValue(
+                            "__CAPTURA_DIRECTA__",
+                            out double capturaDirectaValor) &&
+                        capturaDirectaValor > 0;
+
+                    if (capturaDirecta)
+                    {
+                        continue;
+                    }
+
+                    // =================================================
+                    // PRE PERSISTIDO
+                    //
+                    // NO TOCAR LA CALIFICACIÓN QUE PRE YA CONTROLA.
+                    // =================================================
+
+                    bool tienePre =
+                        _preService != null &&
+                        !string.IsNullOrWhiteSpace(
+                            _claveMateria) &&
+                        _preService
+                            .ObtenerEstadoPre(
+                                _claveMateria,
+                                alumno.Matricula)
+                            .TienePRE;
+
+                    if (tienePre)
+                    {
+                        continue;
+                    }
+
+                    // =================================================
+                    // RECALCULAR CON LAS CAPTURAS EXISTENTES.
+                    // =================================================
+
+                    bool calculable =
+                        IntentarCalcularCalificacionDesdeCapturas(
+                            capturas,
+                            out string nuevaCalificacion);
+
+                    if (calculable)
+                    {
+                        alumno.Calificación[
+                                _evaluacionActual] =
+                            nuevaCalificacion;
+                    }
+                    else
+                    {
+                        alumno.Calificación[
+                                _evaluacionActual] =
+                            string.Empty;
+                    }
+                }
+                else
+                {
+                    // =================================================
+                    // NO HAY CAPTURA PARA EL ALUMNO.
+                    // LA CALIFICACIÓN DEBE QUEDAR VACÍA.
+                    // =================================================
+
+                    alumno.Calificación[
+                            _evaluacionActual] =
+                        string.Empty;
+                }
+            }
+
+            // ========================================================
+            // ACTUALIZAR LA UI DEL ALUMNO ACTUAL
+            // ========================================================
+
+            if (
+                actualizarUiAlumnoActual &&
+                AlumnoSeleccionado != null)
+            {
+                CalificacionParcialTexto =
+                    AlumnoSeleccionado.Calificación[
+                        _evaluacionActual]
+                    ?? string.Empty;
+            }
+
+            ActualizarConteoEvaluados();
+        }
+        finally
+        {
+            _recalculandoTodoParcial =
+                false;
+        }
     }
 
     private void MainVm_PropertyChanged(
@@ -836,7 +1317,7 @@ public partial class ParcialesViewModel : ObservableObject
                     ? ObtenerNombreProfesorDesdeCap(
                         _mainVm.ArchivoCompletoActual)
                     : string.Empty;
-            
+
             NombreEvaluacion =
                 ObtenerNombreEvaluacionVisual(
                     _mainVm.EvaluacionSeleccionada);
@@ -1204,10 +1685,6 @@ public partial class ParcialesViewModel : ObservableObject
                 }
                 else
                 {
-                    // ====================================================
-                    // SIN CAPTURA = SC DURANTE CARGA
-                    // ====================================================
-
                     ed.EstablecerPuntajeDesdeCarga(
                         ed.Activa
                             ? "SC"
@@ -1482,10 +1959,6 @@ public partial class ParcialesViewModel : ObservableObject
             //
             // IMPORTANTE:
             // No convertimos aquí vacío a SC.
-            //
-            // El campo puede estar temporalmente vacío mientras
-            // el usuario lo está editando después de recibir foco.
-            // CampoSc_LostFocus es quien vuelve a colocar SC.
             // --------------------------------------------------------
 
             if (string.IsNullOrWhiteSpace(
@@ -1624,10 +2097,6 @@ public partial class ParcialesViewModel : ObservableObject
             var entrada
             in _materia.Calificaciones)
         {
-            // =========================================================
-            // $CONFIG$ NO ES UN ALUMNO
-            // =========================================================
-
             if (
                 string.Equals(
                     entrada.Key,
@@ -1647,10 +2116,6 @@ public partial class ParcialesViewModel : ObservableObject
             {
                 continue;
             }
-
-            // =========================================================
-            // SC = -1
-            // =========================================================
 
             if (puntaje < 0)
                 continue;
@@ -1683,18 +2148,6 @@ public partial class ParcialesViewModel : ObservableObject
             return;
         }
 
-        // =========================================================
-        // ELIMINAR ÚNICAMENTE LA CAPTURA DE ESTA ACTIVIDAD
-        // PARA TODOS LOS ALUMNOS.
-        //
-        // NO SE TOCA:
-        // - $CONFIG$
-        // - INASISTENCIAS
-        // - CAPTURA DIRECTA
-        // - CALIFICACIÓN DIRECTA
-        // - OTRAS ACTIVIDADES
-        // =========================================================
-
         foreach (
             var entrada
             in _materia.Calificaciones)
@@ -1712,24 +2165,52 @@ public partial class ParcialesViewModel : ObservableObject
                 nombreActividad);
         }
 
-        // =========================================================
-        // EL ALUMNO QUE ESTÁ EN PANTALLA QUEDA SIN CAPTURA
-        // =========================================================
-
         actividad.EstablecerPuntajeDesdeCarga(
             actividad.Activa
                 ? "SC"
                 : string.Empty);
 
-        // =========================================================
-        // RECALCULAR SIN GUARDAR FÍSICAMENTE TODAVÍA.
-        // El cambio queda pendiente hasta PrepararGuardado().
-        // =========================================================
+        // ============================================================
+        // LA CAPTURA DE ESTA ACTIVIDAD YA NO ES VÁLIDA PARA
+        // EL ALUMNO MOSTRADO HASTA QUE VUELVA A CAPTURARSE.
+        //
+        // EL RECÁLCULO INMEDIATO DETERMINA EL ESTADO CORRECTO
+        // DE LA CALIFICACIÓN VISIBLE.
+        // ============================================================
+
+        CalificacionParcialTexto =
+            string.Empty;
+
+        if (
+            AlumnoSeleccionado != null &&
+            !string.IsNullOrWhiteSpace(
+                _evaluacionActual))
+        {
+            AlumnoSeleccionado
+                .Calificación[
+                    _evaluacionActual] =
+                string.Empty;
+        }
 
         RecalcularTodo(
             guardarJson: false,
             esCargaInicial: false,
             marcarCambios: true);
+
+        // ============================================================
+        // RECALCULAR TODOS LOS ALUMNOS DEL PARCIAL EN MEMORIA.
+        //
+        // Como la captura de esta actividad fue eliminada de todos,
+        // los alumnos que ya no tengan todas las actividades activas
+        // capturadas quedan con la calificación vacía.
+        // ============================================================
+
+        if (
+            ConfiguracionActividadesValidaParaRecalculoMasivo())
+        {
+            RecalcularCalificacionesDeTodosLosAlumnosDelParcial(
+                actualizarUiAlumnoActual: true);
+        }
     }
 
     private void RecalcularTodo(
@@ -1742,7 +2223,9 @@ public partial class ParcialesViewModel : ObservableObject
 
         decimal sumaPorcentajes = 0m;
         decimal acumulado = 0m;
+
         bool logicaCorrecta = true;
+        bool hayPuntajesNumericos = false;
 
         var entradas =
             new List<(double porc, double max, double obt)>();
@@ -1752,7 +2235,8 @@ public partial class ParcialesViewModel : ObservableObject
             if (!actividad.Activa)
                 continue;
 
-            if (!double.TryParse(
+            if (
+                !double.TryParse(
                     actividad.Porcentaje,
                     NumberStyles.Any,
                     CultureInfo.InvariantCulture,
@@ -1767,7 +2251,8 @@ public partial class ParcialesViewModel : ObservableObject
             sumaPorcentajes +=
                 (decimal)porc;
 
-            if (!double.TryParse(
+            if (
+                !double.TryParse(
                     actividad.PuntajeMaximo,
                     NumberStyles.Any,
                     CultureInfo.InvariantCulture,
@@ -1778,21 +2263,40 @@ public partial class ParcialesViewModel : ObservableObject
                 continue;
             }
 
+            // ========================================================
+            // TODAS LAS ACTIVIDADES ACTIVAS DEBEN TENER CAPTURA
+            //
+            // SC = CAPTURA VÁLIDA
+            // ========================================================
+
             if (
                 string.IsNullOrWhiteSpace(
-                    actividad.PuntajeObtenido) ||
-                actividad.PuntajeObtenido
-                    .Trim()
-                    .Equals(
-                        "SC",
-                        StringComparison.OrdinalIgnoreCase))
+                    actividad.PuntajeObtenido))
             {
                 logicaCorrecta = false;
                 continue;
             }
 
-            if (!double.TryParse(
-                    actividad.PuntajeObtenido,
+            string puntajeTexto =
+                actividad.PuntajeObtenido.Trim();
+
+            // ========================================================
+            // SC:
+            // NO INVALIDA LA CALIFICACIÓN.
+            // NO APORTA PUNTOS.
+            // ========================================================
+
+            if (
+                puntajeTexto.Equals(
+                    "SC",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (
+                !double.TryParse(
+                    puntajeTexto,
                     NumberStyles.Any,
                     CultureInfo.InvariantCulture,
                     out double obt) ||
@@ -1803,11 +2307,15 @@ public partial class ParcialesViewModel : ObservableObject
                 continue;
             }
 
+            hayPuntajesNumericos =
+                true;
+
             entradas.Add(
                 (porc, max, obt));
         }
 
-        double scaling = 1.0;
+        double scaling =
+            1.0;
 
         if (sumaPorcentajes > 0)
         {
@@ -1816,7 +2324,9 @@ public partial class ParcialesViewModel : ObservableObject
                 (double)sumaPorcentajes;
         }
 
-        foreach (var (porc, max, obt) in entradas)
+        foreach (
+            var (porc, max, obt)
+            in entradas)
         {
             double porcNorm =
                 porc *
@@ -1850,9 +2360,14 @@ public partial class ParcialesViewModel : ObservableObject
         SumaValida =
             sumaPorcentajes == 100m;
 
+        // ============================================================
+        // CALIFICACIÓN DEL ALUMNO ACTUAL
+        // ============================================================
+
         if (
             sumaPorcentajes > 0m &&
-            logicaCorrecta)
+            logicaCorrecta &&
+            hayPuntajesNumericos)
         {
             decimal calificacion =
                 TruncarUnDecimal(
@@ -1914,11 +2429,19 @@ public partial class ParcialesViewModel : ObservableObject
             }
         }
 
+        // ============================================================
+        // PERSISTIR EN MEMORIA LA CAPTURA ACTUAL
+        // ============================================================
+
         if (AlumnoSeleccionado != null)
         {
             PersistirCapturasTemporales(
                 AlumnoSeleccionado.Matricula);
         }
+
+        // ============================================================
+        // GUARDADO FÍSICO
+        // ============================================================
 
         if (guardarJson)
         {
@@ -1988,7 +2511,8 @@ public partial class ParcialesViewModel : ObservableObject
                 AlumnoSeleccionado.Matricula);
         }
 
-        double acumuladoPorcentajes = 0.0;
+        double acumuladoPorcentajes =
+            0.0;
 
         foreach (var ed in Actividades)
         {
@@ -2444,14 +2968,7 @@ public partial class ActividadParcialEditor : ObservableObject
         string value)
     {
         // ============================================================
-        // IMPORTANTE:
-        //
         // AQUÍ YA NO SE CONVIERTE VACÍO EN SC.
-        //
-        // Esto permite que GotFocus borre SC y deje el campo
-        // realmente vacío mientras el usuario captura.
-        //
-        // LostFocus será quien vuelva a colocar SC.
         // ============================================================
 
         if (_cargandoPuntaje)
@@ -2749,7 +3266,6 @@ public partial class ActividadParcialEditor : ObservableObject
                 nameof(DisplayPuntajeObtenido));
         }
     }
-    
 
     private string GetDisplayPuntaje(
         string? raw)
@@ -2768,19 +3284,6 @@ public partial class ActividadParcialEditor : ObservableObject
 
         string texto =
             raw.Trim();
-
-        // =========================================================
-        // PERMITIR DECIMAL INCOMPLETO DURANTE LA CAPTURA
-        //
-        // Ejemplo:
-        // 5
-        // 5.
-        // 5.5
-        //
-        // No convertir "5." a double todavía porque eso haría
-        // desaparecer el punto antes de que el usuario escriba
-        // el siguiente decimal.
-        // =========================================================
 
         if (texto.EndsWith(
                 ".",
