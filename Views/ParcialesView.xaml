@@ -912,8 +912,19 @@
                                         BorderThickness="0"
                                         Cursor="Hand"
                                         VerticalAlignment="Center"
-                                        Click="WarningNoEvaluados_Click"
-                                        ToolTip="{Binding EstadoEvaluacionToolTip}">
+                                        Click="WarningNoEvaluados_Click">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <!-- Sin ToolTip por defecto (Verde y Amarillo) -->
+                                                <Setter Property="ToolTip" Value="{x:Null}" />
+                                                <Style.Triggers>
+                                                    <!-- ToolTip activo solo cuando el color sea Rojo (#DC2626 o "Red") -->
+                                                    <DataTrigger Binding="{Binding EstadoEvaluacionColor}" Value="#DC2626">
+                                                        <Setter Property="ToolTip" Value="HABÍA un AGUJERO aquí. Ahora desapareció." />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
 
                                         <Viewbox
                                             Width="18"

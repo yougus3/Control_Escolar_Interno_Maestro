@@ -1075,132 +1075,132 @@
 
                                             <ItemsControl.ItemTemplate>
 
-                                               <DataTemplate>
+                                                <DataTemplate>
 
-    <Border
-        Background="White"
-        BorderBrush="#E2E8F0"
-        BorderThickness="1"
-        CornerRadius="7"
-        Padding="10"
-        Margin="0,0,0,7">
+                                                    <Border
+                                                        Background="White"
+                                                        BorderBrush="#E2E8F0"
+                                                        BorderThickness="1"
+                                                        CornerRadius="7"
+                                                        Padding="10"
+                                                        Margin="0,0,0,7">
 
-        <Grid>
+                                                        <Grid>
 
-            <Grid.ColumnDefinitions>
+                                                            <Grid.ColumnDefinitions>
 
-                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="*" />
 
-                <ColumnDefinition Width="34" />
+                                                                <ColumnDefinition Width="34" />
 
-            </Grid.ColumnDefinitions>
+                                                            </Grid.ColumnDefinitions>
 
-            <!-- ================================================= -->
-            <!-- CAP -->
-            <!-- ================================================= -->
+                                                            <!-- ================================================= -->
+                                                            <!-- CAP -->
+                                                            <!-- ================================================= -->
 
-            <CheckBox
-                Grid.Column="0"
-                IsChecked="{Binding IsSelected,
+                                                            <CheckBox
+                                                                Grid.Column="0"
+                                                                IsChecked="{Binding IsSelected,
                                     Mode=TwoWay}"
-                VerticalContentAlignment="Center">
+                                                                VerticalContentAlignment="Center">
 
-                <TextBlock
-                    Text="{Binding DisplayName}"
-                    FontSize="12.5"
-                    FontWeight="SemiBold"
-                    Foreground="#334155"
-                    TextWrapping="Wrap"
-                    LineHeight="18"
-                    MaxWidth="340" />
+                                                                <TextBlock
+                                                                    Text="{Binding DisplayName}"
+                                                                    FontSize="12.5"
+                                                                    FontWeight="SemiBold"
+                                                                    Foreground="#334155"
+                                                                    TextWrapping="Wrap"
+                                                                    LineHeight="18"
+                                                                    MaxWidth="340" />
 
-            </CheckBox>
+                                                            </CheckBox>
 
-            <!-- ================================================= -->
-            <!-- ESTADO DE EVALUACIÓN -->
-            <!-- ================================================= -->
+                                                            <!-- ================================================= -->
+                                                            <!-- ESTADO DE EVALUACIÓN -->
+                                                            <!-- ================================================= -->
 
-            <Viewbox
-                Grid.Column="1"
-                Width="20"
-                Height="20"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center">
+                                                            <Viewbox
+                                                                Grid.Column="1"
+                                                                Width="20"
+                                                                Height="20"
+                                                                HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center">
 
-                <Path
-                    StrokeThickness="0"
-                    Stretch="Uniform"
-                    ToolTip="{Binding EstadoEvaluacionToolTip}">
+                                                                <Path
+                                                                    StrokeThickness="0"
+                                                                    Stretch="Uniform"
+                                                                    ToolTip="{Binding EstadoEvaluacionToolTip}">
 
-                    <Path.Style>
+                                                                    <Path.Style>
 
-                        <Style
-                            TargetType="Path">
+                                                                        <Style
+                                                                            TargetType="Path">
 
-                            <!-- ROJO = NINGUNO -->
+                                                                            <!-- ROJO = NINGUNO -->
 
-                            <Setter
-                                Property="Fill"
-                                Value="#DC2626" />
+                                                                            <Setter
+                                                                                Property="Fill"
+                                                                                Value="#DC2626" />
 
-                            <Setter
-                                Property="Data"
-                                Value="M5,3 L19,3 L19,17 L5,17 Z M8,8 L16,16 M16,8 L8,16" />
+                                                                            <Setter
+                                                                                Property="Data"
+                                                                                Value="M5,3 L19,3 L19,17 L5,17 Z M8,8 L16,16 M16,8 L8,16" />
 
-                            <Style.Triggers>
+                                                                            <Style.Triggers>
 
-                                <!-- ================================================= -->
-                                <!-- VERDE = TODOS -->
-                                <!-- ================================================= -->
+                                                                                <!-- ================================================= -->
+                                                                                <!-- VERDE = TODOS -->
+                                                                                <!-- ================================================= -->
 
-                                <DataTrigger
-                                    Binding="{Binding EstadoEvaluacion}"
-                                    Value="Completo">
+                                                                                <DataTrigger
+                                                                                    Binding="{Binding EstadoEvaluacion}"
+                                                                                    Value="Completo">
 
-                                    <Setter
-                                        Property="Fill"
-                                        Value="#16A34A" />
+                                                                                    <Setter
+                                                                                        Property="Fill"
+                                                                                        Value="#16A34A" />
 
-                                    <Setter
-                                        Property="Data"
-                                        Value="M4,11 L8,15 L18,5 L20,7 L8,19 L2,13 Z" />
+                                                                                    <Setter
+                                                                                        Property="Data"
+                                                                                        Value="M4,11 L8,15 L18,5 L20,7 L8,19 L2,13 Z" />
 
-                                </DataTrigger>
+                                                                                </DataTrigger>
 
-                                <!-- ================================================= -->
-                                <!-- AMARILLO = PARCIALMENTE -->
-                                <!-- MISMO ÍCONO DE PARCIALESVIEW -->
-                                <!-- ================================================= -->
+                                                                                <!-- ================================================= -->
+                                                                                <!-- AMARILLO = PARCIALMENTE -->
+                                                                                <!-- MISMO ÍCONO DE PARCIALESVIEW -->
+                                                                                <!-- ================================================= -->
 
-                                <DataTrigger
-                                    Binding="{Binding EstadoEvaluacion}"
-                                    Value="Parcial">
+                                                                                <DataTrigger
+                                                                                    Binding="{Binding EstadoEvaluacion}"
+                                                                                    Value="Parcial">
 
-                                    <Setter
-                                        Property="Fill"
-                                        Value="#FACC15" />
+                                                                                    <Setter
+                                                                                        Property="Fill"
+                                                                                        Value="#FACC15" />
 
-                                    <Setter
-                                        Property="Data"
-                                        Value="M12,2L1,21H23M12,6L19.53,19H4.47M11,10V14H13V10M11,16V18H13V16" />
+                                                                                    <Setter
+                                                                                        Property="Data"
+                                                                                        Value="M12,2L1,21H23M12,6L19.53,19H4.47M11,10V14H13V10M11,16V18H13V16" />
 
-                                </DataTrigger>
+                                                                                </DataTrigger>
 
-                            </Style.Triggers>
+                                                                            </Style.Triggers>
 
-                        </Style>
+                                                                        </Style>
 
-                    </Path.Style>
+                                                                    </Path.Style>
 
-                </Path>
+                                                                </Path>
 
-            </Viewbox>
+                                                            </Viewbox>
 
-        </Grid>
+                                                        </Grid>
 
-    </Border>
+                                                    </Border>
 
-</DataTemplate>
+                                                </DataTemplate>
                                             </ItemsControl.ItemTemplate>
 
                                         </ItemsControl>
@@ -1417,8 +1417,8 @@
                                         Height="44"
                                         Margin="0,0,10,0"
                                         Click="ExportarPdf_Click"
-                                       Style="{StaticResource PrimaryButtonStyle}" />
-                                    
+                                        Style="{StaticResource PrimaryButtonStyle}" />
+
                                     <Button
                                         Content="ENVIAR CALIFICACIONES POR CORREO"
                                         Width="230"
