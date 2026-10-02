@@ -5,6 +5,7 @@ using System.ComponentModel;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Models;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Services;
 using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.ViewModels;
+using Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views.Modals;
 
 namespace Registro_de_Calificaciones_Jose_Ma._Morelos_y_Pavon.Views;
 
@@ -220,4 +221,29 @@ public partial class MainWindow : Window
     {
         DragMove();
     }
+    
+    private void Graficas_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        try
+        {
+            var ventana =
+                new GraficasWindow
+                {
+                    Owner = this
+                };
+
+            ventana.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"No fue posible abrir la ventana de gráficas.\n\n{ex.Message}",
+                "Gráficas",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
 }

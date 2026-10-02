@@ -783,15 +783,14 @@
                 <!-- ================================================= -->
 
                 <Grid
-                        Grid.Column="3"
-                        VerticalAlignment="Center">
+                    Grid.Column="3"
+                    VerticalAlignment="Center">
 
                     <Grid.ColumnDefinitions>
-
                         <ColumnDefinition Width="*" />
-
                         <ColumnDefinition Width="30" />
-
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="30" />
                     </Grid.ColumnDefinitions>
 
                     <TextBox
@@ -802,26 +801,51 @@
                         Margin="0,0,6,0"
                         IsReadOnly="True"
                         VerticalContentAlignment="Center" />
-                    
+
+                    <!-- PORCENTAJES -->
+
                     <Button
-                            Grid.Column="1"
-                            Style="{StaticResource PercentageButtonStyle}"
-                            ToolTip="Ver resumen de porcentajes"
-                            Click="Porcentajes_Click">
+                        Grid.Column="1"
+                        Style="{StaticResource PercentageButtonStyle}"
+                        ToolTip="Ver resumen de porcentajes"
+                        Click="Porcentajes_Click"
+                        Margin="0,0,0,0">
 
                         <Viewbox
-                                Width="17"
-                                Height="17">
+                            Width="17"
+                            Height="17">
 
                             <Path
-                                    Data="{StaticResource PercentageGeometry}"
-                                    Stroke="{StaticResource AppBlue}"
-                                    StrokeThickness="2.2"
-                                    StrokeStartLineCap="Round"
-                                    StrokeEndLineCap="Round"
-                                    StrokeLineJoin="Round"
-                                    Fill="Transparent"
-                                    Stretch="Uniform" />
+                                Data="{StaticResource PercentageGeometry}"
+                                Stroke="{StaticResource AppBlue}"
+                                StrokeThickness="2.2"
+                                StrokeStartLineCap="Round"
+                                StrokeEndLineCap="Round"
+                                StrokeLineJoin="Round"
+                                Fill="Transparent"
+                                Stretch="Uniform" />
+
+                        </Viewbox>
+
+                    </Button>
+
+                    <!-- GRÁFICAS -->
+
+                    <Button
+                        Grid.Column="3"
+                        Style="{StaticResource PercentageButtonStyle}"
+                        ToolTip="Evaluación del grupo"
+                        Click="Graficas_Click"
+                        Margin="0,0,0,0">
+
+                        <Viewbox
+                            Width="17"
+                            Height="17">
+
+                            <Path
+                                Fill="{StaticResource AppBlue}"
+                                Stretch="Uniform"
+                                Data="M4,19H7V10H4V19ZM9,19H12V5H9V19ZM14,19H17V13H14V19ZM19,19H22V2H19V19Z" />
 
                         </Viewbox>
 
